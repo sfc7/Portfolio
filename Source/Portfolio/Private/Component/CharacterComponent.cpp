@@ -1,0 +1,130 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Component/CharacterComponent.h"
+#include "Game/FGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
+#include "Game/FPlayerState.h"
+#include "Character/PlayerCharacter.h"
+#include "WorldStatic/Weapon.h"
+#include "Engine/SkeletalMeshSocket.h"
+
+UCharacterComponent::UCharacterComponent()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UCharacterComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+	if (IsValid(GameInstance)) {
+		if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
+			float InstanceMaxHp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxHp;
+			SetMaxHp(InstanceMaxHp);
+			SetCurrentHp(InstanceMaxHp);
+		}
+	}
+
+	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+	if (IsValid(PlayerCharacter)) {
+		AFPlayerState* PlayerState = Cast<AFPlayerState>(PlayerCharacter->GetPlayerState());
+		if (IsValid(PlayerState)) {
+			if (!PlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
+				PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
+			}
+		}
+	}
+}
+
+void UCharacterComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UCharacterComponent::SetCurrentHp(float _CurrentHp)
+{
+	if (OnCurrnetHpChangeDelegate.IsBound()) {
+		OnCurrnetHpChangeDelegate.Broadcast(CurrentHp, _CurrentHp);
+	}
+
+	CurrentHp = FMath::Clamp(_CurrentHp, 0.f, MaxHp);
+
+	if (_CurrentHp < KINDA_SMALL_NUMBER) {
+		CurrentHp = 0.f;
+		bIsDead = true;
+		
+	}
+
+	OnCurrentHPChanged_NetMulticast(CurrentHp, CurrentHp);	
+}
+
+void UCharacterComponent::OnCurrentHPChanged_NetMulticast_Implementation(float _CurrentHp, float NewCurrntHp)
+{
+	if (OnCurrnetHpChangeDelegate.IsBound()) {
+		OnCurrnetHpChangeDelegate.Broadcast(_CurrentHp, NewCurrntHp);	
+	}
+
+}
+
+void UCharacterComponent::SetMaxHp(float _MaxHp)
+{
+	if (OnMaxHpChangeDelegate.IsBound()) {
+		OnMaxHpChangeDelegate.Broadcast(MaxHp, _MaxHp);
+	}
+
+	MaxHp = _MaxHp;
+}
+
+void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
+{
+	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;
+
+	EquippedWeapon = _Weapon;
+	EquippedWeapon->SetWeaponState(EWeaponState::Equip);
+	FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
+	if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
+		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
+		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
+		EquippedWeapon->SetOwner(PlayerCharacter);
+		EquippedWeapon->ShowPickUpText(false);
+	}
+}
+
+
+
+void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, MaxHp);
+	DOREPLIFETIME(ThisClass, CurrentHp);
+	DOREPLIFETIME(ThisClass, bIsAiming);
+	DOREPLIFETIME(ThisClass, bIsDead);
+}
+
+void UCharacterComponent::SetAiming(bool _bIsAiming)
+{
+	bIsAiming = _bIsAiming;
+	SetAiming_Server(_bIsAiming);
+}
+
+void UCharacterComponent::SetAiming_Server_Implementation(bool _bIsAiming)
+{
+	bIsAiming = _bIsAiming;
+}
+
+void UCharacterComponent::OnCurrentLevelChanged(int32 _CurrentLevel, int32 NewCurrentLevel)
+{
+	SetMaxHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
+	SetCurrentHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
+}
+
+
+
+
+
+
