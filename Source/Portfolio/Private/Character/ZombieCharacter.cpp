@@ -6,11 +6,14 @@
 #include "Engine/StreamableManager.h"
 #include "ZombieCharacterSettings.h"
 #include "Component/MonsterComponent.h"
+#include "AI/ZombieAIController.h"
 
 AZombieCharacter::AZombieCharacter()
 {
-
 	MonsterComponent = CreateDefaultSubobject<UMonsterComponent>(TEXT("MonsterComponent"));
+
+	AIControllerClass = AZombieAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	//const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
 	//if (0 < CDO->ZombieCharacterMeshPaths.Num())

@@ -9,7 +9,7 @@ public class PortfolioSettings : ModuleRules
 
         PublicDependencyModuleNames.AddRange(new string[] {
             // Initial Modules
-            "Core", "CoreUObject", "Engine", "InputCore",
+            "Core", "CoreUObject", "Engine", "InputCore", 
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] {
