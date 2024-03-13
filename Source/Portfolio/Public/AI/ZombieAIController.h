@@ -25,12 +25,16 @@ protected:
 
 	void EndAIController();
 
+	UFUNCTION()
+		void SetTargetKeybySightSense(AActor* actor, FAIStimulus const Stimulus);
 public:
 	static const float PatrolRadius;
 
 	static const FName StartPatrolPositionKey;
 
 	static const FName EndPatrolPositionKey;
+
+	static const FName TargetActorKey;
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -39,4 +43,5 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UBehaviorTree> BehaviorTree;
 
+	TObjectPtr<class UAISenseConfig_Sight> SightConfig;
 };

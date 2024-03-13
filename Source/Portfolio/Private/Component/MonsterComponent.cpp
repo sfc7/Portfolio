@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Game/FGameInstance.h"
 #include "Component/MonsterComponent.h"
+#include "Game/FGameInstance.h"
 
 UMonsterComponent::UMonsterComponent()
 {
@@ -18,8 +18,6 @@ void UMonsterComponent::BeginPlay()
 			float InstanceMaxHp = GameInstance->GetMonsterTableRowFromName(MonsterName)->MaxHp;
 			SetMaxHp(InstanceMaxHp);	
 			SetCurrentHp(InstanceMaxHp);
-
-			UE_LOG(LogTemp, Log, TEXT("Monster Begin : %f"), GetCurrentHp());
 		}
 	}
 }

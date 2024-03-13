@@ -1,8 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Camera/CameraComponent.h"
 #include "Character/LobbyCharacter.h"
-
+#include "Camera/CameraComponent.h"
 
 ALobbyCharacter::ALobbyCharacter()
 {
