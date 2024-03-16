@@ -17,34 +17,29 @@ EBTNodeResult::Type UBTTask_GetEndPatrolPosition::ExecuteTask(UBehaviorTreeCompo
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
 	if (EBTNodeResult::Failed == Result) {
-		UE_LOG(LogTemp, Warning, TEXT("ExecuteTask"));
 		return Result;
 	}
 
-
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (!IsValid(AIController)) {
-		UE_LOG(LogTemp, Warning, TEXT("Controller"));
 		return Result = EBTNodeResult::Failed;
 	}
 
 	AZombieCharacter* Zombie = Cast<AZombieCharacter>(AIController->GetPawn());
 	if (!IsValid(Zombie)) {
-		UE_LOG(LogTemp, Warning, TEXT("Zombie"));
 		return Result = EBTNodeResult::Failed;
 	}
 
 	UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(Zombie->GetWorld());
 	if (!IsValid(NavigationSystem)) {
-		UE_LOG(LogTemp, Warning, TEXT("Navigation"));
 		return Result = EBTNodeResult::Failed;
 	}
 
 	FVector StartPatrolPosition = OwnerComp.GetBlackboardComponent()->GetValueAsVector(AZombieAIController::StartPatrolPositionKey);
 	FNavLocation EndPatrolLocation;
-	if (NavigationSystem->GetRandomPointInNavigableRadius(FVector::ZeroVector, AIController->PatrolRadius, EndPatrolLocation)) {
+
+	if (NavigationSystem->GetRandomPointInNavigableRadius(StartPatrolPosition, AIController->PatrolRadius, EndPatrolLocation)) {
 		OwnerComp.GetBlackboardComponent()->SetValueAsVector(AZombieAIController::EndPatrolPositionKey, EndPatrolLocation.Location);
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *EndPatrolLocation.Location.ToString());
 		return Result = EBTNodeResult::Succeeded;
 	}
 

@@ -15,4 +15,7 @@ class PORTFOLIO_API UBTService_DetectPlayerCharacter : public UBTService
 	GENERATED_BODY()
 public:
 	UBTService_DetectPlayerCharacter();
+
+protected:
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

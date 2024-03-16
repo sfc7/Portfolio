@@ -7,6 +7,7 @@
 #include "ZombieCharacterSettings.h"
 #include "Component/MonsterComponent.h"
 #include "AI/ZombieAIController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -28,6 +29,12 @@ AZombieCharacter::AZombieCharacter()
 void AZombieCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bUseControllerRotationYaw = false;
+
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
+	GetCharacterMovement()->MaxWalkSpeed = 200.f;
 
 	//const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
 	//int32 RandIndex = FMath::RandRange(0, CDO->ZombieCharacterMeshPaths.Num() - 1);
