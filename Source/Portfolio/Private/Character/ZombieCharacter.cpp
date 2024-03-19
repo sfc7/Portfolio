@@ -2,12 +2,15 @@
 
 
 #include "Character/ZombieCharacter.h"
+#include "Character/PlayerCharacter.h"
 #include "Game/FGameInstance.h"
 #include "Engine/StreamableManager.h"
 #include "ZombieCharacterSettings.h"
 #include "Component/MonsterComponent.h"
 #include "AI/ZombieAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Animation/ZombieAnimInstance.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -69,6 +72,12 @@ void AZombieCharacter::PostInitializeComponents()
 	{
 		MonsterComponent->SetMonsterName(FName("Zombie"));
 	}
+
+	ZombieAnimInstance = Cast<UZombieAnimInstance>(GetMesh()->GetAnimInstance());
+	if (ZombieAnimInstance) {
+		ZombieAnimInstance->AttackHit.AddUObject(this, &ThisClass::Attack_BasicHit);
+		ZombieAnimInstance->AttackMontageEnd.AddUObject(this, &ThisClass::AttackMontageEnd);
+	}
 }
 
 void AZombieCharacter::Tick(float DeltaTime)
@@ -85,3 +94,50 @@ void AZombieCharacter::MeshAssetLoad()
 	}
 }
 
+void AZombieCharacter::Attack()
+{
+	if (ZombieAnimInstance) {
+		MonsterComponent->SetIsAttacking(true);
+		ZombieAnimInstance->PlayAttackMontage();
+	}
+}
+
+void AZombieCharacter::Attack_BasicHit()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams Params(NAME_None, false, this);
+	FVector RangeVector = GetActorForwardVector() * AttackRange;
+	FVector Center = GetActorLocation() + RangeVector * 0.5f;
+	FQuat ZRotation = FRotationMatrix::MakeFromZ(RangeVector).ToQuat();
+	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+
+	bool Result = GetWorld()->SweepSingleByChannel(
+		OUT HitResult,
+		Center,
+		Center + AttackRange * GetActorForwardVector(),
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel4,
+		FCollisionShape::MakeSphere(AttackRadius),
+		Params
+	);
+
+	FColor DrawColor;
+
+	if (Result && Cast<APlayerCharacter>(HitResult.GetActor())) {
+		DrawColor = FColor::Green;
+		APlayerCharacter* HitActor = Cast<APlayerCharacter>(HitResult.GetActor());
+		UGameplayStatics::ApplyDamage(HitActor, AttackDamage, GetController(), this, NULL);
+	}
+	else {
+		DrawColor = FColor::Red;
+	}
+
+	DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);
+}
+
+void AZombieCharacter::AttackMontageEnd()
+{
+	MonsterComponent->SetIsAttacking(false);
+}
+
+	

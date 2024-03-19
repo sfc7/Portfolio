@@ -13,6 +13,8 @@ UCLASS()
 class PORTFOLIO_API AZombieCharacter : public AMonsterCharacter
 {
 	GENERATED_BODY()
+
+	friend class UBTTask_Attack;
 public:
 	AZombieCharacter();
 protected:
@@ -27,6 +29,12 @@ private:
 	UFUNCTION()
 		void MeshAssetLoad();
 
+	void Attack();
+
+	void Attack_BasicHit();
+
+	void AttackMontageEnd();
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UMonsterComponent> MonsterComponent;
@@ -34,4 +42,16 @@ private:
 	FSoftObjectPath	CurrentZombieCharacterMeshPath = FSoftObjectPath();
 
 	TSharedPtr<struct FStreamableHandle> AssetStreamableHandle = nullptr;
+
+	UPROPERTY()
+		TObjectPtr<class UZombieAnimInstance> ZombieAnimInstance;
+
+	//Attack
+	float AttackDamage = 10.f;
+	
+	float AttackRange = 50.f;
+
+	float AttackRadius = 50.f;
+	//
+
 };

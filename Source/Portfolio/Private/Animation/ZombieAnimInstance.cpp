@@ -28,7 +28,24 @@ void UZombieAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (IsValid(OwnerCharacter) && IsValid(MovementComponent)) {
 		GroundSpeed = MovementComponent->GetLastUpdateVelocity().Size();
+	}
+}
 
+void UZombieAnimInstance::AnimNotify_AttackHit()
+{
+	AttackHit.Broadcast();
+}
 
+void UZombieAnimInstance::AnimNotify_AttackMontageEnd()
+{
+	AttackMontageEnd.Broadcast();
+}
+
+void UZombieAnimInstance::PlayAttackMontage()
+{
+	if (IsValid(AttackMontage)) {
+		if (!Montage_IsPlaying(AttackMontage)) {
+			Montage_Play(AttackMontage);
+		}
 	}
 }

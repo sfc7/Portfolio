@@ -19,18 +19,21 @@ public:
 
 	float GetMaxHp() const { return MaxHp; }
 
+	uint8 GetIsAttacking() const { return bIsAttacking; }
+
 	void SetMonsterName(FName _Name);
 
 	void SetCurrentHp(float _CurrentHp);
 
 	void SetMaxHp(float _MaxHp);
 
+	void SetIsAttacking(uint8 _bIsAttacking);
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	
 
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -44,6 +47,10 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		FName MonsterName;
+
+	uint8 bIsAttacking;
+
+
 
 		
 };

@@ -20,17 +20,14 @@ EBTNodeResult::Type UBTTask_SetMovementSpeed::ExecuteTask(UBehaviorTreeComponent
 	}
 
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
-	if (!IsValid(AIController)) {
-		return Result = EBTNodeResult::Failed;
+	if (IsValid(AIController)) {
+		AZombieCharacter* ZombieChaacter = Cast<AZombieCharacter>(AIController->GetPawn());
+
+		if (IsValid(ZombieChaacter)) {
+			ZombieChaacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
+			Result = EBTNodeResult::Succeeded;
+		}
 	}
 
-	AZombieCharacter* ZombieChaacter = Cast<AZombieCharacter>(AIController->GetPawn());
-	if (!IsValid(ZombieChaacter)) {
-		return Result = EBTNodeResult::Failed;
-	}
-
-	ZombieChaacter->GetCharacterMovement()->MaxWalkSpeed = Speed;
-
-	return Result = EBTNodeResult::Succeeded;
-
+	return Result = EBTNodeResult::Failed;
 }

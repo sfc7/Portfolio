@@ -46,3 +46,8 @@ void UMonsterComponent::SetMaxHp(float _MaxHp)
 	MaxHp = _MaxHp;
 }
 
+void UMonsterComponent::SetIsAttacking(uint8 _bIsAttacking)
+{
+	bIsAttacking = _bIsAttacking;
+}
+

@@ -16,32 +16,32 @@ EBTNodeResult::Type UBTTask_GetEndPatrolPosition::ExecuteTask(UBehaviorTreeCompo
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
+	
+
 	if (EBTNodeResult::Failed == Result) {
 		return Result;
 	}
 
+	UE_LOG(LogTemp, Log, TEXT("previous"));
+
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
-	if (!IsValid(AIController)) {
-		return Result = EBTNodeResult::Failed;
+	if (IsValid(AIController)) {
+		
+		AZombieCharacter* Zombie = Cast<AZombieCharacter>(AIController->GetPawn());
+		if (IsValid(Zombie)) {
+			UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(Zombie->GetWorld());
+
+			if (IsValid(NavigationSystem)) {
+				FVector StartPatrolPosition = OwnerComp.GetBlackboardComponent()->GetValueAsVector(AZombieAIController::StartPatrolPositionKey);
+				FNavLocation EndPatrolLocation;
+
+				if (NavigationSystem->GetRandomPointInNavigableRadius(StartPatrolPosition, AIController->PatrolRadius, EndPatrolLocation)) {
+					OwnerComp.GetBlackboardComponent()->SetValueAsVector(AZombieAIController::EndPatrolPositionKey, EndPatrolLocation.Location);
+					return Result = EBTNodeResult::Succeeded;
+				}
+			}
+		}
 	}
 
-	AZombieCharacter* Zombie = Cast<AZombieCharacter>(AIController->GetPawn());
-	if (!IsValid(Zombie)) {
-		return Result = EBTNodeResult::Failed;
-	}
-
-	UNavigationSystemV1* NavigationSystem = UNavigationSystemV1::GetNavigationSystem(Zombie->GetWorld());
-	if (!IsValid(NavigationSystem)) {
-		return Result = EBTNodeResult::Failed;
-	}
-
-	FVector StartPatrolPosition = OwnerComp.GetBlackboardComponent()->GetValueAsVector(AZombieAIController::StartPatrolPositionKey);
-	FNavLocation EndPatrolLocation;
-
-	if (NavigationSystem->GetRandomPointInNavigableRadius(StartPatrolPosition, AIController->PatrolRadius, EndPatrolLocation)) {
-		OwnerComp.GetBlackboardComponent()->SetValueAsVector(AZombieAIController::EndPatrolPositionKey, EndPatrolLocation.Location);
-		return Result = EBTNodeResult::Succeeded;
-	}
-
-	return Result;
+	return Result = EBTNodeResult::Failed;
 }

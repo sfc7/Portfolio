@@ -6,6 +6,8 @@
 #include "Animation/MonsterAnimInstance.h"
 #include "ZombieAnimInstance.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FAttackHit);
+DECLARE_MULTICAST_DELEGATE(FAttackMontageEnd);
 /**
  * 
  */
@@ -20,6 +22,22 @@ public:
 
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
+	UFUNCTION()
+		void AnimNotify_AttackHit();
+
+	UFUNCTION()
+		void AnimNotify_AttackMontageEnd();
+
+	void PlayAttackMontage();
+
+
+
+public:
+	FAttackHit AttackHit;
+	FAttackMontageEnd AttackMontageEnd;
+
+
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class AZombieCharacter> OwnerCharacter;
@@ -29,6 +47,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		float GroundSpeed;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* AttackMontage;
 
 
 };
