@@ -14,7 +14,7 @@ class PORTFOLIO_API UBTTask_RotateToTarget : public UBTTaskNode
 {
 	GENERATED_BODY()
 public:
-	UBTTask_TurnToTarget();
+	UBTTask_RotateToTarget();
 
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;

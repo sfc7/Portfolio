@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "CharacterComponent.generated.h"
 
+// 각 게임의 세션 안에서만 유효한 값들
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, float, _CurrentHp, float, NewCurrentHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, float, _MaxHp, float, NewMaxHp);
 
@@ -46,7 +48,7 @@ private:
 	UFUNCTION(NetMulticast, Reliable)
 		void OnCurrentHPChanged_NetMulticast(float _CurrentHp, float NewCurrntHp);
 	UFUNCTION()
-		void OnCurrentLevelChanged(int32 _CurrentLevel, int32 NewCurrentLevel);
+		void OnCurrentLevelChanged(int32 NewCurrentLevel);
 
 public:
 	FOnCurrnetHpChangeDelegate OnCurrnetHpChangeDelegate;
@@ -69,6 +71,12 @@ private:
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		float MaxHp;
+
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		float CurrentExp;
+
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		float MaxExp;
 
 	UPROPERTY(Replicated)
 		uint8 bIsAiming;

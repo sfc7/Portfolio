@@ -6,11 +6,14 @@
 #include "Game/FGameInstance.h"
 #include "Engine/StreamableManager.h"
 #include "ZombieCharacterSettings.h"
+#include "Component/CharacterComponent.h"
 #include "Component/MonsterComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "AI/ZombieAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Animation/ZombieAnimInstance.h"
+#include "Game/FPlayerState.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -58,7 +61,28 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 {
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	MonsterComponent->SetCurrentHp(MonsterComponent->GetCurrentHp() - ActualDamage);
+	
+	GetMonsterComponent()->SetCurrentHp(GetMonsterComponent()->GetCurrentHp() - ActualDamage);
+
+	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+
+		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
+		if (IsValid(CauserCharacter)) {
+			AFPlayerState* CauserCharacterPlayerState = Cast<AFPlayerState>(CauserCharacter->GetPlayerState());
+			
+			if (IsValid(CauserCharacterPlayerState)) {
+				CauserCharacterPlayerState->SetCurrentEXP(CauserCharacterPlayerState->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
+			}
+		}
+
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
+		if (IsValid(AIController)) {
+			AIController->EndAIController();
+		}
+	}
+
 
 
 	return ActualDamage;
@@ -68,9 +92,9 @@ void AZombieCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	if (MonsterComponent != nullptr)
+	if (GetMonsterComponent() != nullptr)
 	{
-		MonsterComponent->SetMonsterName(FName("Zombie"));
+		GetMonsterComponent()->SetMonsterName(FName("Zombie"));
 	}
 
 	ZombieAnimInstance = Cast<UZombieAnimInstance>(GetMesh()->GetAnimInstance());
@@ -97,7 +121,7 @@ void AZombieCharacter::MeshAssetLoad()
 void AZombieCharacter::Attack()
 {
 	if (ZombieAnimInstance) {
-		MonsterComponent->SetIsAttacking(true);
+		GetMonsterComponent()->SetIsAttacking(true);
 		ZombieAnimInstance->PlayAttackMontage();
 	}
 }
@@ -137,7 +161,7 @@ void AZombieCharacter::Attack_BasicHit()
 
 void AZombieCharacter::AttackMontageEnd()
 {
-	MonsterComponent->SetIsAttacking(false);
+	GetMonsterComponent()->SetIsAttacking(false);
 }
 
 	

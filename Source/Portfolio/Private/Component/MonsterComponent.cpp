@@ -18,7 +18,10 @@ void UMonsterComponent::BeginPlay()
 			float InstanceMaxHp = GameInstance->GetMonsterTableRowFromName(MonsterName)->MaxHp;
 			SetMaxHp(InstanceMaxHp);	
 			SetCurrentHp(InstanceMaxHp);
-		}
+
+			float InstanceExpValue = GameInstance->GetMonsterTableRowFromName(MonsterName)->EXP;
+			SetMonsterExpValue(InstanceExpValue);
+;		}
 	}
 }
 
@@ -44,6 +47,11 @@ void UMonsterComponent::SetCurrentHp(float _CurrentHp)
 void UMonsterComponent::SetMaxHp(float _MaxHp)
 {
 	MaxHp = _MaxHp;
+}
+
+void UMonsterComponent::SetMonsterExpValue(float _MonsterExpValue)
+{
+	MonsterExpValue = _MonsterExpValue;
 }
 
 void UMonsterComponent::SetIsAttacking(uint8 _bIsAttacking)

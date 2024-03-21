@@ -67,7 +67,6 @@ void UCharacterComponent::OnCurrentHPChanged_NetMulticast_Implementation(float _
 	if (OnCurrnetHpChangeDelegate.IsBound()) {
 		OnCurrnetHpChangeDelegate.Broadcast(_CurrentHp, NewCurrntHp);	
 	}
-
 }
 
 void UCharacterComponent::SetMaxHp(float _MaxHp)
@@ -117,7 +116,7 @@ void UCharacterComponent::SetAiming_Server_Implementation(bool _bIsAiming)
 	bIsAiming = _bIsAiming;
 }
 
-void UCharacterComponent::OnCurrentLevelChanged(int32 _CurrentLevel, int32 NewCurrentLevel)
+void UCharacterComponent::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
 	SetMaxHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
 	SetCurrentHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);

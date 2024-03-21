@@ -6,9 +6,10 @@
 #include "GameFramework/PlayerState.h"
 #include "FPlayerState.generated.h"
 
+// 게임의 세션이 이동해도 저장될 값들
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentLevelChangedDelegate, int32, _CurrentLevel, int32, NewCurrentLevel);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentEXPChangedDelegate, float, _CurrentEXP, float, NewCurrentEXP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int32, NewCurrentLevel);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 
 UCLASS()
 class PORTFOLIO_API AFPlayerState : public APlayerState
@@ -50,15 +51,15 @@ private:
         int32 PlayerNumber = 99;
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        int32 MaxLevel = 5;
+        int32 MaxLevel;
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        int32 CurrentLevel = 1;
+        int32 CurrentLevel;
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        float MaxEXP = 150;
+        float MaxEXP;
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        float CurrentEXP = 0;
+        float CurrentEXP;
 
 };

@@ -17,6 +17,9 @@ class PORTFOLIO_API AZombieCharacter : public AMonsterCharacter
 	friend class UBTTask_Attack;
 public:
 	AZombieCharacter();
+
+	class UMonsterComponent* GetMonsterComponent() { return MonsterComponent; }
+
 protected:
 	virtual void BeginPlay() override;
 

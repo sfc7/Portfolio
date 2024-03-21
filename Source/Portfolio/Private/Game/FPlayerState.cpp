@@ -28,27 +28,29 @@ void AFPlayerState::InitPlayerState()
 
 void AFPlayerState::SetCurrentLevel(int32 _CurrentLevel)
 {
-	int32 PreCurrentLevel = CurrentLevel;
 	CurrentLevel = FMath::Clamp(_CurrentLevel, 1, MaxLevel);
 
 	FCharacterTable* RowData = FGameInstance->GetCharacterTableRowFromLevel(CurrentLevel);
 	if (nullptr != RowData) {
 		MaxEXP = RowData->MaxEXP;
-		OnCurrentLevelChangedDelegate.Broadcast(PreCurrentLevel, CurrentLevel);
+		OnCurrentLevelChangedDelegate.Broadcast(CurrentLevel);
 	}
 }
 
 void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 {
-	float PreCurrentExp = CurrentEXP;
 	CurrentEXP = FMath::Clamp<float>(_CurrentEXP, 0.f, MaxEXP);
 
-	if (MaxEXP - KINDA_SMALL_NUMBER < CurrentEXP) {
+	while (MaxEXP - KINDA_SMALL_NUMBER < CurrentEXP) {
+		CurrentEXP -= MaxEXP;
 		SetCurrentLevel(CurrentLevel + 1);
-		CurrentEXP = 0.f;
+
+		if (CurrentEXP < 0) {
+			CurrentEXP = 0.f;
+		}
 	}
 
-	OnCurrentEXPChangedDelegate.Broadcast(PreCurrentExp, CurrentEXP);
+	OnCurrentEXPChangedDelegate.Broadcast(CurrentEXP);
 }
 
 void AFPlayerState::SetPlayerNumber(int32 _PlayerNumber)

@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -98,8 +95,8 @@ void APlayerCharacter::BeginPlay()
 	}
 	}), 0.2f, false);
 	
-	if (CharacterComponent && HasAuthority()) {
-		CharacterComponent->EquipWeapon(OverlapWeapon);
+	if (GetCharacterComponent() && HasAuthority()) {
+		GetCharacterComponent()->EquipWeapon(OverlapWeapon);
 	}
 	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
 	//if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
@@ -182,9 +179,9 @@ float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 {
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	CharacterComponent->SetCurrentHp(CharacterComponent->GetCurrentHp() - ActualDamage);
+	GetCharacterComponent()->SetCurrentHp(GetCharacterComponent()->GetCurrentHp() - ActualDamage);
 
-	if (!IsValid(CharacterComponent)) {
+	if (!IsValid(GetCharacterComponent())) {
 		return ActualDamage;
 	}
 
@@ -222,8 +219,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void APlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (CharacterComponent) {
-		CharacterComponent->PlayerCharacter = this;
+	if (GetCharacterComponent()) {
+		GetCharacterComponent()->PlayerCharacter = this;
 	}
 }
 
@@ -282,8 +279,8 @@ void APlayerCharacter::StartAiming(const FInputActionValue& InValue)
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 1080.f, 0.f);
 	TargetFOV = 45.f;
 
-	if (CharacterComponent) {
-		CharacterComponent->SetAiming(true);
+	if (GetCharacterComponent()) {
+		GetCharacterComponent()->SetAiming(true);
 	}
 }
 
@@ -292,8 +289,8 @@ void APlayerCharacter::EndAiming(const FInputActionValue& InValue)
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
 	TargetFOV = 70.f;
 
-	if (CharacterComponent) {
-		CharacterComponent->SetAiming(false);
+	if (GetCharacterComponent()) {
+		GetCharacterComponent()->SetAiming(false);
 	}
 }
 
@@ -361,7 +358,7 @@ void APlayerCharacter::Fire()
 	}
 }
 
-void APlayerCharacter::OnCurrentLevelChanged(int32 _CurrentLevel, int32 NewCurrentLevel)
+void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
 	/*ParticleSystemComponent->Activate(true);*/
 }
@@ -421,7 +418,7 @@ void APlayerCharacter::OnHittedRagdollRestoreTimerElapsed()
 
 void APlayerCharacter::PlayRagdoll_NetMulticast_Implementation()
 {
-	if (!IsValid(CharacterComponent)) {
+	if (!IsValid(GetCharacterComponent())) {
 		return;
 	}
 
@@ -480,12 +477,12 @@ void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
 
 uint8 APlayerCharacter::IsAiming()
 {
-	return (CharacterComponent && CharacterComponent->bIsAiming);
+	return (GetCharacterComponent() && GetCharacterComponent()->bIsAiming);
 }
 
 uint8 APlayerCharacter::IsDead()
 {
-	return (CharacterComponent && CharacterComponent->bIsDead);
+	return (GetCharacterComponent() && GetCharacterComponent()->bIsDead);
 }
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값

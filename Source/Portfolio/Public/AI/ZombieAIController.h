@@ -16,14 +16,13 @@ class PORTFOLIO_API AZombieAIController : public AAIController
 public:
 	AZombieAIController();
 
+	void EndAIController();
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void BeginAIController(APawn* InPawn);
-
-	void EndAIController();
 
 	UFUNCTION()
 		void SetTargetKeybySightSense(AActor* actor, FAIStimulus const Stimulus);

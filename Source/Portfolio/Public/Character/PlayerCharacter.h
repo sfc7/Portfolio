@@ -72,7 +72,7 @@ private:
 	void Fire();
 
 	UFUNCTION()
-		void OnCurrentLevelChanged(int32 _CurrentLevel, int32 NewCurrentLevel);	
+		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
 
 	void SpawnLandMine(const FInputActionValue& InValue);
 

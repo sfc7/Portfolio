@@ -19,6 +19,8 @@ public:
 
 	float GetMaxHp() const { return MaxHp; }
 
+	float GetMonsterExpValue() const { return MonsterExpValue; }
+
 	uint8 GetIsAttacking() const { return bIsAttacking; }
 
 	void SetMonsterName(FName _Name);
@@ -26,6 +28,8 @@ public:
 	void SetCurrentHp(float _CurrentHp);
 
 	void SetMaxHp(float _MaxHp);
+
+	void SetMonsterExpValue(float _MonsterExpValue);
 
 	void SetIsAttacking(uint8 _bIsAttacking);
 
@@ -47,6 +51,10 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		FName MonsterName;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		float MonsterExpValue;
+
 
 	uint8 bIsAttacking;
 

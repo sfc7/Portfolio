@@ -20,7 +20,7 @@ void UBTTask_Attack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
 		AZombieCharacter* Zombie = Cast<AZombieCharacter>(AIController->GetPawn());
 
 		if (IsValid(Zombie)) {
-			if (!Zombie->MonsterComponent->GetIsAttacking())
+			if (!Zombie->GetMonsterComponent()->GetIsAttacking())
 			{
 				FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 			}
