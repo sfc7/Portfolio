@@ -15,7 +15,6 @@ UBTDecorator_IsInAttackRange::UBTDecorator_IsInAttackRange()
 bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	bool Result = Super::CalculateRawConditionValue(OwnerComp, NodeMemory);
-	UE_LOG(LogTemp, Log, TEXT("decoprevious"));
 	
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (IsValid(AIController)) {
@@ -24,7 +23,6 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 		if (IsValid(Zombie)) {
 			APlayerCharacter* Target = Cast<APlayerCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(AZombieAIController::TargetActorKey));
 			if (IsValid(Target)) {
-				UE_LOG(LogTemp, Log, TEXT("decosuccess"));
 				return Result = Target->GetDistanceTo(Zombie) <= AttackRange;
 			}
 		}

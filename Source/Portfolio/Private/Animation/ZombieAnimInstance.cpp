@@ -41,11 +41,26 @@ void UZombieAnimInstance::AnimNotify_AttackMontageEnd()
 	AttackMontageEnd.Broadcast();
 }
 
+void UZombieAnimInstance::AnimNotify_DeathMontageEnd()
+{
+	DeathMontageEnd.Broadcast();
+}
+
 void UZombieAnimInstance::PlayAttackMontage()
 {
 	if (IsValid(AttackMontage)) {
 		if (!Montage_IsPlaying(AttackMontage)) {
 			Montage_Play(AttackMontage);
+		}
+	}
+}
+
+void UZombieAnimInstance::PlayDeathMontage()
+{
+	if (IsValid(DeathMontage)) {
+		StopAllMontages(0.0f);
+		if (!Montage_IsPlaying(DeathMontage)) {
+			Montage_Play(DeathMontage);
 		}
 	}
 }

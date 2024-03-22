@@ -44,8 +44,8 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	//AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
-	//if (IsValid(PlayerState)) {
-	//	PlayerState->InitPlayerState();
-	//}
+	AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
+	if (IsValid(PlayerState)) {
+		PlayerState->InitPlayerState();
+	}
 }

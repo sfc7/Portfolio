@@ -23,6 +23,8 @@ public:
 
 	uint8 GetIsAttacking() const { return bIsAttacking; }
 
+	uint8 GetIsDead() const { return bIsDead; }
+
 	void SetMonsterName(FName _Name);
 
 	void SetCurrentHp(float _CurrentHp);
@@ -32,6 +34,8 @@ public:
 	void SetMonsterExpValue(float _MonsterExpValue);
 
 	void SetIsAttacking(uint8 _bIsAttacking);
+
+	void SetIsDead(uint8 _bIsDead);
 
 protected:
 	virtual void BeginPlay() override;
@@ -58,6 +62,7 @@ private:
 
 	uint8 bIsAttacking;
 
+	uint8 bIsDead;
 
 
 		

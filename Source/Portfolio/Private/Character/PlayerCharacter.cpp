@@ -81,9 +81,7 @@ void APlayerCharacter::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimer(StateTimer, FTimerDelegate::CreateLambda([&] {
 		AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 		if (IsValid(FPlayerState)) {
-
 		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-
 
 		if (IsLocallyControlled()) {
 			SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
@@ -153,6 +151,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 			UpdateInputValue_Server(ForwardInputValue, RightInputValue);
 		}
 	}
+
+	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -438,7 +438,6 @@ void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(const FVecto
 {
 	if (IsValid(HitCharacter)) {
 		HitCharacter->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-		UKismetSystemLibrary::PrintString(GetWorld(), FString::Printf(TEXT("Damage : %f"), Damage));
 	}
 
 	DrawLine_NetMulticast(DrawStart, DrawEnd);

@@ -16,13 +16,9 @@ EBTNodeResult::Type UBTTask_GetEndPatrolPosition::ExecuteTask(UBehaviorTreeCompo
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	
-
 	if (EBTNodeResult::Failed == Result) {
 		return Result;
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("previous"));
 
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (IsValid(AIController)) {

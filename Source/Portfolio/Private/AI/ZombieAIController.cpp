@@ -79,13 +79,10 @@ void AZombieAIController::EndAIController()
 
 void AZombieAIController::SetTargetKeybySightSense(AActor* actor, FAIStimulus const Stimulus)
 {
-	UE_LOG(LogTemp, Log, TEXT("perception"));
 	if (Stimulus.Type == UAISense::GetSenseID(UAISense_Sight::StaticClass())) {
 		if (Cast<APlayerCharacter>(actor)) {
-			UE_LOG(LogTemp, Log, TEXT("actor"));
 			if (Stimulus.WasSuccessfullySensed()) {
 				Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, actor);
-				UE_LOG(LogTemp, Log, TEXT("target"));
 			}
 		}
 	}

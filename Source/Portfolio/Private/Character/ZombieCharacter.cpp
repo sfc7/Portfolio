@@ -59,12 +59,22 @@ void AZombieCharacter::BeginPlay()
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	if (GetMonsterComponent()->GetIsDead())
+	{
+		return 0.f;
+	}
 
+	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	
 	GetMonsterComponent()->SetCurrentHp(GetMonsterComponent()->GetCurrentHp() - ActualDamage);
+	UE_LOG(LogTemp, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
 
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+
+		MonsterComponent->SetIsDead(true);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+		ZombieAnimInstance->PlayDeathMontage();
 
 		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
 		if (IsValid(CauserCharacter)) {
@@ -75,15 +85,11 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 			}
 		}
 
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
 		AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
 		if (IsValid(AIController)) {
 			AIController->EndAIController();
 		}
 	}
-
-
 
 	return ActualDamage;
 }
@@ -101,6 +107,7 @@ void AZombieCharacter::PostInitializeComponents()
 	if (ZombieAnimInstance) {
 		ZombieAnimInstance->AttackHit.AddUObject(this, &ThisClass::Attack_BasicHit);
 		ZombieAnimInstance->AttackMontageEnd.AddUObject(this, &ThisClass::AttackMontageEnd);
+		ZombieAnimInstance->DeathMontageEnd.AddUObject(this, &ThisClass::DestroyActor);
 	}
 }
 
@@ -162,6 +169,11 @@ void AZombieCharacter::Attack_BasicHit()
 void AZombieCharacter::AttackMontageEnd()
 {
 	GetMonsterComponent()->SetIsAttacking(false);
+}
+
+void AZombieCharacter::DestroyActor()
+{
+	Destroy();
 }
 
 	

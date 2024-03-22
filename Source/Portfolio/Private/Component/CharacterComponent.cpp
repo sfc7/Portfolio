@@ -43,6 +43,7 @@ void UCharacterComponent::BeginPlay()
 void UCharacterComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 }
 
 void UCharacterComponent::SetCurrentHp(float _CurrentHp)
@@ -56,7 +57,6 @@ void UCharacterComponent::SetCurrentHp(float _CurrentHp)
 	if (_CurrentHp < KINDA_SMALL_NUMBER) {
 		CurrentHp = 0.f;
 		bIsDead = true;
-		
 	}
 
 	OnCurrentHPChanged_NetMulticast(CurrentHp, CurrentHp);	

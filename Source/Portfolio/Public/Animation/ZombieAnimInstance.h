@@ -8,6 +8,7 @@
 
 DECLARE_MULTICAST_DELEGATE(FAttackHit);
 DECLARE_MULTICAST_DELEGATE(FAttackMontageEnd);
+DECLARE_MULTICAST_DELEGATE(FDeathMontageEnd);
 /**
  * 
  */
@@ -28,15 +29,17 @@ public:
 	UFUNCTION()
 		void AnimNotify_AttackMontageEnd();
 
+	UFUNCTION()
+		void AnimNotify_DeathMontageEnd();
+
 	void PlayAttackMontage();
 
-
+	void PlayDeathMontage();
 
 public:
 	FAttackHit AttackHit;
 	FAttackMontageEnd AttackMontageEnd;
-
-
+	FDeathMontageEnd DeathMontageEnd;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -50,6 +53,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
 		UAnimMontage* AttackMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* DeathMontage;
 
 
 };

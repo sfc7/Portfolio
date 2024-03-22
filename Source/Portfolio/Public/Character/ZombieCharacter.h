@@ -38,6 +38,8 @@ private:
 
 	void AttackMontageEnd();
 
+	void DestroyActor();
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UMonsterComponent> MonsterComponent;

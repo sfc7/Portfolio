@@ -32,13 +32,11 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 {
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
-	UE_LOG(LogTemp, Log, TEXT("attackprevious"));
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (IsValid(AIController)) {
 		AZombieCharacter* Zombie = Cast<AZombieCharacter>(AIController->GetPawn());
 
 		if (IsValid(Zombie)) {
-			UE_LOG(LogTemp, Log, TEXT("attacksuccess"));
 			Zombie->Attack();
 		}
 	}
