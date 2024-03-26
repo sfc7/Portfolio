@@ -16,8 +16,16 @@ class PORTFOLIO_API UPlayerHUD : public UUserWidget
 public:
 	void BindCharacterComponent(class UCharacterComponent* _CharacterComponent);
 
+	void BindPlayerState(class AFPlayerState* _PlayerState);
+
+protected:
+	UFUNCTION()
+		virtual void LevelTextChange(int32 NewLevel);
+
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;
+
+	TWeakObjectPtr<class AFPlayerState> PlayerState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UTextBlock> LevelText;
@@ -25,4 +33,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UPlayer_HPBar> Hp_Bar;
 
-};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+		TObjectPtr<class UPlayer_EXPBar> Exp_Bar;
+
+};	

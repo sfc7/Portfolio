@@ -47,9 +47,9 @@ public:
 
 	virtual void Shutdown() override;
 
-	const UDataTable* GetCharacterTable() { return CharacterTable; }
+	UDataTable* GetCharacterTable() const  { return CharacterTable; }
 
-	const UDataTable* GetMonsterTable() { return MonsterTable; }
+	UDataTable* GetMonsterTable() const  { return MonsterTable; }
 
 	FCharacterTable* UFGameInstance::GetCharacterTableRowFromLevel(int32 Level);
 

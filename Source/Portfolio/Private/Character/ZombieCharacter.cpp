@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Animation/ZombieAnimInstance.h"
 #include "Game/FPlayerState.h"
+#include "Portfolio/Portfolio.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -59,6 +60,8 @@ void AZombieCharacter::BeginPlay()
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
+
 	if (GetMonsterComponent()->GetIsDead())
 	{
 		return 0.f;
@@ -67,27 +70,21 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	
 	GetMonsterComponent()->SetCurrentHp(GetMonsterComponent()->GetCurrentHp() - ActualDamage);
-	UE_LOG(LogTemp, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
 
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 
 		MonsterComponent->SetIsDead(true);
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-		ZombieAnimInstance->PlayDeathMontage();
+		IsDead_NetMulticast();
 
-		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
-		if (IsValid(CauserCharacter)) {
-			AFPlayerState* CauserCharacterPlayerState = Cast<AFPlayerState>(CauserCharacter->GetPlayerState());
-			
-			if (IsValid(CauserCharacterPlayerState)) {
-				CauserCharacterPlayerState->SetCurrentEXP(CauserCharacterPlayerState->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
+		if (IsLocallyControlled()) {
+			APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
+			if (IsValid(CauserCharacter)) {
+				AFPlayerState* CauserCharacterPlayerState = Cast<AFPlayerState>(CauserCharacter->GetPlayerState());
+
+				if (IsValid(CauserCharacterPlayerState)) {
+					CauserCharacterPlayerState->SetCurrentEXP(CauserCharacterPlayerState->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
+				}
 			}
-		}
-
-		AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
-		if (IsValid(AIController)) {
-			AIController->EndAIController();
 		}
 	}
 
@@ -174,6 +171,18 @@ void AZombieCharacter::AttackMontageEnd()
 void AZombieCharacter::DestroyActor()
 {
 	Destroy();
+}
+
+void AZombieCharacter::IsDead_NetMulticast_Implementation()
+{
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+	ZombieAnimInstance->PlayDeathMontage();
+
+	AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
+	if (IsValid(AIController)) {
+		AIController->EndAIController();
+	}
 }
 
 	

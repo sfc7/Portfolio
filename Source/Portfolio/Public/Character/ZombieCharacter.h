@@ -28,6 +28,7 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	virtual void Tick(float DeltaTime) override;
+
 private:
 	UFUNCTION()
 		void MeshAssetLoad();
@@ -40,6 +41,10 @@ private:
 
 	void DestroyActor();
 
+	UFUNCTION(NetMulticast, Reliable)
+		void IsDead_NetMulticast();
+
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UMonsterComponent> MonsterComponent;

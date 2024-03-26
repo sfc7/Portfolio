@@ -2,10 +2,20 @@
 
 #include "Component/MonsterComponent.h"
 #include "Game/FGameInstance.h"
+#include "Net/UnrealNetwork.h"
 
 UMonsterComponent::UMonsterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UMonsterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, bIsDead);
+	DOREPLIFETIME(ThisClass, bIsAttacking);
+	DOREPLIFETIME(ThisClass, CurrentHp);
 }
 
 void UMonsterComponent::BeginPlay()
@@ -64,4 +74,5 @@ void UMonsterComponent::SetIsDead(uint8 _bIsDead)
 {
 	bIsDead = _bIsDead;
 }
+
 

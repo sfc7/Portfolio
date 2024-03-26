@@ -15,6 +15,8 @@ class PORTFOLIO_API UMonsterComponent : public UActorComponent
 public:	
 	UMonsterComponent();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	float GetCurrentHp() const { return CurrentHp; }
 
 	float GetMaxHp() const { return MaxHp; }
@@ -47,7 +49,7 @@ private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UFGameInstance> GameInstance;
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		float CurrentHp;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -59,9 +61,10 @@ private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		float MonsterExpValue;
 
-
+	UPROPERTY(Replicated, meta = (AllowPrivateAccess))
 	uint8 bIsAttacking;
 
+	UPROPERTY(Replicated, meta = (AllowPrivateAccess))
 	uint8 bIsDead;
 
 
