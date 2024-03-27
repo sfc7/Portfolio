@@ -99,7 +99,7 @@ void APlayerCharacter::BeginPlay()
 	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
 	//if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
 	//	WeaponMeshComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-	//}
+	//}	
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -151,8 +151,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 			UpdateInputValue_Server(ForwardInputValue, RightInputValue);
 		}
 	}
-
-	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

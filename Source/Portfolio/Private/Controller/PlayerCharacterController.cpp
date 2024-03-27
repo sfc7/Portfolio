@@ -9,6 +9,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/MainGameMode.h"
+#include "Game/FPlayerState.h"
 
 void APlayerCharacterController::BeginPlay()
 {
@@ -32,6 +33,11 @@ void APlayerCharacterController::BeginPlay()
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
 			if (IsValid(HUDWidget)) {
 				HUDWidget->AddToViewport();
+
+				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+				if (IsValid(FPlayerState)) {
+					HUDWidget->BindPlayerState(FPlayerState);
+				}
 
 				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
 				if (IsValid(PlayerCharacter)) {

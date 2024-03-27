@@ -19,9 +19,6 @@ public:
 	void InitalizeEXPBarWidget(class AFPlayerState* NewPlayerState);
 
 	UFUNCTION()
-		void OnMaxEXPChange(float NewMaxEXP);
-
-	UFUNCTION()
 		void OnCurrentEXPChange(float NewEXP);
 
 protected:

@@ -60,7 +60,7 @@ void AZombieCharacter::BeginPlay()
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
+	/*USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());*/
 
 	if (GetMonsterComponent()->GetIsDead())
 	{

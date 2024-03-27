@@ -31,7 +31,6 @@ void UMonsterComponent::BeginPlay()
 
 			float InstanceExpValue = GameInstance->GetMonsterTableRowFromName(MonsterName)->EXP;
 			SetMonsterExpValue(InstanceExpValue);
-			UE_LOG(LogTemp, Log, TEXT("component value : %f"), InstanceExpValue);
 ;		}
 	}
 }

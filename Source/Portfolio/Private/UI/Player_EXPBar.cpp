@@ -13,14 +13,7 @@ void UPlayer_EXPBar::SetMaxExp(float _MaxEXP)
 
 void UPlayer_EXPBar::InitalizeEXPBarWidget(AFPlayerState* NewPlayerState)
 {
-	OnCurrentEXPChange(NewPlayerState->GetMaxEXP());
-}
-
-void UPlayer_EXPBar::OnMaxEXPChange(float NewMaxEXP)
-{
-	SetMaxFigure(NewMaxEXP);
-
-	OnCurrentEXPChange(NewMaxEXP);
+	OnCurrentEXPChange(NewPlayerState->GetCurrentEXP());
 }
 
 void UPlayer_EXPBar::OnCurrentEXPChange(float NewEXP)
@@ -28,6 +21,9 @@ void UPlayer_EXPBar::OnCurrentEXPChange(float NewEXP)
 	if (IsValid(Bar)) {
 		if (MaxFigure > KINDA_SMALL_NUMBER) {
 			Bar->SetPercent(NewEXP / MaxFigure);
+			//UE_LOG(LogTemp, Log, TEXT("NewEXP : %f"), NewEXP);
+			//UE_LOG(LogTemp, Log, TEXT("percent : %f"), NewEXP / MaxFigure);
+			//UE_LOG(LogTemp, Log, TEXT("MaxFigure : %f"), MaxFigure);
 		}
 		else {
 			Bar->SetPercent(0.f);

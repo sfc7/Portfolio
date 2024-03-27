@@ -6,6 +6,8 @@
 #include "Portfolio/Portfolio.h"
 #include "Character/PlayerCharacter.h"
 #include "Controller/PlayerCharacterController.h"
+#include "WorldStatic/ZombieSpawnPoint.h"
+#include "Kismet/GameplayStatics.h"
 
 AMainGameMode::AMainGameMode()
 {
@@ -48,4 +50,14 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 	if (IsValid(PlayerState)) {
 		PlayerState->InitPlayerState();
 	}
+
+	TArray<AActor* > TempArray;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AZombieSpawnPoint::StaticClass(), TempArray);
+	for (AActor* TempActor : TempArray) {
+		if (AZombieSpawnPoint* SpawnPoint = Cast<AZombieSpawnPoint>(TempActor)) {
+			ZombieSpawnPointArray.Add(SpawnPoint);
+		}
+	}
+		
+	UE_LOG(LogTemp, Log, TEXT("count : %d"), ZombieSpawnPointArray.Num());
 }

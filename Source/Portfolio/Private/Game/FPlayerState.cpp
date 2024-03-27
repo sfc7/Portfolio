@@ -21,7 +21,6 @@ void AFPlayerState::InitPlayerState()
 			CurrentLevel = 1;
 			CurrentEXP = 0;
 			MaxEXP = FGameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
-			
 		}
 	}
 }
@@ -46,7 +45,7 @@ void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 	while (MaxEXP - KINDA_SMALL_NUMBER < CurrentEXP) {
 		CurrentEXP -= MaxEXP;
 		SetCurrentLevel(GetCurrentLevel() + 1);
-
+			
 		if (CurrentEXP < 0) {
 			CurrentEXP = 0.f;
 		}

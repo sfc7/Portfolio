@@ -13,15 +13,13 @@ UCLASS()
 class PORTFOLIO_API AFGameState : public AGameState
 {
 	GENERATED_BODY()
-//public:
-//	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
-//
-//	int32 GetPlayerCount() const { return PlayerCount; }
-//
-//	void PlayerCountIncrease() { PlayerCount++; }
-//private:
-//	UPROPERTY(Replicated)
-//		int32 PlayerCount = 0;
+public:
+	uint8 GetRoundNumber() const { return RoundNumber; }
+
+private:
+	uint8 RoundNumber;
+
+
 
 
 };

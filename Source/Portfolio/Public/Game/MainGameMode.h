@@ -25,4 +25,6 @@ protected:
 private:
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 
+	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;
+
 };
