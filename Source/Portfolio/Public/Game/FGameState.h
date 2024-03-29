@@ -14,6 +14,8 @@ class PORTFOLIO_API AFGameState : public AGameState
 {
 	GENERATED_BODY()
 public:
+	AFGameState();
+
 	uint8 GetRoundNumber() const { return RoundNumber; }
 
 private:

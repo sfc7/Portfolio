@@ -39,8 +39,9 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 	UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(GameInstance)) {
 		if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
-			float MaxExp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
-			Exp_Bar->SetMaxExp(MaxExp);
+			float TableMaxExp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
+			UE_LOG(LogTemp, Log, TEXT("TableMaxExp : %f"), TableMaxExp);
+			Exp_Bar->SetMaxExp(TableMaxExp);
 			Exp_Bar->InitalizeEXPBarWidget(PlayerState.Get());
 			LevelTextChange(PlayerState->GetCurrentLevel());
 		}

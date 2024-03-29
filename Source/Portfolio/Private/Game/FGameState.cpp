@@ -2,3 +2,8 @@
 
 
 #include "Game/FGameState.h"
+
+AFGameState::AFGameState()
+{
+	RoundNumber = 1;
+}

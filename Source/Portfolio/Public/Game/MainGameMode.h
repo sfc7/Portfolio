@@ -16,15 +16,35 @@ class PORTFOLIO_API AMainGameMode : public AFGameMode
 public:
 	AMainGameMode();
 
-	//virtual void SpawnPlayer(APlayerController* _PlayerController) override;
+	void SpawnZombie();	
 
+	//virtual void SpawnPlayer(APlayerController* _PlayerController) override;
 	
 protected:
+
+	virtual void BeginPlay() override;
+
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
-	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
+	void CountZombieRemaning();
 
+private:
+	TObjectPtr<class AFGameState> FGameState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
+		TSubclassOf<class AZombieCharacter> ZombieCharacterClass;
+
+	FTimerHandle ZombieSpawnHandle;
+		
 	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;
+
+	uint16 ZombieRemaning;
+
+
+
+
+
+	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 
 };

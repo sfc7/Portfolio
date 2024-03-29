@@ -54,6 +54,8 @@ void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 	OnCurrentEXPChangedDelegate.Broadcast(CurrentEXP);
 }
 
+
+
 void AFPlayerState::SetPlayerNumber(int32 _PlayerNumber)
 {
 	PlayerNumber = _PlayerNumber;

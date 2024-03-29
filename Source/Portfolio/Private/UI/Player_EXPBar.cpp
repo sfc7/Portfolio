@@ -21,12 +21,15 @@ void UPlayer_EXPBar::OnCurrentEXPChange(float NewEXP)
 	if (IsValid(Bar)) {
 		if (MaxFigure > KINDA_SMALL_NUMBER) {
 			Bar->SetPercent(NewEXP / MaxFigure);
-			//UE_LOG(LogTemp, Log, TEXT("NewEXP : %f"), NewEXP);
-			//UE_LOG(LogTemp, Log, TEXT("percent : %f"), NewEXP / MaxFigure);
-			//UE_LOG(LogTemp, Log, TEXT("MaxFigure : %f"), MaxFigure);
+			//UE_LOG(LogTemp, Log, TEXT("if NewEXP : %f"), NewEXP);
+			//UE_LOG(LogTemp, Log, TEXT("if percent : %f"), NewEXP / MaxFigure);
+			//UE_LOG(LogTemp, Log, TEXT("if MaxFigure : %f"), MaxFigure);
 		}
 		else {
 			Bar->SetPercent(0.f);
+			//UE_LOG(LogTemp, Log, TEXT("else NewEXP : %f"), NewEXP);
+			//UE_LOG(LogTemp, Log, TEXT("else percent : %f"), NewEXP / MaxFigure);
+			//UE_LOG(LogTemp, Log, TEXT("else MaxFigure : %f"), MaxFigure);
 		}
 	}
 }

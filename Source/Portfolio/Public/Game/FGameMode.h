@@ -24,11 +24,14 @@ public:
 	virtual void SpawnPlayer(APlayerController* _PlayerController);
 
 protected:
+
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 public:
 	TArray<TObjectPtr<class APlayerStart>> PlayerStartArray;
 
-	int32 PlayerMaxCount = 4;
-	int32 PlayerCount = 0;
+	uint8 PlayerMaxCount;
+	uint8 PlayerCount;
+
+
 };

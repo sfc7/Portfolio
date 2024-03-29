@@ -7,11 +7,20 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Portfolio/Portfolio.h"
-
+#include "Game/FGameState.h"
 
 AFGameMode::AFGameMode()
 {
+	PlayerMaxCount = 4;
+	PlayerCount = 0;
 	PlayerStartArray.SetNum(PlayerMaxCount);
+}
+
+void AFGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	PlayerStartFind();
 }
 
 void AFGameMode::PlayerStartFind()
@@ -24,7 +33,7 @@ void AFGameMode::PlayerStartFind()
 
 FTransform AFGameMode::GetPlayerStartTransform()
 {
-	int32 PlayerNumber = FMath::Clamp(PlayerCount, 0, PlayerMaxCount - 1);
+	uint8 PlayerNumber = FMath::Clamp(PlayerCount, 0, PlayerMaxCount - 1);
 	PlayerCount++;
 
 	return PlayerStartArray[PlayerNumber]->GetActorTransform();
@@ -34,9 +43,6 @@ void AFGameMode::SpawnPlayer(APlayerController* _PlayerController)
 {
 }
 
-void AFGameMode::PostLogin(APlayerController* NewPlayer)
-{
-	Super::PostLogin(NewPlayer);
 
-	PlayerStartFind();
-}
+
+
