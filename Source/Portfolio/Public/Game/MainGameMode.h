@@ -27,7 +27,7 @@ protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
-	void CountZombieRemaning();
+	void SetZombieRemaning();
 
 private:
 	TObjectPtr<class AFGameState> FGameState;

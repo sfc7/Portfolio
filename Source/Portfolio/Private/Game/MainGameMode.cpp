@@ -33,7 +33,7 @@ void AMainGameMode::BeginPlay()
 {
 	FGameState = GetGameState<AFGameState>();
 
-	CountZombieRemaning();
+	SetZombieRemaning();
 	GetWorld()->GetTimerManager().SetTimer(ZombieSpawnHandle, this, &ThisClass::SpawnZombie, 2.0f, true);
 }
 
@@ -67,6 +67,7 @@ void AMainGameMode::SpawnZombie()
 			FRotator Rot = SpawnPoint->GetActorRotation();
 
 			if (AZombieCharacter* Zombie = GetWorld()->SpawnActor<AZombieCharacter>(ZombieCharacterClass, Loc, Rot)) {
+				Zombie->SpawnDefaultController();
 				ZombieRemaning--;
 			}
 		}
@@ -92,7 +93,7 @@ void AMainGameMode::SpawnZombie()
 //	}
 //}
 
-void AMainGameMode::CountZombieRemaning()
+void AMainGameMode::SetZombieRemaning()
 {
 	if (FGameState) {
 		uint8 RoundNumber = FGameState->GetRoundNumber();

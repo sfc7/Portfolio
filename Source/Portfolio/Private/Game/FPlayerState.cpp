@@ -35,14 +35,15 @@ void AFPlayerState::SetCurrentLevel(int32 _CurrentLevel)
 		MaxEXP = RowData->MaxEXP;
 		CurrentLevel = ClampLevel;
 		OnCurrentLevelChangedDelegate.Broadcast(CurrentLevel);
+		OnMaxEXPChangedDelegate.Broadcast(MaxEXP);
 	}
 }
 
 void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 {
-	CurrentEXP = FMath::Clamp<float>(_CurrentEXP, 0.f, MaxEXP);
+	CurrentEXP = _CurrentEXP;
 
-	while (MaxEXP - KINDA_SMALL_NUMBER < CurrentEXP) {
+	while (MaxEXP - KINDA_SMALL_NUMBER < CurrentEXP) { 
 		CurrentEXP -= MaxEXP;
 		SetCurrentLevel(GetCurrentLevel() + 1);
 			

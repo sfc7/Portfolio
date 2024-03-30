@@ -44,6 +44,9 @@ private:
 	UFUNCTION(NetMulticast, Reliable)
 		void IsDead_NetMulticast();
 
+	UFUNCTION()
+		void OnHittedRagdollRestoreTimerElapsed();
+
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -64,4 +67,9 @@ private:
 	float AttackRadius = 50.f;
 	//
 
+	FTimerHandle HittedRagdollRestoreTimer;
+
+	FTimerDelegate HittedRagdollRestoreTimerDelegate;
+
+	float BlendWeight = 0.f;
 };

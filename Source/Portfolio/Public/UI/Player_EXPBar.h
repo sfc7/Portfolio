@@ -21,6 +21,9 @@ public:
 	UFUNCTION()
 		void OnCurrentEXPChange(float NewEXP);
 
+	UFUNCTION()
+		void OnMaxEXPChange(float NewMaxEXP);
+
 protected:
 	virtual void NativeConstruct() override;
 

@@ -18,7 +18,7 @@ public:
 
 	void EndAIController();
 protected:
-	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

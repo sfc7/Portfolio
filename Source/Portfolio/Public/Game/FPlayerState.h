@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int32, NewCurrentLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
 
 UCLASS()
 class PORTFOLIO_API AFPlayerState : public APlayerState
@@ -41,6 +42,8 @@ public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
 
     FOnCurrentEXPChangedDelegate OnCurrentEXPChangedDelegate;
+
+    FOnMaxEXPChangedDelegate OnMaxEXPChangedDelegate;
 
 
 private:

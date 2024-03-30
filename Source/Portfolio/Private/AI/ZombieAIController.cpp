@@ -41,9 +41,9 @@ AZombieAIController::AZombieAIController()
 	GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombieAIController::SetTargetKeybySightSense);
 }
 
-void AZombieAIController::BeginPlay()
+void AZombieAIController::OnPossess(APawn* InPawn)
 {
-	Super::BeginPlay();
+	Super::OnPossess(InPawn);
 
 	APawn* OwnerPawn = GetPawn();
 	if (IsValid(OwnerPawn)) {

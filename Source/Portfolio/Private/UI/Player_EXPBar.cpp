@@ -34,6 +34,11 @@ void UPlayer_EXPBar::OnCurrentEXPChange(float NewEXP)
 	}
 }
 
+void UPlayer_EXPBar::OnMaxEXPChange(float NewMaxEXP)
+{
+	MaxFigure = NewMaxEXP;
+}
+
 void UPlayer_EXPBar::NativeConstruct()
 {
 	Super::NativeConstruct();

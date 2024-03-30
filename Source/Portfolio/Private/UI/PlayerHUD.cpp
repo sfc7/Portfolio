@@ -33,6 +33,7 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 	if (IsValid(_PlayerState)) {
 		PlayerState = _PlayerState;
 		PlayerState->OnCurrentEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnCurrentEXPChange);
+		PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
 	}
 
@@ -40,7 +41,6 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 	if (IsValid(GameInstance)) {
 		if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
 			float TableMaxExp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
-			UE_LOG(LogTemp, Log, TEXT("TableMaxExp : %f"), TableMaxExp);
 			Exp_Bar->SetMaxExp(TableMaxExp);
 			Exp_Bar->InitalizeEXPBarWidget(PlayerState.Get());
 			LevelTextChange(PlayerState->GetCurrentLevel());
