@@ -71,5 +71,9 @@ private:
 
 	FTimerDelegate HittedRagdollRestoreTimerDelegate;
 
-	float BlendWeight = 0.f;
+	float TargetRagDollPercent = 0.f;
+
+	float CurrentRagDollPercent = 0.f;
+
+	uint8 bIsRagdoll = false;
 };

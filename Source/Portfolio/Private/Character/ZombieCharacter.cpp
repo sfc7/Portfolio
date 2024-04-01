@@ -57,6 +57,29 @@ void AZombieCharacter::BeginPlay()
 	//}
 }
 
+void AZombieCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsRagdoll) {
+		CurrentRagDollPercent = FMath::FInterpTo(CurrentRagDollPercent, TargetRagDollPercent, DeltaTime, 10.f);
+
+		FName PivotBoneName = FName(TEXT("spine1"));
+		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollPercent);
+
+		if (CurrentRagDollPercent - TargetRagDollPercent < KINDA_SMALL_NUMBER) {
+			GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
+			bIsRagdoll = false;
+		}
+
+		if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+			GetMesh()->SetSimulatePhysics(true);
+			GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
+			
+			bIsRagdoll = false;
+		}
+	}
+}
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -71,11 +94,9 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	
 	GetMonsterComponent()->SetCurrentHp(GetMonsterComponent()->GetCurrentHp() - ActualDamage);
 
-	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
-
-		GetMesh()->SetSimulatePhysics(true);
+	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {	
 		MonsterComponent->SetIsDead(true);
-
+		IsDead_NetMulticast();
 
 		if (IsLocallyControlled()) {
 			APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
@@ -91,11 +112,10 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	else {
 		FName PivotBoneName = FName(TEXT("spine1"));
 		GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
-		BlendWeight = 1.f;
-		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, BlendWeight);
+		TargetRagDollPercent = 1.f;
 
 		HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
-		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 0.5f, false);
+		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
 	}
 
 	return ActualDamage;
@@ -118,10 +138,7 @@ void AZombieCharacter::PostInitializeComponents()
 	}
 }
 
-void AZombieCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
+
 
 void AZombieCharacter::MeshAssetLoad()
 {
@@ -180,18 +197,15 @@ void AZombieCharacter::AttackMontageEnd()
 
 void AZombieCharacter::DestroyActor()
 {
-	//IsDead_NetMulticast();
-
 	Destroy();
 }
 
 void AZombieCharacter::OnHittedRagdollRestoreTimerElapsed()
 {
 	FName PivotBoneName = FName(TEXT("spine1"));
-	GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
-	BlendWeight = 0.f;
-	GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, BlendWeight);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TargetRagDollPercent = 0.f;
+	CurrentRagDollPercent = 1.f;
+	bIsRagdoll = true;
 
 }
 
@@ -205,6 +219,9 @@ void AZombieCharacter::IsDead_NetMulticast_Implementation()
 	if (IsValid(AIController)) {
 		AIController->EndAIController();
 	}
+
+	FTimerHandle DeathTimer;
+	GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &ThisClass::DestroyActor, 10.0f, false);
 }
 
 	
