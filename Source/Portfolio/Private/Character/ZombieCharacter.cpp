@@ -19,6 +19,7 @@
 AZombieCharacter::AZombieCharacter()
 {
 	MonsterComponent = CreateDefaultSubobject<UMonsterComponent>(TEXT("MonsterComponent"));
+	MonsterComponent->SetIsReplicated(true);
 
 	AIControllerClass = AZombieAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -68,6 +69,7 @@ void AZombieCharacter::Tick(float DeltaTime)
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollPercent);
 
 		if (CurrentRagDollPercent - TargetRagDollPercent < KINDA_SMALL_NUMBER) {
+			USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
 			GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
 			bIsRagdoll = false;
 		}
@@ -83,7 +85,7 @@ void AZombieCharacter::Tick(float DeltaTime)
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	/*USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());*/
+	USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
 
 	if (GetMonsterComponent()->GetIsDead())
 	{
@@ -94,8 +96,32 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	
 	GetMonsterComponent()->SetCurrentHp(GetMonsterComponent()->GetCurrentHp() - ActualDamage);
 
-	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {	
-		MonsterComponent->SetIsDead(true);
+	
+	//if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {	
+	//	MonsterComponent->SetIsDead(true);
+	//	IsDead_NetMulticast();
+
+	//	if (IsLocallyControlled()) {
+	//		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
+	//		if (IsValid(CauserCharacter)) {
+	//			AFPlayerState* CauserCharacterPlayerState = Cast<AFPlayerState>(CauserCharacter->GetPlayerState());
+
+	//			if (IsValid(CauserCharacterPlayerState)) {
+	//				CauserCharacterPlayerState->SetCurrentEXP(CauserCharacterPlayerState->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
+	//			}
+	//		}
+	//	}
+	//}
+	//else {
+	//	FName PivotBoneName = FName(TEXT("spine1"));
+	//	GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
+	//	TargetRagDollPercent = 1.f;
+
+	//	HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
+	//	GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
+	//}
+
+	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		IsDead_NetMulticast();
 
 		if (IsLocallyControlled()) {
@@ -109,14 +135,8 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 			}
 		}
 	}
-	else {
-		FName PivotBoneName = FName(TEXT("spine1"));
-		GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
-		TargetRagDollPercent = 1.f;
 
-		HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
-		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
-	}
+	PlayRagdoll_NetMulticast();
 
 	return ActualDamage;
 }
@@ -207,6 +227,25 @@ void AZombieCharacter::OnHittedRagdollRestoreTimerElapsed()
 	CurrentRagDollPercent = 1.f;
 	bIsRagdoll = true;
 
+}
+
+void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()
+{
+	if (!IsValid(GetMonsterComponent())) {
+		return;
+	}
+
+	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+		MonsterComponent->SetIsDead(true);
+	}
+	else {
+		FName PivotBoneName = FName(TEXT("spine1"));
+		GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
+		TargetRagDollPercent = 1.f;
+
+		HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
+		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
+	}
 }
 
 void AZombieCharacter::IsDead_NetMulticast_Implementation()

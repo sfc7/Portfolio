@@ -49,7 +49,7 @@ void UMonsterComponent::SetCurrentHp(float _CurrentHp)
 {
 	CurrentHp = FMath::Clamp(_CurrentHp, 0.f, MaxHp);
 
-	if (CurrentHp <= KINDA_SMALL_NUMBER) {
+	if (CurrentHp < KINDA_SMALL_NUMBER) {
 		CurrentHp = 0.f;
 	}
 }

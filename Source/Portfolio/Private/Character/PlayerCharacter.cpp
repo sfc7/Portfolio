@@ -315,35 +315,31 @@ void APlayerCharacter::Fire()
 	QueryParams.AddIgnoredComponent((const UPrimitiveComponent*)CameraComponent);
 	QueryParams.bTraceComplex = true;	
 
-	//FVector MuzzleLocation = WeaponMeshComponent->GetSocketLocation(FName("Weapon_Socket"));
 	bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_GameTraceChannel3, QueryParams);
 
 	if (bIsHit) {
 		DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);
 
-		//APlayerCharacter* HitCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
 		AZombieCharacter* HitCharacter = Cast<AZombieCharacter>(HitResult.GetActor());
 		
 		if (IsValid(HitCharacter)) {
 			FString BoneNameString = HitResult.BoneName.ToString();		
+			FDamageEvent DamageEvent;
+
 			UKismetSystemLibrary::PrintString(this, BoneNameString);
 			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
 
-			FDamageEvent DamageEvent;			
-
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
-				/*HitCharacter->TakeDamage(100.f, DamageEvent, GetController(), this);*/
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitCharacter, 100.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitCharacter, 50.f, DamageEvent, GetController(), this);
 			}
 			else {
-				/*HitCharacter->TakeDamage(10.f, DamageEvent, GetController(), this);*/
 				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitCharacter, 10.f, DamageEvent, GetController(), this);
 			}
 		}
 	}
 	else {
-		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
 		FDamageEvent DamageEvent;
+		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
 		ApplyDamageAndDrawLine_Server(CameraStartLocation, CameraEndLocation, nullptr, 100.f, DamageEvent, GetController(), this);
 	}
 

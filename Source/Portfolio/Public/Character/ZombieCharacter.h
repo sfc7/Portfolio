@@ -47,6 +47,9 @@ private:
 	UFUNCTION()
 		void OnHittedRagdollRestoreTimerElapsed();
 
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayRagdoll_NetMulticast();
+
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
