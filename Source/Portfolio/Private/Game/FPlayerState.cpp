@@ -51,7 +51,7 @@ void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 			CurrentEXP = 0.f;
 		}
 	}
-
+	
 	OnCurrentEXPChangedDelegate.Broadcast(CurrentEXP);
 }
 
@@ -60,4 +60,10 @@ void AFPlayerState::SetCurrentEXP(float _CurrentEXP)
 void AFPlayerState::SetPlayerNumber(int32 _PlayerNumber)
 {
 	PlayerNumber = _PlayerNumber;
+}
+
+void AFPlayerState::IncreaseMoney(int32 _Money)
+{
+	PlayerMoney += _Money;
+	UE_LOG(LogTemp, Log, TEXT("%d"), PlayerMoney);
 }

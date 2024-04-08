@@ -168,4 +168,4 @@ private:
 	//Death
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess))
 		uint8 bIsDead = 0;
-};
+};	

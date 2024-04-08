@@ -158,7 +158,18 @@ void AZombieCharacter::PostInitializeComponents()
 	}
 }
 
+void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitResult)
+{
+	if (IsValid(Player)) {
+		AFPlayerState* FPlayerState = Player->GetPlayerState<AFPlayerState>();
 
+		if (IsValid(FPlayerState)) {
+			FString BoneName = _HitResult.BoneName.ToString();
+			uint16 Money = GetMoneyFromHitPart(BoneName);
+			FPlayerState->IncreaseMoney(Money);
+		}
+	}
+}
 
 void AZombieCharacter::MeshAssetLoad()
 {
@@ -218,6 +229,15 @@ void AZombieCharacter::AttackMontageEnd()
 void AZombieCharacter::DestroyActor()
 {
 	Destroy();
+}
+
+uint16 AZombieCharacter::GetMoneyFromHitPart(FString BoneName)
+{
+	if (BoneName.Contains(FString("Spine"))) {
+		return 50;
+	}
+
+	return 0;
 }
 
 void AZombieCharacter::OnHittedRagdollRestoreTimerElapsed()

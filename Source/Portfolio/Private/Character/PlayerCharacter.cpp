@@ -320,9 +320,10 @@ void APlayerCharacter::Fire()
 	if (bIsHit) {
 		DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);
 
-		AZombieCharacter* HitCharacter = Cast<AZombieCharacter>(HitResult.GetActor());
+		AZombieCharacter* HitZombie = Cast<AZombieCharacter>(HitResult.GetActor());
 		
-		if (IsValid(HitCharacter)) {
+		if (IsValid(HitZombie)) {
+			HitZombie->ZombieHitted(this, HitResult);
 			FString BoneNameString = HitResult.BoneName.ToString();		
 			FDamageEvent DamageEvent;
 
@@ -330,10 +331,10 @@ void APlayerCharacter::Fire()
 			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitCharacter, 50.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 50.f, DamageEvent, GetController(), this);
 			}
 			else {
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitCharacter, 10.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 10.f, DamageEvent, GetController(), this);
 			}
 		}
 	}

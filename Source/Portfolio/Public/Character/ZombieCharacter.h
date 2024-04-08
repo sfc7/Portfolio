@@ -18,6 +18,8 @@ class PORTFOLIO_API AZombieCharacter : public AMonsterCharacter
 public:
 	AZombieCharacter();
 
+	void ZombieHitted(class APlayerCharacter* Player, FHitResult _HitResult);
+
 	class UMonsterComponent* GetMonsterComponent() { return MonsterComponent; }
 
 protected:
@@ -40,6 +42,8 @@ private:
 	void AttackMontageEnd();
 
 	void DestroyActor();
+
+	uint16 GetMoneyFromHitPart(FString BoneName);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void IsDead_NetMulticast();

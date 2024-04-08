@@ -31,12 +31,15 @@ public:
 
     float GetCurrentEXP() const { return CurrentEXP; }
 
+    int32 GetMoney() const { return PlayerMoney;  }
+
     void SetCurrentLevel(int32 _CurrentLevel);
 
     void SetCurrentEXP(float _CurrentEXP);
 
     void SetPlayerNumber(int32 _PlayerNumber);
 
+    void IncreaseMoney(int32 _Money);
     
 public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
@@ -64,5 +67,8 @@ private:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         float CurrentEXP;
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+        int32 PlayerMoney;
 
 };
