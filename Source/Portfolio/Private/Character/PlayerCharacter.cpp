@@ -83,9 +83,9 @@ void APlayerCharacter::BeginPlay()
 		if (IsValid(FPlayerState)) {
 		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
 
-		if (IsLocallyControlled()) {
-			SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
-		}
+		//if (IsLocallyControlled()) {
+		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
+		//}
 
 		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
 			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
