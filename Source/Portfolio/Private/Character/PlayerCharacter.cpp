@@ -269,6 +269,7 @@ void APlayerCharacter::Attack(const FInputActionValue& InValue)
 {
 	if (!bIsBurstTrigger) {
 		Fire();
+		GetCharacterComponent()->CurrentState = ECurrentState::Crouch;
 	}
 }
 
@@ -477,6 +478,16 @@ uint8 APlayerCharacter::IsAiming()
 uint8 APlayerCharacter::IsDead()
 {
 	return (GetCharacterComponent() && GetCharacterComponent()->bIsDead);
+}
+
+ECurrentState APlayerCharacter::IsCurrentState()
+{
+	if (IsValid(GetCharacterComponent())) {
+		return(GetCharacterComponent()->CurrentState);
+	}
+	else {
+		return ECurrentState::None;
+	}
 }
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값

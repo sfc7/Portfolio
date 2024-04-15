@@ -78,6 +78,28 @@ void UCharacterComponent::SetMaxHp(float _MaxHp)
 	MaxHp = _MaxHp;
 }
 
+void UCharacterComponent::SetIsInCombat(bool _bIsInCombat)
+{
+	bIsInCombat = _bIsInCombat;
+	SetIsInCombat_Server(_bIsInCombat);
+}
+
+void UCharacterComponent::SetIsInCombat_Server_Implementation(bool _bIsInCombat)
+{
+	bIsInCombat = _bIsInCombat;
+}
+
+void UCharacterComponent::SetCurrenState(ECurrentState _CurrentState)
+{
+	CurrentState = _CurrentState;
+	SetCurrenState_Server(_CurrentState);
+}
+
+void UCharacterComponent::SetCurrenState_Server_Implementation(ECurrentState _CurrentState)
+{
+	CurrentState = _CurrentState;
+}
+
 void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 {
 	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;

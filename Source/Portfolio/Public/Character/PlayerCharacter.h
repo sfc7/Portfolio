@@ -6,6 +6,7 @@
 #include "Character/FCharacter.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "Component/CharacterComponent.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -33,6 +34,8 @@ public:
 	uint8 IsAiming();
 
 	uint8 IsDead();
+
+	ECurrentState IsCurrentState();
 
 protected:
 	virtual void BeginPlay() override;

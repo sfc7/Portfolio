@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Component/CharacterComponent.h"
 #include "PlayerAnimInstance.generated.h"
 
 /**
@@ -51,6 +52,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = USTPSAnimInstance, meta = (AllowPrivateAccess = true))
 		uint8 bIsAiming : 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = USTPSAnimInstance, meta = (AllowPrivateAccess = true))
+		ECurrentState CurrentState;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UAnimMontage> RifleFireAnimMontage;

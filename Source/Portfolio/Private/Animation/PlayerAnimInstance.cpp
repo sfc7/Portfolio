@@ -47,6 +47,7 @@ void UPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		bIsFalling = MovementComponent->IsFalling();
 		bIsAiming = OwnerCharacter->IsAiming();
 		bIsDead = OwnerCharacter->IsDead();
+		CurrentState = OwnerCharacter->IsCurrentState();
 	}
 }
 void UPlayerAnimInstance::PlayRifleFireAnimMontage()

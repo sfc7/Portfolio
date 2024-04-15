@@ -11,6 +11,15 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, float, _CurrentHp, float, NewCurrentHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, float, _MaxHp, float, NewMaxHp);
 
+UENUM(BlueprintType)
+enum class ECurrentState : uint8
+{
+	None,
+	Stand,
+	Crouch,
+	End
+};
+
 UCLASS(ClassGroup = (Custom),  meta = (BlueprintSpawnableComponent))
 class PORTFOLIO_API UCharacterComponent : public UActorComponent
 {
@@ -43,6 +52,16 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 		void SetAiming_Server(bool _bIsAiming);
+
+	void SetIsInCombat(bool _bIsInCombat);
+
+	UFUNCTION(Server, Reliable)
+		void SetIsInCombat_Server(bool _bIsInCombat);
+
+	void SetCurrenState(ECurrentState _CurrentState);
+
+	UFUNCTION(Server, Reliable)
+		void SetCurrenState_Server(ECurrentState _CurrentState);
 
 private:
 	UFUNCTION(NetMulticast, Reliable)
@@ -79,10 +98,17 @@ private:
 		float MaxExp;
 
 	UPROPERTY(Replicated)
+		ECurrentState CurrentState = ECurrentState::Stand;
+
+	UPROPERTY(Replicated)
 		uint8 bIsAiming;
 
 	UPROPERTY(Replicated)
+		uint8 bIsInCombat;
+
+	UPROPERTY(Replicated)
 		uint8 bIsDead;
+
 
 		
 };
