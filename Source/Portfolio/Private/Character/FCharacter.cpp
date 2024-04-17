@@ -104,8 +104,8 @@ void AFCharacter::SetPlayerMesh_Multicast_Implementation(USkeletalMesh* _PlayerM
 
 void AFCharacter::SetPlayerMesh_Client_Implementation(USkeletalMesh* _PlayerMesh)
 {
-	GetMesh()->SetSkeletalMesh(_PlayerMesh);
-}
+		GetMesh()->SetSkeletalMesh(_PlayerMesh);
+	}
 
 void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

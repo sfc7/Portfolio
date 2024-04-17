@@ -82,5 +82,5 @@ private:
 
 	float CurrentRagDollPercent = 0.f;
 
-	uint8 bIsRagdoll = false;
+	bool bIsRagdoll = false;
 };

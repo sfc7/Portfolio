@@ -62,10 +62,10 @@ private:
 		float MonsterExpValue;
 
 	UPROPERTY(Replicated, meta = (AllowPrivateAccess))
-	uint8 bIsAttacking;
+		uint8 bIsAttacking : 1;
 
 	UPROPERTY(Replicated, meta = (AllowPrivateAccess))
-	uint8 bIsDead;
+		uint8 bIsDead : 1;
 
 
 		

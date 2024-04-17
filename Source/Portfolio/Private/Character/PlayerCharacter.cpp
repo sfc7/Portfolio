@@ -166,7 +166,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ZoomAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ZoomAction, ETriggerEvent::Completed, this, &ThisClass::EndAiming);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->BurstTriggerAction, ETriggerEvent::Started, this, &ThisClass::ToggleBurstTrigger);
-		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Started, this, &ThisClass::StartFire);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Started, this, &ThisClass::AttackOnBurstTrigger);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Completed, this, &ThisClass::StopFire);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
@@ -217,8 +217,14 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void APlayerCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
 	if (GetCharacterComponent()) {
 		GetCharacterComponent()->PlayerCharacter = this;
+	}
+
+	UPlayerAnimInstance* AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+	if (IsValid(AnimInstance)) {
+		AnimInstance->FireMontage.AddUObject(this, &ThisClass::Fire);
 	}
 }
 
@@ -268,7 +274,8 @@ void APlayerCharacter::Look(const FInputActionValue& InValue)
 void APlayerCharacter::Attack(const FInputActionValue& InValue)
 {
 	if (!bIsBurstTrigger) {
-		Fire();
+		FirePlay();
+		PlayAttackMontage_Server();
 		GetCharacterComponent()->CurrentState = ECurrentState::Crouch;
 	}
 }
@@ -345,9 +352,6 @@ void APlayerCharacter::Fire()
 		ApplyDamageAndDrawLine_Server(CameraStartLocation, CameraEndLocation, nullptr, 100.f, DamageEvent, GetController(), this);
 	}
 
-	FirePlay();
-	PlayAttackMontage_Server();
-
 	if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
 	{ 
 		PlayerController->ClientStartCameraShake(FireShake);
@@ -364,7 +368,7 @@ void APlayerCharacter::ToggleBurstTrigger(const FInputActionValue& InValue)
 	bIsBurstTrigger = !bIsBurstTrigger;
 }
 
-void APlayerCharacter::StartFire(const FInputActionValue& InValue)
+void APlayerCharacter::AttackOnBurstTrigger(const FInputActionValue& InValue)
 {
 	if (bIsBurstTrigger) {
 		GetWorldTimerManager().SetTimer(BetweenShotsTimer, this, &ThisClass::Fire, TimeBetWeenFire, true);
@@ -470,12 +474,12 @@ void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
 	}
 }
 
-uint8 APlayerCharacter::IsAiming()
+bool APlayerCharacter::IsAiming()
 {
 	return (GetCharacterComponent() && GetCharacterComponent()->bIsAiming);
 }
 
-uint8 APlayerCharacter::IsDead()
+bool APlayerCharacter::IsDead()
 {
 	return (GetCharacterComponent() && GetCharacterComponent()->bIsDead);
 }
@@ -499,8 +503,6 @@ void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapo
 		LastWeapon->ShowPickUpText(false);
 	}
 }
-
-
 
 void APlayerCharacter::FirePlay()
 {

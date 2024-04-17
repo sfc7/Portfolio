@@ -31,9 +31,9 @@ public:
 
 	void SetOverlapWeapon(class AWeapon* _Weapon);
 
-	uint8 IsAiming();
+	bool IsAiming();
 
-	uint8 IsDead();
+	bool IsDead();
 
 	ECurrentState IsCurrentState();
 
@@ -66,7 +66,7 @@ private:
 
 	void ToggleBurstTrigger(const FInputActionValue& InValue);
 
-	void StartFire(const FInputActionValue& InValue);
+	void AttackOnBurstTrigger(const FInputActionValue& InValue);
 
 	void StopFire(const FInputActionValue& InValue);
 
@@ -170,5 +170,6 @@ private:
 
 	//Death
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess))
-		uint8 bIsDead = 0;
+		uint8 bIsDead : 1;
+	//
 };	

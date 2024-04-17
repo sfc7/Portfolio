@@ -64,3 +64,13 @@ void UPlayerAnimInstance::PlayRifleIronSightFireAnimMontage()
 	}
 }
 
+void UPlayerAnimInstance::AnimNotify_FireMontage()
+{
+	FireMontage.Broadcast();	
+}
+
+void UPlayerAnimInstance::AnimNotify_FireMontageEnd()
+{
+	FireMontageEnd.Broadcast();
+}
+

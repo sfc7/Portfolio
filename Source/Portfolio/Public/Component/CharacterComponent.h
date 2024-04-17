@@ -53,11 +53,6 @@ protected:
 	UFUNCTION(Server, Reliable)
 		void SetAiming_Server(bool _bIsAiming);
 
-	void SetIsInCombat(bool _bIsInCombat);
-
-	UFUNCTION(Server, Reliable)
-		void SetIsInCombat_Server(bool _bIsInCombat);
-
 	void SetCurrenState(ECurrentState _CurrentState);
 
 	UFUNCTION(Server, Reliable)
@@ -101,13 +96,10 @@ private:
 		ECurrentState CurrentState = ECurrentState::Stand;
 
 	UPROPERTY(Replicated)
-		uint8 bIsAiming;
+		uint8 bIsAiming : 1;
 
 	UPROPERTY(Replicated)
-		uint8 bIsInCombat;
-
-	UPROPERTY(Replicated)
-		uint8 bIsDead;
+		uint8 bIsDead : 1; 
 
 
 		

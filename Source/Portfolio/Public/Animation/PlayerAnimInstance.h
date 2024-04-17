@@ -7,6 +7,8 @@
 #include "Component/CharacterComponent.h"
 #include "PlayerAnimInstance.generated.h"
 
+DECLARE_MULTICAST_DELEGATE(FFireMontage);
+DECLARE_MULTICAST_DELEGATE(FFireMontageEnd);
 /**
  * 
  */
@@ -24,6 +26,16 @@ public:
 	void PlayRifleFireAnimMontage();
 
 	void PlayRifleIronSightFireAnimMontage();
+
+	UFUNCTION()
+		void AnimNotify_FireMontage();
+
+	UFUNCTION()
+		void AnimNotify_FireMontageEnd();
+
+public:
+	FFireMontage FireMontage;
+	FFireMontageEnd FireMontageEnd;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
