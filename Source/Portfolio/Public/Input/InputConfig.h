@@ -32,5 +32,7 @@ public:
 		TObjectPtr<class UInputAction> MenuAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> Q_InteractionAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> CrouchAction;
 		
 };

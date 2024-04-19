@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+
+
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
@@ -28,11 +30,15 @@ public:
 
 	void ShowPickUpText(bool ShowFlag);
 
-	FORCEINLINE void SetWeaponState(EWeaponState _WeaponState) { WeaponState = _WeaponState; }
+	void SetWeaponState(EWeaponState _WeaponState);
+
+	class USphereComponent* GetSphereComponent() const { return SphereComponent; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -40,15 +46,18 @@ protected:
 	UFUNCTION()
 		void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 			int32 OtherBodyIndex);
+private:
+	UFUNCTION()
+		void OnRep_WeaponState();
 
 private:
 	UPROPERTY(EditAnywhere)
 		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditAnywhere)
-		class USphereComponent* SphereComponent;
+		USphereComponent* SphereComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere)
 		EWeaponState WeaponState;
 
 	UPROPERTY(VisibleAnywhere)

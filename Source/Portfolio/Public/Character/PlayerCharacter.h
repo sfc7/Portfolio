@@ -60,6 +60,8 @@ private:
 
 	void Attack(const FInputActionValue& InValue);
 
+	void Crouch(const FInputActionValue& InValue);
+
 	void StartAiming(const FInputActionValue& InValue);
 		 
 	void EndAiming(const FInputActionValue& InValue);

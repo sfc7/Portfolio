@@ -2,6 +2,7 @@
 
 
 #include "Component/CharacterComponent.h"
+#include "Components/SphereComponent.h"
 #include "Game/FGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -100,7 +101,6 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
 		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
 		EquippedWeapon->SetOwner(PlayerCharacter);
-		EquippedWeapon->ShowPickUpText(false);
 	}
 }
 
@@ -114,6 +114,7 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ThisClass, CurrentHp);
 	DOREPLIFETIME(ThisClass, bIsAiming);
 	DOREPLIFETIME(ThisClass, bIsDead);
+	DOREPLIFETIME(ThisClass, CurrentState);
 }
 
 void UCharacterComponent::SetAiming(bool _bIsAiming)

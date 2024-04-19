@@ -93,13 +93,7 @@ void APlayerCharacter::BeginPlay()
 	}
 	}), 0.2f, false);
 	
-	if (GetCharacterComponent() && HasAuthority()) {
-		GetCharacterComponent()->EquipWeapon(OverlapWeapon);
-	}
-	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
-	//if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
-	//	WeaponMeshComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-	//}	
+
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -162,6 +156,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->JumpAction, ETriggerEvent::Started, this, &ThisClass::Jump);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->CrouchAction, ETriggerEvent::Started, this, &ThisClass::Crouch);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Started, this, &ThisClass::Attack);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ZoomAction, ETriggerEvent::Started, this, &ThisClass::StartAiming);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ZoomAction, ETriggerEvent::Completed, this, &ThisClass::EndAiming);
@@ -170,6 +165,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Completed, this, &ThisClass::StopFire);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
+
 	}
 }
 
@@ -276,7 +272,18 @@ void APlayerCharacter::Attack(const FInputActionValue& InValue)
 	if (!bIsBurstTrigger) {
 		FirePlay();
 		PlayAttackMontage_Server();
-		GetCharacterComponent()->CurrentState = ECurrentState::Crouch;
+	}
+}
+
+void APlayerCharacter::Crouch(const FInputActionValue& InValue)
+{
+	if (GetCharacterComponent()) {
+		if (GetCharacterComponent()->CurrentState == ECurrentState::Stand) {
+			GetCharacterComponent()->CurrentState = ECurrentState::Crouch;
+		}
+		else {
+			GetCharacterComponent()->CurrentState = ECurrentState::Stand;
+		}
 	}
 }
 
@@ -496,6 +503,7 @@ ECurrentState APlayerCharacter::IsCurrentState()
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 {
+	UE_LOG(LogTemp, Log, TEXT("OnRep_OverlappingWeapon"));
 	if (OverlapWeapon) {
 		OverlapWeapon->ShowPickUpText(true); // 클라이언트 Owner에게
 	}

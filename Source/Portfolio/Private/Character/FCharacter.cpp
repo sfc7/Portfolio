@@ -13,6 +13,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "WorldStatic/Weapon.h"
+#include "Portfolio/Portfolio.h"
 
 // Sets default values
 AFCharacter::AFCharacter()
@@ -41,6 +42,7 @@ void AFCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	if (Rifle) {
+		USER_LOG(LogUser, Log, TEXT("rifle beginplay"));
 		Weapon = GetWorld()->SpawnActor<AWeapon>(Rifle);
 		if (IsValid(Weapon)) {
 			FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
@@ -48,6 +50,9 @@ void AFCharacter::BeginPlay()
 				Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 				Weapon->SetOwner(this);
 				Weapon->ShowPickUpText(false);
+				if (GetCharacterComponent()) {
+					GetCharacterComponent()->EquipWeapon(Weapon);
+				}
 			}
 		}
 	}

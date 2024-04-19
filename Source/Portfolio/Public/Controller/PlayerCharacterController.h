@@ -26,6 +26,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void OnPossess(APawn* aPawn) override;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> CrosshairUIClass;

@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Character/PlayerCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -13,12 +14,11 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
-
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
 
 	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
@@ -29,8 +29,9 @@ AWeapon::AWeapon()
 	PickUpText = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickUpText"));
 	PickUpText->SetupAttachment(RootComponent);
 
+	UE_LOG(LogTemp, Log, TEXT("weapon initialize"));
 }
-
+	
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -48,8 +49,16 @@ void AWeapon::BeginPlay()
 	}
 }
 
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, WeaponState);
+}
+
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Log, TEXT("OnSphereOverlap"));
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 	if (PlayerCharacter) {
 		PlayerCharacter->SetOverlapWeapon(this);
@@ -61,6 +70,26 @@ void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActo
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 	if (PlayerCharacter) {
 		PlayerCharacter->SetOverlapWeapon(nullptr);
+	}
+}
+
+void AWeapon::SetWeaponState(EWeaponState _WeaponState)
+{
+	WeaponState = _WeaponState;
+	switch (WeaponState) {
+	case EWeaponState::Equip:
+		ShowPickUpText(false);
+		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	}
+
+}
+void AWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState) {
+	case EWeaponState::Equip:
+		ShowPickUpText(false);
+		break;
 	}
 }
 
@@ -77,4 +106,6 @@ void AWeapon::ShowPickUpText(bool ShowFlag)
 		PickUpText->SetVisibility(ShowFlag);
 	}
 }
+
+
 

@@ -59,6 +59,11 @@ void APlayerCharacterController::BeginPlay()
 	}
 }
 
+void APlayerCharacterController::OnPossess(APawn* aPawn)
+{
+	Super::OnPossess(aPawn);
+}
+
 void APlayerCharacterController::ToggleMenu()
 {
 	if (IsValid(MenuUI)) {
