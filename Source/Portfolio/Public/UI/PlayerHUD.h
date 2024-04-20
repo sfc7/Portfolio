@@ -22,6 +22,9 @@ protected:
 	UFUNCTION()
 		virtual void LevelTextChange(int32 NewLevel);
 
+	UFUNCTION()
+		virtual void MoneyChange(int32 _Money);
+
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;
 
@@ -29,6 +32,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UTextBlock> LevelText;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+		TObjectPtr<class UTextBlock> Money;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UPlayer_HPBar> Hp_Bar;

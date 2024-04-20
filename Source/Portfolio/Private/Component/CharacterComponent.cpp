@@ -100,7 +100,6 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 	if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
 		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
 		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
-		EquippedWeapon->SetOwner(PlayerCharacter);
 	}
 }
 

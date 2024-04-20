@@ -166,7 +166,7 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 		if (IsValid(FPlayerState)) {
 			FString BoneName = _HitResult.BoneName.ToString();
 			uint16 Money = GetMoneyFromHitPart(BoneName);
-			FPlayerState->IncreaseMoney(Money);
+			FPlayerState->SetMoney(FPlayerState->GetMoney() + Money);
 		}
 	}
 }

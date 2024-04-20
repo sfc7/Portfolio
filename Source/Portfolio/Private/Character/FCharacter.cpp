@@ -41,21 +41,7 @@ void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Rifle) {
-		USER_LOG(LogUser, Log, TEXT("rifle beginplay"));
-		Weapon = GetWorld()->SpawnActor<AWeapon>(Rifle);
-		if (IsValid(Weapon)) {
-			FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
-			if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
-				Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-				Weapon->SetOwner(this);
-				Weapon->ShowPickUpText(false);
-				if (GetCharacterComponent()) {
-					GetCharacterComponent()->EquipWeapon(Weapon);
-				}
-			}
-		}
-	}
+	
 }
 
 void AFCharacter::Tick(float DeltaTime)
@@ -127,6 +113,32 @@ void AFCharacter::OnRep_Mesh()
 	}
 	else {
 		GetMesh()->SetSkeletalMesh(ReplicateMesh); // 서버의 캐릭터 setskeletalmsh
+	}
+}
+
+void AFCharacter::EquipWeapon()
+{
+	if (Rifle) {
+		Weapon = GetWorld()->SpawnActor<AWeapon>(Rifle);
+		if (IsValid(Weapon)) {
+			FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
+			if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
+				Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+				Weapon->SetOwner(this);
+				Weapon->ShowPickUpText(false);
+				if (GetCharacterComponent()) {
+					GetCharacterComponent()->EquipWeapon(Weapon);
+				}
+				if (GetPlayerState()) {
+					AFPlayerState* PlayerState = Cast<AFPlayerState>(GetPlayerState());
+					if (IsValid(PlayerState)) {
+						PlayerState->SetCurrentAmmo(Weapon->GetReloadMaxAmmo());
+						PlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
+						PlayerState->SetTotalAmmo(Weapon->GetTotalAmmo());
+					}
+				}
+			}
+		}
 	}
 }
 

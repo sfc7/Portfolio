@@ -42,6 +42,8 @@ protected:
 	UFUNCTION()
 	virtual	void OnRep_Mesh();
 
+	void EquipWeapon();
+
 public:	
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class AWeapon> Rifle;

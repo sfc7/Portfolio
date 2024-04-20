@@ -11,6 +11,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int32, NewCurrentLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyChangeDelegate, int32, NewMoney);
 
 UCLASS()
 class PORTFOLIO_API AFPlayerState : public APlayerState
@@ -31,7 +32,9 @@ public:
 
     float GetCurrentEXP() const { return CurrentEXP; }
 
-    int32 GetMoney() const { return PlayerMoney;  }
+    int32 GetMoney() const { return PlayerMoney; }
+
+    int32 GetCurrentAmmo() const { return CurrentAmmo; }
 
     void SetCurrentLevel(int32 _CurrentLevel);
 
@@ -39,7 +42,13 @@ public:
 
     void SetPlayerNumber(int32 _PlayerNumber);
 
-    void IncreaseMoney(int32 _Money);
+    void SetMoney(int32 _Money);
+
+    void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
+
+    void SetTotalAmmo(int32 _TotalAmmo);
+
+    void SetCurrentAmmo(int32 _CurrentAmmo);
     
 public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
@@ -48,7 +57,7 @@ public:
 
     FOnMaxEXPChangedDelegate OnMaxEXPChangedDelegate;
 
-
+    FOnMoneyChangeDelegate OnMoneyChangeDelegate;
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         TObjectPtr<class UFGameInstance> FGameInstance;
@@ -71,4 +80,12 @@ private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         int32 PlayerMoney;
 
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+        int32 ReloadMaxAmmo;
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+        int32 TotalAmmo;
+
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+        int32 CurrentAmmo;
 };

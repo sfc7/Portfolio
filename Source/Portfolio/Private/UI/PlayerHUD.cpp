@@ -35,6 +35,7 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 		PlayerState->OnCurrentEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnCurrentEXPChange);
 		PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
+		PlayerState->OnMoneyChangeDelegate.AddDynamic(this, &ThisClass::MoneyChange);
 	}
 
 	UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
@@ -46,8 +47,6 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 			LevelTextChange(PlayerState->GetCurrentLevel());
 		}
 	}
-
-
 }
 
 void UPlayerHUD::LevelTextChange(int32 NewLevel)
@@ -55,4 +54,11 @@ void UPlayerHUD::LevelTextChange(int32 NewLevel)
 	FString ConvertString = FString::Printf(TEXT("Lv. %d"), NewLevel);
 
 	LevelText->SetText(FText::FromString(ConvertString));
+}
+
+void UPlayerHUD::MoneyChange(int32 _Money)
+{
+	FString ConvertString = FString::Printf(TEXT("%d"), _Money);
+
+	Money->SetText(FText::FromString(ConvertString));
 }

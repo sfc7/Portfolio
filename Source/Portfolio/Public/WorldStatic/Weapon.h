@@ -33,6 +33,10 @@ public:
 	void SetWeaponState(EWeaponState _WeaponState);
 
 	class USphereComponent* GetSphereComponent() const { return SphereComponent; }
+
+	uint32 GetTotalAmmo() { return TotalAmmo; }
+
+	uint32 GetReloadMaxAmmo() { return ReloadMaxAmmo; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -46,11 +50,11 @@ protected:
 	UFUNCTION()
 		void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 			int32 OtherBodyIndex);
-private:
+
 	UFUNCTION()
 		void OnRep_WeaponState();
 
-private:
+protected:
 	UPROPERTY(EditAnywhere)
 		USkeletalMeshComponent* WeaponMesh;
 
@@ -62,6 +66,15 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 		class UWidgetComponent* PickUpText;
+
+	UPROPERTY(VisibleAnywhere)
+		uint32 TotalAmmo;
+
+	UPROPERTY(VisibleAnywhere)
+		uint32 ReloadMaxAmmo;
+
+
+
 
 
 

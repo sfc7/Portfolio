@@ -9,7 +9,6 @@
 
 AFPlayerState::AFPlayerState()
 {
-
 }
 
 void AFPlayerState::InitPlayerState()
@@ -62,8 +61,25 @@ void AFPlayerState::SetPlayerNumber(int32 _PlayerNumber)
 	PlayerNumber = _PlayerNumber;
 }
 
-void AFPlayerState::IncreaseMoney(int32 _Money)
+void AFPlayerState::SetMoney(int32 _Money)
 {
-	PlayerMoney += _Money;
+	PlayerMoney = _Money;
+	
+	OnMoneyChangeDelegate.Broadcast(_Money);
 	UE_LOG(LogTemp, Log, TEXT("%d"), PlayerMoney);
+}
+
+void AFPlayerState::SetReloadMaxAmmo(int32 _ReloadMaxAmmo)
+{
+	ReloadMaxAmmo = _ReloadMaxAmmo;
+}
+
+void AFPlayerState::SetTotalAmmo(int32 _TotalAmmo)
+{
+	TotalAmmo = _TotalAmmo;
+}
+
+void AFPlayerState::SetCurrentAmmo(int32 _CurrentAmmo)
+{
+	CurrentAmmo = _CurrentAmmo;
 }
