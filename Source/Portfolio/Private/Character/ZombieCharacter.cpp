@@ -69,7 +69,6 @@ void AZombieCharacter::Tick(float DeltaTime)
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollPercent);
 
 		if (CurrentRagDollPercent - TargetRagDollPercent < KINDA_SMALL_NUMBER) {
-			USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
 			GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
 			bIsRagdoll = false;
 		}

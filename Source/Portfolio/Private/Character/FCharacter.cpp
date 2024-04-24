@@ -31,7 +31,7 @@ AFCharacter::AFCharacter()
 	CharacterComponent = CreateDefaultSubobject<UCharacterComponent>(TEXT("CharacterComponent"));
 	CharacterComponent->SetIsReplicated(true);
 
-	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Weapon.BP_Weapon_C'"));
+	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Rifle.BP_Rifle_C'"));
 	if (RifleBP.Succeeded()) {
 		Rifle = RifleBP.Class;
 	}
@@ -40,8 +40,6 @@ AFCharacter::AFCharacter()
 void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
 void AFCharacter::Tick(float DeltaTime)
@@ -52,6 +50,39 @@ void AFCharacter::Tick(float DeltaTime)
 void AFCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
+
+		//if (IsLocallyControlled()) {
+		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
+		//}
+	}
+	else {
+		USER_LOG(LogUser, Log, TEXT("cant initialize"));
+	}
+
+	EquipWeapon();
+}
+
+void AFCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
+
+		//if (IsLocallyControlled()) {
+		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
+		//}
+	}
+	else {
+		USER_LOG(LogUser, Log, TEXT("cant initialize"));
+	}
+
+	EquipWeapon();
 }
 
 void AFCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,11 +161,11 @@ void AFCharacter::EquipWeapon()
 					GetCharacterComponent()->EquipWeapon(Weapon);
 				}
 				if (GetPlayerState()) {
-					AFPlayerState* PlayerState = Cast<AFPlayerState>(GetPlayerState());
-					if (IsValid(PlayerState)) {
-						PlayerState->SetCurrentAmmo(Weapon->GetReloadMaxAmmo());
-						PlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-						PlayerState->SetTotalAmmo(Weapon->GetTotalAmmo());
+					if (IsValid(FPlayerState)) {
+						USER_LOG(LogUser, Log, TEXT("Ammo : %d"), Weapon->GetReloadMaxAmmo());
+						FPlayerState->SetCurrentAmmo(Weapon->GetReloadMaxAmmo());
+						FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
+						FPlayerState->SetTotalAmmo(Weapon->GetTotalAmmo());
 					}
 				}
 			}

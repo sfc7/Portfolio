@@ -28,8 +28,6 @@ AWeapon::AWeapon()
 
 	PickUpText = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickUpText"));
 	PickUpText->SetupAttachment(RootComponent);
-
-	UE_LOG(LogTemp, Log, TEXT("weapon initialize"));
 }
 	
 // Called when the game starts or when spawned
@@ -58,7 +56,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("OnSphereOverlap"));
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
 	if (PlayerCharacter) {
 		PlayerCharacter->SetOverlapWeapon(this);

@@ -57,15 +57,22 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	//if (!IsLocallyControlled())
+	//{
+	//	return;
+	//}
+
+	if (IsValid(FPlayerState)) {
+		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
+			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
+		}
+	}
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	//if (!IsLocallyControlled())
-	//{
-	//	return;
-	//}
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
 	if (IsValid(PlayerController)) {
@@ -76,24 +83,6 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(PlayerCharacterInputMappingContext, 0);
 		}
 	}
-
-	FTimerHandle StateTimer;
-	GetWorld()->GetTimerManager().SetTimer(StateTimer, FTimerDelegate::CreateLambda([&] {
-		AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-		if (IsValid(FPlayerState)) {
-		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-
-		//if (IsLocallyControlled()) {
-		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
-		//}
-
-		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
-			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
-		}
-	}
-	}), 0.2f, false);
-	
-
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -218,9 +207,9 @@ void APlayerCharacter::PostInitializeComponents()
 		GetCharacterComponent()->PlayerCharacter = this;
 	}
 
-	UPlayerAnimInstance* AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+	AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 	if (IsValid(AnimInstance)) {
-		AnimInstance->FireMontage.AddUObject(this, &ThisClass::Fire);
+		AnimInstance->FireMontage.AddUObject(this, &ThisClass::FireBullet);
 	}
 }
 
@@ -269,9 +258,17 @@ void APlayerCharacter::Look(const FInputActionValue& InValue)
 
 void APlayerCharacter::Attack(const FInputActionValue& InValue)
 {
+	if (!IsValid(FPlayerState)) {
+
+		return;
+	}
+	if (!IsValid(GetPlayerState())) {
+		USER_LOG(LogUser, Log, TEXT("cant initialize attack1"));
+		
+		return;
+	}
 	if (!bIsBurstTrigger) {
-		FirePlay();
-		PlayAttackMontage_Server();
+		Fire();
 	}
 }
 
@@ -307,7 +304,7 @@ void APlayerCharacter::EndAiming(const FInputActionValue& InValue)
 	}
 }
 
-void APlayerCharacter::Fire()
+void APlayerCharacter::FireBullet()
 {
 	if (/*HasAuthority() ||*/ GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
 	{
@@ -396,6 +393,29 @@ void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
 	}
 }
 
+void APlayerCharacter::Fire()
+{
+	if (!IsValid(FPlayerState)) {
+		USER_LOG(LogUser, Log, TEXT("FPlayerState"));
+		return;
+	}
+
+	if (!IsValid(GetPlayerState())) {
+		USER_LOG(LogUser, Log, TEXT("GetPlayerState()"));
+		return;
+	}
+
+	if (!IsValid(FPlayerState) && FPlayerState->GetCurrentAmmo() == 0) {
+		return;
+	}
+
+	FPlayerState->SetCurrentAmmo(FPlayerState->GetCurrentAmmo() - 1);
+	USER_LOG(LogUser, Log, TEXT("%d"), FPlayerState->GetCurrentAmmo());
+
+	FireAnimationPlay();
+	PlayAttackMontage_Server();
+}
+
 void APlayerCharacter::SpawnLandMine(const FInputActionValue& InValue)
 {
 	SpawnLandMine_Server();
@@ -457,14 +477,14 @@ void APlayerCharacter::DrawLine_NetMulticast_Implementation(const FVector& DrawS
 
 void APlayerCharacter::PlayAttackMontage_Server_Implementation()
 {
-	FirePlay();
+	FireAnimationPlay();
 	PlayAttackMontage_NetMulticast();
 }
 
 void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
 {
 	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
-		FirePlay();
+		FireAnimationPlay();
 	}
 }
 
@@ -503,7 +523,6 @@ ECurrentState APlayerCharacter::IsCurrentState()
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 {
-	UE_LOG(LogTemp, Log, TEXT("OnRep_OverlappingWeapon"));
 	if (OverlapWeapon) {
 		OverlapWeapon->ShowPickUpText(true); // 클라이언트 Owner에게
 	}
@@ -512,9 +531,19 @@ void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapo
 	}
 }
 
-void APlayerCharacter::FirePlay()
+void APlayerCharacter::OnRep_PlayerState()
 {
-	UPlayerAnimInstance* AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
+	Super::OnRep_PlayerState();
+
+	if (IsValid(FPlayerState)) {
+		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
+			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
+		}
+	}
+}
+
+void APlayerCharacter::FireAnimationPlay()
+{
 	if (!IsValid(AnimInstance)) {
 		return;
 	}

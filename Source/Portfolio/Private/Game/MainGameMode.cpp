@@ -53,8 +53,6 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 			ZombieSpawnPointArray.Add(SpawnPoint);
 		}
 	}
-		
-	UE_LOG(LogTemp, Log, TEXT("count : %d"), ZombieSpawnPointArray.Num());
 }
 
 void AMainGameMode::SpawnZombie()

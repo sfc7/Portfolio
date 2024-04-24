@@ -36,6 +36,7 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 		PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
 		PlayerState->OnMoneyChangeDelegate.AddDynamic(this, &ThisClass::MoneyChange);
+		PlayerState->CurrentAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoChange);
 	}
 
 	UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
@@ -61,4 +62,11 @@ void UPlayerHUD::MoneyChange(int32 _Money)
 	FString ConvertString = FString::Printf(TEXT("%d"), _Money);
 
 	Money->SetText(FText::FromString(ConvertString));
+}
+
+void UPlayerHUD::CurrentAmmoChange(int32 _CurrentAmmo)
+{
+	FString ConvertString = FString::Printf(TEXT("%d"), _CurrentAmmo);
+
+	CurrentAmmo->SetText(FText::FromString(ConvertString));
 }

@@ -16,7 +16,7 @@ void APlayerCharacterController::BeginPlay()
 	Super::BeginPlay();
 
 	if(IsLocalPlayerController()) {
-		SpawnPlayerMove_Server();
+		
 
 		FInputModeGameOnly GameOnlyMode;
 		SetInputMode(GameOnlyMode);
@@ -56,6 +56,8 @@ void APlayerCharacterController::BeginPlay()
 				MenuUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
+	
+		SpawnPlayerMove_Server();
 	}
 }
 
@@ -90,7 +92,7 @@ void APlayerCharacterController::ToggleMenu()
 }
 
 void APlayerCharacterController::SpawnPlayerMove_Server_Implementation()
-{
+{		
 	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	if (IsValid(MainGameMode)) {
 		FTransform PlayerStartTransform = MainGameMode->GetPlayerStartTransform();

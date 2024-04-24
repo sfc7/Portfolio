@@ -25,6 +25,9 @@ protected:
 	UFUNCTION()
 		virtual void MoneyChange(int32 _Money);
 
+	UFUNCTION()
+		virtual void CurrentAmmoChange(int32 _CurrentAmmo);
+
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;
 
@@ -35,6 +38,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UTextBlock> Money;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+		TObjectPtr<class UTextBlock> CurrentAmmo;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UPlayer_HPBar> Hp_Bar;

@@ -13,6 +13,7 @@ AFPlayerState::AFPlayerState()
 
 void AFPlayerState::InitPlayerState()
 {
+	UE_LOG(LogTemp, Log, TEXT("InitPlayerState"));
 	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(FGameInstance)) {
 		if (nullptr != FGameInstance->GetCharacterTable() || nullptr != FGameInstance->GetCharacterTableRowFromLevel(1)) {
@@ -81,5 +82,9 @@ void AFPlayerState::SetTotalAmmo(int32 _TotalAmmo)
 
 void AFPlayerState::SetCurrentAmmo(int32 _CurrentAmmo)
 {
-	CurrentAmmo = _CurrentAmmo;
+	if (_CurrentAmmo >= 0) {
+		CurrentAmmo = _CurrentAmmo;
+	}
+
+	CurrentAmmoChangeDelegate.Broadcast(CurrentAmmo);
 }

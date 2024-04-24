@@ -5,5 +5,6 @@
 
 ARifle::ARifle()
 {
-	TotalAmmo = 30;
-}
+	TotalAmmo = 270;
+	ReloadMaxAmmo = 30;
+}	

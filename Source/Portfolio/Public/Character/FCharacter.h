@@ -13,8 +13,6 @@ class PORTFOLIO_API AFCharacter : public ACharacter
 public:
 	AFCharacter();
 
-	virtual void PossessedBy(AController* NewController) override;
-
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -35,12 +33,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void PossessedBy(AController* NewController) override;
+
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UFUNCTION()
 	virtual	void OnRep_Mesh();
+
+	virtual void OnRep_PlayerState() override;
 
 	void EquipWeapon();
 
@@ -52,7 +54,6 @@ public:
 		TObjectPtr<AWeapon> Weapon;
 
 protected:
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class USpringArmComponent> SpringArmComponent;
 
@@ -61,6 +62,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UCharacterComponent> CharacterComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+		TObjectPtr<class AFPlayerState> FPlayerState;
+
 
 	// Move
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

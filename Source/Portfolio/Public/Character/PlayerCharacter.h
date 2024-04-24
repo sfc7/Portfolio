@@ -27,8 +27,6 @@ public:
 
 	void SetWidget(class UPlayerWidget* _PlayerWidget) {}
 
-	virtual void PossessedBy(AController* NewController) override;
-
 	void SetOverlapWeapon(class AWeapon* _Weapon);
 
 	bool IsAiming();
@@ -39,6 +37,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void Tick(float DeltaTime) override;
 
@@ -52,6 +52,8 @@ protected:
 
 	UFUNCTION()
 		void OnRep_OverlappingWeapon(AWeapon* LastWeapon); // LastWeapon은 Replicate하기 전 OverlapWeapon 값
+
+	virtual void OnRep_PlayerState();
 
 private:
 	void Move(const FInputActionValue& InValue);
@@ -75,6 +77,10 @@ private:
 	void OnMenu(const FInputActionValue& InValue);
 
 	void Fire();
+
+	void LineTracingFromFire();
+
+	void FireBullet();
 
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
@@ -114,7 +120,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<class AActor> LandMineClass;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+		TObjectPtr<class UPlayerAnimInstance> AnimInstance;
 
 	// Attack
 	UFUNCTION(Server, Unreliable)
@@ -130,7 +137,7 @@ private:
 	UFUNCTION(NetMulticast, Reliable)
 		void DrawLine_NetMulticast(const FVector& DrawStart, const FVector& DrawEnd);
 
-	void FirePlay();
+	void FireAnimationPlay();
 	//
 
 	// Zoom 

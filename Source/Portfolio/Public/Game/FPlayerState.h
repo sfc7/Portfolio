@@ -12,6 +12,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int3
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyChangeDelegate, int32, NewMoney);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCurrentAmmoChangeDelegate, int32, CurrentAmmo);
 
 UCLASS()
 class PORTFOLIO_API AFPlayerState : public APlayerState
@@ -58,6 +59,8 @@ public:
     FOnMaxEXPChangedDelegate OnMaxEXPChangedDelegate;
 
     FOnMoneyChangeDelegate OnMoneyChangeDelegate;
+
+    FCurrentAmmoChangeDelegate CurrentAmmoChangeDelegate;
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         TObjectPtr<class UFGameInstance> FGameInstance;
