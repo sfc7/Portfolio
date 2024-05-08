@@ -64,6 +64,20 @@ void UPlayerAnimInstance::PlayRifleIronSightFireAnimMontage()
 	}
 }
 
+void UPlayerAnimInstance::PlayRifleReloadAnimMontage()
+{
+	if (!Montage_IsPlaying(RifleReloadAnimMontage)) {
+		Montage_Play(RifleReloadAnimMontage);
+	}
+}
+
+void UPlayerAnimInstance::PlayRifleIronSightReloadAnimMontage()
+{
+	if (!Montage_IsPlaying(RifleIronReloadAnimMontage)) {
+		Montage_Play(RifleIronReloadAnimMontage);
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_FireMontage()
 {
 	FireMontage.Broadcast();	
@@ -72,5 +86,15 @@ void UPlayerAnimInstance::AnimNotify_FireMontage()
 void UPlayerAnimInstance::AnimNotify_FireMontageEnd()
 {
 	FireMontageEnd.Broadcast();
+}
+
+void UPlayerAnimInstance::AnimNotify_ReloadMontage()
+{
+	ReloadMontage.Broadcast();
+}
+
+void UPlayerAnimInstance::AnimNotify_ReloadMontageEnd()
+{
+	ReloadMontageEnd.Broadcast();
 }
 

@@ -9,14 +9,24 @@
 #include "Blueprint/UserWidget.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/MainGameMode.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
 #include "Game/FPlayerState.h"
+
+void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, UserNotificationText);
+}
 
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	if(IsLocalPlayerController()) {
-		
+		SpawnPlayerMove_Server();
 
 		FInputModeGameOnly GameOnlyMode;
 		SetInputMode(GameOnlyMode);
@@ -33,11 +43,7 @@ void APlayerCharacterController::BeginPlay()
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
 			if (IsValid(HUDWidget)) {
 				HUDWidget->AddToViewport();
-
-				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-				if (IsValid(FPlayerState)) {
-					HUDWidget->BindPlayerState(FPlayerState);
-				}
+				BindPlayerState();
 
 				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
 				if (IsValid(PlayerCharacter)) {
@@ -56,14 +62,56 @@ void APlayerCharacterController::BeginPlay()
 				MenuUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
-	
-		SpawnPlayerMove_Server();
+
+		if (IsValid(UserNotificationTextUIClass)) {
+			UE_LOG(LogTemp, Log, TEXT("UserNotificationTextUIClass1"));
+			UUserWidget* UserNotificationTextUI = CreateWidget<UUserWidget>(this, UserNotificationTextUIClass);
+			if (IsValid(UserNotificationTextUI)) {
+				UE_LOG(LogTemp, Log, TEXT("UserNotificationTextUIClass"));
+				UserNotificationTextUI->AddToViewport(1);
+				UserNotificationTextUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
 	}
 }
 
 void APlayerCharacterController::OnPossess(APawn* aPawn)
 {
 	Super::OnPossess(aPawn);
+}
+
+void APlayerCharacterController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+
+	APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
+	if (IsValid(PlayerCharacter)) {
+		AFPlayerState* FPlayerState = PlayerCharacter->GetFPlayerState();
+		if (IsValid(FPlayerState)) {
+				BindPlayerState();
+		}
+		else {
+			PlayerCharacter->OnFPlayerStateBindDelegate.AddDynamic(this, &ThisClass::BindPlayerState);
+		}
+	}
+}	
+
+void APlayerCharacterController::BindPlayerState()
+{
+	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		HUDWidget->BindPlayerState(FPlayerState);
+	}
+}
+
+void APlayerCharacterController::LevelTransition(const FString& _LevelPath)
+{
+	/*UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%sTransitionType=ServerTravel"), *_LevelPath));*/
+}
+
+void APlayerCharacterController::BindFirstWeaponAmmo()
+{
 }
 
 void APlayerCharacterController::ToggleMenu()
@@ -92,7 +140,7 @@ void APlayerCharacterController::ToggleMenu()
 }
 
 void APlayerCharacterController::SpawnPlayerMove_Server_Implementation()
-{		
+{
 	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	if (IsValid(MainGameMode)) {
 		FTransform PlayerStartTransform = MainGameMode->GetPlayerStartTransform();

@@ -3,10 +3,11 @@
 
 #include "Character/FCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Component/CharacterComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Portfolio/Portfolio.h"
-#include "Component/CharacterComponent.h"
+#include "Controller/PlayerCharacterController.h"
 #include "Game/PlayerStateSave.h"
 #include "Game/FPlayerState.h"
 #include "Kismet/GameplayStatics.h"
@@ -37,9 +38,17 @@ AFCharacter::AFCharacter()
 	}
 }
 
+void AFCharacter::SetbFPlayerStateBindFlag()
+{
+	bFPlayerStateBindFlag = true;
+	OnFPlayerStateBindDelegate.Broadcast();
+}
+
 void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+
 }
 
 void AFCharacter::Tick(float DeltaTime)
@@ -51,38 +60,25 @@ void AFCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	FPlayerState = GetPlayerState<AFPlayerState>();
-	if (IsValid(FPlayerState)) {
-		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-
-		//if (IsLocallyControlled()) {
-		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
-		//}
-	}
-	else {
-		USER_LOG(LogUser, Log, TEXT("cant initialize"));
+	if (HasAuthority()) {
+		SetFPlayerState();
+		FPlayerStateBindComplete();
+		FTimerHandle EquipTimer;
+		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
 	}
 
-	EquipWeapon();
 }
 
 void AFCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	FPlayerState = GetPlayerState<AFPlayerState>();
-	if (IsValid(FPlayerState)) {
-		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-
-		//if (IsLocallyControlled()) {
-		//	SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
-		//}
+	if (!HasAuthority()) {
+		SetFPlayerState();
+		FPlayerStateBindComplete();
+		FTimerHandle EquipTimer;
+		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
 	}
-	else {
-		USER_LOG(LogUser, Log, TEXT("cant initialize"));
-	}
-
-	EquipWeapon();
 }
 
 void AFCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -126,8 +122,8 @@ void AFCharacter::SetPlayerMesh_Multicast_Implementation(USkeletalMesh* _PlayerM
 
 void AFCharacter::SetPlayerMesh_Client_Implementation(USkeletalMesh* _PlayerMesh)
 {
-		GetMesh()->SetSkeletalMesh(_PlayerMesh);
-	}
+	GetMesh()->SetSkeletalMesh(_PlayerMesh);
+}
 
 void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -160,17 +156,28 @@ void AFCharacter::EquipWeapon()
 				if (GetCharacterComponent()) {
 					GetCharacterComponent()->EquipWeapon(Weapon);
 				}
-				if (GetPlayerState()) {
-					if (IsValid(FPlayerState)) {
-						USER_LOG(LogUser, Log, TEXT("Ammo : %d"), Weapon->GetReloadMaxAmmo());
-						FPlayerState->SetCurrentAmmo(Weapon->GetReloadMaxAmmo());
-						FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-						FPlayerState->SetTotalAmmo(Weapon->GetTotalAmmo());
-					}
+				if (GetPlayerState() && IsValid(FPlayerState)) {
+					FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
+					FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 				}
 			}
 		}
 	}
 }
+
+void AFCharacter::FPlayerStateBindComplete()
+{
+	SetbFPlayerStateBindFlag();
+}
+
+void AFCharacter::SetFPlayerState()
+{
+	FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
+	}
+}
+
+
 
 

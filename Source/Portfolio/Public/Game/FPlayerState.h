@@ -12,7 +12,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int3
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyChangeDelegate, int32, NewMoney);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCurrentAmmoChangeDelegate, int32, CurrentAmmo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentAmmoChangeDelegate, int32, CurrentAmmo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
+
 
 UCLASS()
 class PORTFOLIO_API AFPlayerState : public APlayerState
@@ -35,7 +37,11 @@ public:
 
     int32 GetMoney() const { return PlayerMoney; }
 
+    int32 GetReloadMaxAmmo() const { return ReloadMaxAmmo; }
+
     int32 GetCurrentAmmo() const { return CurrentAmmo; }
+
+    int32 GetTotalAmmo() const { return TotalAmmo; }
 
     void SetCurrentLevel(int32 _CurrentLevel);
 
@@ -50,6 +56,10 @@ public:
     void SetTotalAmmo(int32 _TotalAmmo);
 
     void SetCurrentAmmo(int32 _CurrentAmmo);
+
+    void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
+
+
     
 public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
@@ -58,9 +68,12 @@ public:
 
     FOnMaxEXPChangedDelegate OnMaxEXPChangedDelegate;
 
-    FOnMoneyChangeDelegate OnMoneyChangeDelegate;
+    FOnMoneyChangeDelegate OnMoneyChangeDelegate;   
 
-    FCurrentAmmoChangeDelegate CurrentAmmoChangeDelegate;
+    FOnCurrentAmmoChangeDelegate OnCurrentAmmoChangeDelegate;
+
+    FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
+
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         TObjectPtr<class UFGameInstance> FGameInstance;
@@ -91,4 +104,6 @@ private:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         int32 CurrentAmmo;
+
+
 };

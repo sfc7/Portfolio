@@ -53,7 +53,7 @@ protected:
 	UFUNCTION()
 		void OnRep_OverlappingWeapon(AWeapon* LastWeapon); // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 
-	virtual void OnRep_PlayerState();
+	virtual void OnRep_PlayerState() override;
 
 private:
 	void Move(const FInputActionValue& InValue);
@@ -81,6 +81,10 @@ private:
 	void LineTracingFromFire();
 
 	void FireBullet();
+
+	void Reload();
+
+	void ReloadAmmo();
 
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
@@ -181,4 +185,13 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess))
 		uint8 bIsDead : 1;
 	//
+
+	//Reload
+	UFUNCTION(Server, Unreliable)
+		void PlayReloadMontage_Server();
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayReloadMontage_NetMulticast();
+
+	void ReloadAnimationPlay();
 };	

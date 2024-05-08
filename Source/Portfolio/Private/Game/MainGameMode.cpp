@@ -25,21 +25,27 @@ AMainGameMode::AMainGameMode()
 	}	
 
 	PlayerStateClass = AFPlayerState::StaticClass();
-
-	ZombieRemaning = 0;
 }
 
 void AMainGameMode::BeginPlay()
 {
 	FGameState = GetGameState<AFGameState>();
 
+	SetLevelStateFromLevelName();
 	SetZombieRemaning();
+
+	GetWorld()->GetTimerManager().SetTimer(MainTimerHandle, this, &ThisClass::OnMainTimerElapsed, 1.0f, true);
 	GetWorld()->GetTimerManager().SetTimer(ZombieSpawnHandle, this, &ThisClass::SpawnZombie, 2.0f, true);
 }
 
 void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
+
+	APlayerCharacterController* PlayerCharacterController = Cast<APlayerCharacterController>(NewPlayer);
+	if (IsValid(PlayerCharacterController)) {
+		AlivePlayerCharacterControllers.Add(PlayerCharacterController);
+	}
 
 	AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
 	if (IsValid(PlayerState)) {
@@ -57,7 +63,7 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 
 void AMainGameMode::SpawnZombie()
 {
-	if (ZombieRemaning > 0) {
+	if (ZombieSpawnRemaning > 0) {
 		int RandomIndex = FMath::RandRange(0, ZombieSpawnPointArray.Num() - 1);
 
 		if (AZombieSpawnPoint* SpawnPoint = ZombieSpawnPointArray[RandomIndex]) {
@@ -66,12 +72,19 @@ void AMainGameMode::SpawnZombie()
 
 			if (AZombieCharacter* Zombie = GetWorld()->SpawnActor<AZombieCharacter>(ZombieCharacterClass, Loc, Rot)) {
 				Zombie->SpawnDefaultController();
-				ZombieRemaning--;
+				ZombieSpawnRemaning--;
 			}
 		}
 	}
 	else {
 		GetWorld()->GetTimerManager().PauseTimer(ZombieSpawnHandle);
+	}
+}
+
+void AMainGameMode::RemaningZombieDie()
+{
+	if (IsValid(FGameState)) {
+		FGameState->ZombieDie();
 	}
 }
 
@@ -93,8 +106,58 @@ void AMainGameMode::SpawnZombie()
 
 void AMainGameMode::SetZombieRemaning()
 {
-	if (FGameState) {
+	if (IsValid(FGameState)) {
 		uint8 RoundNumber = FGameState->GetRoundNumber();
-		ZombieRemaning = 6;
+		ZombieSpawnRemaning = RoundNumber * 3;
 	}
 }
+
+void AMainGameMode::OnMainTimerElapsed()
+{
+	switch (LevelState) {
+		case ELevelState::None:
+			break;
+		case ELevelState::WaitingRoom:
+			if (RemaningWaitTime <= 0) {
+				RemaningWaitTime = WaitingRoomTime;
+				LevelState = ELevelState::Stage;
+				GetWorld()->ServerTravel("/Game/Safe_House/maps/Safe_House_2?listen?copy");
+			}	
+			else {
+				NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+				RemaningWaitTime--;
+			}
+
+			OnNotificationText(NotificationString);
+			break;
+		case ELevelState::Stage:
+			break;
+		case ELevelState::End:
+			break;
+		default:
+			break;
+	}
+}
+
+void AMainGameMode::OnNotificationText(const FString& _NotificationString)
+{
+	for (APlayerCharacterController* AlivePlayerCharacterController : AlivePlayerCharacterControllers) {
+		AlivePlayerCharacterController->UserNotificationText = FText::FromString(_NotificationString);
+	}
+}
+
+void AMainGameMode::SetLevelStateFromLevelName()
+{
+	FString LevelName = GetWorld()->GetMapName();
+	LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+
+	if (LevelName == "Stage") {
+		LevelState = ELevelState::Stage;
+	}
+	else if (LevelName == "WaitingRoom") {
+		LevelState = ELevelState::WaitingRoom;
+	}
+
+
+}
+

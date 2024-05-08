@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Animation/ZombieAnimInstance.h"
 #include "Game/FPlayerState.h"
+#include "Game/FGameState.h"
 #include "Portfolio/Portfolio.h"
 
 AZombieCharacter::AZombieCharacter()
@@ -23,6 +24,8 @@ AZombieCharacter::AZombieCharacter()
 
 	AIControllerClass = AZombieAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+
 
 	//const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
 	//if (0 < CDO->ZombieCharacterMeshPaths.Num())
@@ -37,6 +40,10 @@ AZombieCharacter::AZombieCharacter()
 void AZombieCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (AFGameState* FGameState = GetWorld()->GetGameState<AFGameState>()) {
+		FGameState->SpawnTotalZombiesInRound();
+	}
 
 	bUseControllerRotationYaw = false;
 
@@ -256,6 +263,7 @@ void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()
 
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		MonsterComponent->SetIsDead(true);
+
 	}
 	else {
 		FName PivotBoneName = FName(TEXT("spine1"));
@@ -282,4 +290,9 @@ void AZombieCharacter::IsDead_NetMulticast_Implementation()
 	GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &ThisClass::DestroyActor, 10.0f, false);
 }
 
-	
+//if (HasAuthority()) {
+//	if (AMainGameMode* MainGamemode = GetWorld()->GetAuthGameMode<AMainGameMode>())
+//	{
+//		MainGamemode->RemaningZombieDie();
+//	}
+//}

@@ -13,6 +13,8 @@ void ALoadingController::BeginPlay()
 	if (IsValid(GM)) {
 		FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel")));
 		UGameplayStatics::OpenLevel(GM, *NextLevel, false);
+
+		UE_LOG(LogTemp, Log, TEXT("load"));
 	}
  
 }

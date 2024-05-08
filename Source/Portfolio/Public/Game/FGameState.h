@@ -18,8 +18,20 @@ public:
 
 	uint8 GetRoundNumber() const { return RoundNumber; }
 
+	void SetTotalZombiesInRound (uint16 _TotalZombiesInRound);
+
+	uint16 GetTotalZombiesInRound() const { return TotalZombiesInRound; }
+
+	void IncrementRound() { ++RoundNumber; }
+
+	void SpawnTotalZombiesInRound() { ++TotalZombiesInRound; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound); }
+
+	void ZombieDie() { --TotalZombiesInRound; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound);  }
+
 private:
 	uint8 RoundNumber;
+	uint16 TotalZombiesInRound;
+	uint8 ZombiesOnMap;
 
 
 

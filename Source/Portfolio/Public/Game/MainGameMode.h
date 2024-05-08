@@ -6,6 +6,15 @@
 #include "Game/FGameMode.h"
 #include "MainGameMode.generated.h"
 
+UENUM(BlueprintType)
+enum class ELevelState : uint8
+{
+	None,
+	WaitingRoom,
+	Stage,
+	End
+};
+
 /**
  * 
  */
@@ -18,16 +27,30 @@ public:
 
 	void SpawnZombie();	
 
+	void RemaningZombieDie();
+
 	//virtual void SpawnPlayer(APlayerController* _PlayerController) override;
 	
 protected:
-
 	virtual void BeginPlay() override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
 	void SetZombieRemaning();
+
+	UFUNCTION()
+	void OnMainTimerElapsed();
+
+	void OnNotificationText(const FString& NotificationString);
+
+	void SetLevelStateFromLevelName();
+
+public:
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		TArray<TObjectPtr<class APlayerCharacterController>> AlivePlayerCharacterControllers;
 
 private:
 	TObjectPtr<class AFGameState> FGameState;
@@ -39,12 +62,21 @@ private:
 		
 	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;
 
-	uint16 ZombieRemaning;
+	uint16 ZombieSpawnRemaning = 0 ;
 
+	FTimerHandle MainTimerHandle;
 
+	ELevelState LevelState = ELevelState::WaitingRoom;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 WaitingRoomTime = 10;
 
+	int32 RemaningWaitTime = 10;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
+
+	FString NotificationString;
+
+	FString CurrentLevelName;
 
 };

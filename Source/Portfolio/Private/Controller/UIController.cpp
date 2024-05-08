@@ -36,6 +36,7 @@ void AUIController::JoinServer(const FString& IPAddress)
 {
 	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%s"), *IPAddress));
 }
+
 void AUIController::SpawnPlayerMove_Server_Implementation()
 {
 	ALobbyGameMode* LobbyGameMode = Cast<ALobbyGameMode>(GetWorld()->GetAuthGameMode());

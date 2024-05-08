@@ -4,6 +4,8 @@
 #include "GameFramework/Character.h"
 #include "FCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFPlayerStateBindDelegate);
+
 
 UCLASS()
 class PORTFOLIO_API AFCharacter : public ACharacter
@@ -30,9 +32,14 @@ public:
 
 	class UCharacterComponent* GetCharacterComponent() { return CharacterComponent; }
 
+	TObjectPtr<class AFPlayerState> GetFPlayerState() const { return FPlayerState.Get(); }
+
+	int32 GetbFPlayerStateBindFlag() const { return bFPlayerStateBindFlag; }
+
+	void SetbFPlayerStateBindFlag();
 protected:
 	virtual void BeginPlay() override;
-
+		
 	virtual void PossessedBy(AController* NewController) override;
 
 	virtual float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
@@ -44,7 +51,13 @@ protected:
 
 	virtual void OnRep_PlayerState() override;
 
+	void SetFPlayerState();
+
 	void EquipWeapon();
+
+	void FPlayerStateBindComplete();
+
+
 
 public:	
 	UPROPERTY(EditAnywhere)
@@ -52,6 +65,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		TObjectPtr<AWeapon> Weapon;
+
+	FOnFPlayerStateBindDelegate OnFPlayerStateBindDelegate;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -92,4 +107,8 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Mesh)
 		USkeletalMesh* ReplicateMesh;
+
+
+	bool bFPlayerStateBindFlag;
+
 };

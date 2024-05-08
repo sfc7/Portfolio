@@ -19,6 +19,7 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/FPlayerState.h"
+#include "Game/MainGameMode.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/PlayerStateSave.h"
 #include "WorldStatic/Weapon.h"
@@ -81,6 +82,17 @@ void APlayerCharacter::BeginPlay()
 		Subsystem->ClearAllMappings();
 		if (IsValid(Subsystem)) {
 			Subsystem->AddMappingContext(PlayerCharacterInputMappingContext, 0);
+		}
+	}
+}
+
+void APlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (IsValid(FPlayerState)) {
+		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
+			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
 		}
 	}
 }
@@ -154,7 +166,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Completed, this, &ThisClass::StopFire);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
-
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ReloadAction, ETriggerEvent::Started, this, &ThisClass::Reload);
 	}
 }
 
@@ -210,6 +222,7 @@ void APlayerCharacter::PostInitializeComponents()
 	AnimInstance = Cast<UPlayerAnimInstance>(GetMesh()->GetAnimInstance());
 	if (IsValid(AnimInstance)) {
 		AnimInstance->FireMontage.AddUObject(this, &ThisClass::FireBullet);
+		AnimInstance->ReloadMontageEnd.AddUObject(this, &ThisClass::ReloadAmmo);
 	}
 }
 
@@ -259,12 +272,9 @@ void APlayerCharacter::Look(const FInputActionValue& InValue)
 void APlayerCharacter::Attack(const FInputActionValue& InValue)
 {
 	if (!IsValid(FPlayerState)) {
-
 		return;
 	}
 	if (!IsValid(GetPlayerState())) {
-		USER_LOG(LogUser, Log, TEXT("cant initialize attack1"));
-		
 		return;
 	}
 	if (!bIsBurstTrigger) {
@@ -362,6 +372,37 @@ void APlayerCharacter::FireBullet()
 	}
 }
 
+void APlayerCharacter::Reload()
+{
+	if (FPlayerState->GetTotalAmmo() > 0 && FPlayerState->GetReloadMaxAmmo() != FPlayerState->GetCurrentAmmo()) {
+		ReloadAnimationPlay();
+		PlayReloadMontage_Server();
+	}
+	else {
+		return;
+	}
+}
+
+void APlayerCharacter::ReloadAmmo()
+{
+	int32 AmmoDif = FPlayerState->GetReloadMaxAmmo() - FPlayerState->GetCurrentAmmo();
+	int32 CurrentAmmo;
+	int32 TotalAmmo;
+
+	if (FPlayerState->GetTotalAmmo() < AmmoDif) {
+		CurrentAmmo = AmmoDif;
+		TotalAmmo = 0;
+	}
+	else {
+		CurrentAmmo = FPlayerState->GetReloadMaxAmmo();
+		TotalAmmo = FPlayerState->GetTotalAmmo() - AmmoDif;
+	}
+
+	FPlayerState->SetCurrentAndTotalAmmo(CurrentAmmo, TotalAmmo);
+
+	return;
+}
+
 void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
 	/*ParticleSystemComponent->Activate(true);*/
@@ -395,22 +436,11 @@ void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
 
 void APlayerCharacter::Fire()
 {
-	if (!IsValid(FPlayerState)) {
-		USER_LOG(LogUser, Log, TEXT("FPlayerState"));
+	if (!IsValid(FPlayerState) || FPlayerState->GetCurrentAmmo() == 0) {
 		return;
 	}
 
-	if (!IsValid(GetPlayerState())) {
-		USER_LOG(LogUser, Log, TEXT("GetPlayerState()"));
-		return;
-	}
-
-	if (!IsValid(FPlayerState) && FPlayerState->GetCurrentAmmo() == 0) {
-		return;
-	}
-
-	FPlayerState->SetCurrentAmmo(FPlayerState->GetCurrentAmmo() - 1);
-	USER_LOG(LogUser, Log, TEXT("%d"), FPlayerState->GetCurrentAmmo());
+	FPlayerState->SetCurrentAndTotalAmmo(FPlayerState->GetCurrentAmmo() - 1,FPlayerState->GetTotalAmmo());
 
 	FireAnimationPlay();
 	PlayAttackMontage_Server();
@@ -531,17 +561,6 @@ void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapo
 	}
 }
 
-void APlayerCharacter::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	if (IsValid(FPlayerState)) {
-		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
-			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
-		}
-	}
-}
-
 void APlayerCharacter::FireAnimationPlay()
 {
 	if (!IsValid(AnimInstance)) {
@@ -553,5 +572,32 @@ void APlayerCharacter::FireAnimationPlay()
 	}
 	else {
 		AnimInstance->PlayRifleFireAnimMontage();
+	}
+}
+
+void APlayerCharacter::ReloadAnimationPlay()
+{
+	if (!IsValid(AnimInstance)) {
+		return;
+	}
+
+	if (IsAiming()) {
+		AnimInstance->PlayRifleIronSightReloadAnimMontage();
+	}
+	else {
+		AnimInstance->PlayRifleReloadAnimMontage();
+	}
+}
+
+void APlayerCharacter::PlayReloadMontage_Server_Implementation()
+{
+	ReloadAnimationPlay();
+	PlayReloadMontage_NetMulticast();
+}
+
+void APlayerCharacter::PlayReloadMontage_NetMulticast_Implementation()
+{
+	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
+		ReloadAnimationPlay();
 	}
 }

@@ -15,6 +15,7 @@ class PORTFOLIO_API APlayerCharacterController : public APlayerController
 	GENERATED_BODY()
 
 public:
+
 	class UPlayerHUD* GetHUDWidget() const { return HUDWidget; }
 
 	void ToggleMenu();
@@ -23,16 +24,32 @@ public:
 		void SpawnPlayerMove_Server();
 
 	void PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMesh);
+
+	UFUNCTION()
+		virtual void BindPlayerState();
+
+	void LevelTransition(const FString& _LevelPath);
+
 protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void BeginPlay() override;
 
 	virtual void OnPossess(APawn* aPawn) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	virtual void BindFirstWeaponAmmo();
+
+public:
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
+		FText UserNotificationText;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> CrosshairUIClass;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UPlayerHUD> HUDWidgetClass;
 
 	UPROPERTY()
@@ -45,6 +62,11 @@ protected:
 		TObjectPtr<class UUserWidget> MenuUI;
 
 	bool FlagMenu = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		TSubclassOf<class UUserWidget> UserNotificationTextUIClass;
+
+
 
 
 

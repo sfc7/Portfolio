@@ -22,6 +22,7 @@ protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
 private:
-	TSubclassOf<ALobbyCharacter> LobbyCharacterClass;
+	TSubclassOf<class ALobbyCharacter> LobbyCharacterClass;
+
 };
 													

@@ -83,5 +83,5 @@ void ULobby_UI::OnTestButtonClicked()
 void ULobby_UI::SaveInitializedSaveData()
 {
     /* FText ServerIP = EditServerIP->GetText();*/
-    /*PlayerUIController->JoinServer(ServerIP.ToString());*/
+    /* PlayerUIController->JoinServer(ServerIP.ToString());*/
 }

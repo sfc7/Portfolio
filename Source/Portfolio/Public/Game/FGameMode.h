@@ -27,6 +27,9 @@ protected:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+private:
+
+
 public:
 	TArray<TObjectPtr<class APlayerStart>> PlayerStartArray;
 
