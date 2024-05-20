@@ -68,9 +68,6 @@ public:
 	FOnCurrnetHpChangeDelegate OnCurrnetHpChangeDelegate;
 
 	FOnMaxHpChangeDelegate OnMaxHpChangeDelegate;
-
-	 
-	static FString SaveSlotName;
 		
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))

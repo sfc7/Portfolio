@@ -54,9 +54,11 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 
 	TArray<AActor* > TempArray;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AZombieSpawnPoint::StaticClass(), TempArray);
-	for (AActor* TempActor : TempArray) {
-		if (AZombieSpawnPoint* SpawnPoint = Cast<AZombieSpawnPoint>(TempActor)) {
-			ZombieSpawnPointArray.Add(SpawnPoint);
+	if (TempArray.Num() > 0) {
+		for (AActor* TempActor : TempArray) {
+			if (AZombieSpawnPoint* SpawnPoint = Cast<AZombieSpawnPoint>(TempActor)) {
+				ZombieSpawnPointArray.Add(SpawnPoint);
+			}
 		}
 	}
 }
@@ -121,13 +123,12 @@ void AMainGameMode::OnMainTimerElapsed()
 			if (RemaningWaitTime <= 0) {
 				RemaningWaitTime = WaitingRoomTime;
 				LevelState = ELevelState::Stage;
-				GetWorld()->ServerTravel("/Game/Safe_House/maps/Safe_House_2?listen?copy");
+				GetWorld()->ServerTravel("/Game/Level/Stage?listen");
 			}	
 			else {
 				NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
 				RemaningWaitTime--;
 			}
-
 			OnNotificationText(NotificationString);
 			break;
 		case ELevelState::Stage:
@@ -157,7 +158,5 @@ void AMainGameMode::SetLevelStateFromLevelName()
 	else if (LevelName == "WaitingRoom") {
 		LevelState = ELevelState::WaitingRoom;
 	}
-
-
 }
 

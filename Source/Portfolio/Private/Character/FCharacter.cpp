@@ -38,22 +38,23 @@ AFCharacter::AFCharacter()
 	}
 }
 
-void AFCharacter::SetbFPlayerStateBindFlag()
-{
-	bFPlayerStateBindFlag = true;
-	OnFPlayerStateBindDelegate.Broadcast();
-}
-
 void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-
 }
 
 void AFCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//if (IsValid(FPlayerState)) {
+	//	if (!HasAuthority()) {
+	//		UE_LOG(LogTemp, Log, TEXT("Client PlayerState CurrentAmmo : %d"), FPlayerState->GetCurrentAmmo());
+	//	}
+	//	if (HasAuthority()) {
+	//		UE_LOG(LogTemp, Log, TEXT("Server PlayerState CurrentAmmo : %d"), FPlayerState->GetCurrentAmmo());
+	//	}
+	//}
 }
 
 void AFCharacter::PossessedBy(AController* NewController)
@@ -61,8 +62,7 @@ void AFCharacter::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 
 	if (HasAuthority()) {
-		SetFPlayerState();
-		FPlayerStateBindComplete();
+		FPlayerState = GetPlayerState<AFPlayerState>();
 		FTimerHandle EquipTimer;
 		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
 	}
@@ -74,8 +74,7 @@ void AFCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	if (!HasAuthority()) {
-		SetFPlayerState();
-		FPlayerStateBindComplete();
+		FPlayerState = GetPlayerState<AFPlayerState>();
 		FTimerHandle EquipTimer;
 		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
 	}
@@ -156,28 +155,14 @@ void AFCharacter::EquipWeapon()
 				if (GetCharacterComponent()) {
 					GetCharacterComponent()->EquipWeapon(Weapon);
 				}
-				if (GetPlayerState() && IsValid(FPlayerState)) {
+				if (GetPlayerState() && IsValid(FPlayerState) && !FPlayerState->GetWeaponEquipFlag()) {
 					FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
 					FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
+					FPlayerState->SetWeaponEquipFlagOn();
+					UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EquipWeapon")), true, true, FLinearColor::Blue, 10.0f);
 				}
 			}
 		}
 	}
 }
-
-void AFCharacter::FPlayerStateBindComplete()
-{
-	SetbFPlayerStateBindFlag();
-}
-
-void AFCharacter::SetFPlayerState()
-{
-	FPlayerState = GetPlayerState<AFPlayerState>();
-	if (IsValid(FPlayerState)) {
-		UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-	}
-}
-
-
-
 

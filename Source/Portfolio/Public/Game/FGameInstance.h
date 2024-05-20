@@ -57,6 +57,11 @@ public:
 
 public:
 	FStreamableManager StreamableManager = FStreamableManager();
+
+	uint32 CurrentAmmo = 0;
+	uint32 TotalAmmo = 0;
+	bool WeaponEquipFlag = false;
+
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
 		class UDataTable* CharacterTable;

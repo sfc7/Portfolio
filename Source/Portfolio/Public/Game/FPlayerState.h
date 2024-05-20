@@ -12,7 +12,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int3
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyChangeDelegate, int32, NewMoney);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentAmmoChangeDelegate, int32, CurrentAmmo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
 
 
@@ -24,6 +23,10 @@ public:
     AFPlayerState();
 
     void InitPlayerState();
+
+    void SaveFGameInstance(); 
+
+    void SaveInitValueFromPlayerStateSave();
 
     int32 GetPlayerNumber() const { return PlayerNumber; }
 
@@ -43,6 +46,8 @@ public:
 
     int32 GetTotalAmmo() const { return TotalAmmo; }
 
+    bool GetWeaponEquipFlag();
+
     void SetCurrentLevel(int32 _CurrentLevel);
 
     void SetCurrentEXP(float _CurrentEXP);
@@ -59,8 +64,11 @@ public:
 
     void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
 
+    void SetWeaponEquipFlagOn();
 
-    
+    virtual void OnDeactivated() override;
+
+
 public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
 
@@ -70,9 +78,9 @@ public:
 
     FOnMoneyChangeDelegate OnMoneyChangeDelegate;   
 
-    FOnCurrentAmmoChangeDelegate OnCurrentAmmoChangeDelegate;
-
     FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
+
+    bool PlayerStateSaveFlag = false;
 
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -104,6 +112,7 @@ private:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         int32 CurrentAmmo;
+
 
 
 };

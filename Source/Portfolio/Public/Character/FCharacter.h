@@ -34,9 +34,6 @@ public:
 
 	TObjectPtr<class AFPlayerState> GetFPlayerState() const { return FPlayerState.Get(); }
 
-	int32 GetbFPlayerStateBindFlag() const { return bFPlayerStateBindFlag; }
-
-	void SetbFPlayerStateBindFlag();
 protected:
 	virtual void BeginPlay() override;
 		
@@ -107,8 +104,5 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Mesh)
 		USkeletalMesh* ReplicateMesh;
-
-
-	bool bFPlayerStateBindFlag;
 
 };

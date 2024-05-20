@@ -27,6 +27,15 @@ public:
 		float CurrentEXP;
 
 	UPROPERTY()
+		float Money;
+
+	UPROPERTY()
+		float CurrentAmmo;
+
+	UPROPERTY()
+		float TotalAmmo;
+
+	UPROPERTY()
 		class USkeletalMesh* PlayerMesh;
 
 

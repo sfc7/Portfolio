@@ -64,10 +64,8 @@ void APlayerCharacterController::BeginPlay()
 		}
 
 		if (IsValid(UserNotificationTextUIClass)) {
-			UE_LOG(LogTemp, Log, TEXT("UserNotificationTextUIClass1"));
 			UUserWidget* UserNotificationTextUI = CreateWidget<UUserWidget>(this, UserNotificationTextUIClass);
 			if (IsValid(UserNotificationTextUI)) {
-				UE_LOG(LogTemp, Log, TEXT("UserNotificationTextUIClass"));
 				UserNotificationTextUI->AddToViewport(1);
 				UserNotificationTextUI->SetVisibility(ESlateVisibility::Visible);
 			}
@@ -84,12 +82,12 @@ void APlayerCharacterController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-
 	APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
 	if (IsValid(PlayerCharacter)) {
 		AFPlayerState* FPlayerState = PlayerCharacter->GetFPlayerState();
+
 		if (IsValid(FPlayerState)) {
-				BindPlayerState();
+			BindPlayerState();
 		}
 		else {
 			PlayerCharacter->OnFPlayerStateBindDelegate.AddDynamic(this, &ThisClass::BindPlayerState);
@@ -98,16 +96,18 @@ void APlayerCharacterController::OnRep_PlayerState()
 }	
 
 void APlayerCharacterController::BindPlayerState()
-{
+{	
 	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 	if (IsValid(FPlayerState)) {
-		HUDWidget->BindPlayerState(FPlayerState);
+		if (IsValid(HUDWidget)) {
+			HUDWidget->BindPlayerState(FPlayerState);
+		}
 	}
 }
 
 void APlayerCharacterController::LevelTransition(const FString& _LevelPath)
 {
-	/*UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%sTransitionType=ServerTravel"), *_LevelPath));*/
+	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%sTransitionType=ServerTravel"), *_LevelPath));
 }
 
 void APlayerCharacterController::BindFirstWeaponAmmo()

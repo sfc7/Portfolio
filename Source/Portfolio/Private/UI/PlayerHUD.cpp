@@ -36,9 +36,8 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 		PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
 		PlayerState->OnMoneyChangeDelegate.AddDynamic(this, &ThisClass::MoneyChange);
-		PlayerState->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoChange);
+		PlayerState->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 	}
-
 	UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(GameInstance)) {
 		if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
@@ -64,7 +63,7 @@ void UPlayerHUD::MoneyChange(int32 _Money)
 	Money->SetText(FText::FromString(ConvertString));
 }
 
-void UPlayerHUD::CurrentAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo)
+void UPlayerHUD::CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo)
 {
 	FString ConvertString = FString::Printf(TEXT("%d / %d"), _CurrentAmmo, _TotalAmmo);
 

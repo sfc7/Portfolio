@@ -25,9 +25,10 @@ protected:
 	UFUNCTION()
 		virtual void MoneyChange(int32 _Money);
 
-	UFUNCTION()
-		virtual void CurrentAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo);
 
+	UFUNCTION()
+		virtual void CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo);
+	
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;
 

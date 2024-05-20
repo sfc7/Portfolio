@@ -10,6 +10,10 @@ UPlayerStateSave::UPlayerStateSave()
 	PlayerCharacterName = TEXT("DefaultPlayer");
 	CurrentLevel = 1;
 	CurrentEXP = 0;
+	Money = 0;
+	CurrentAmmo = 0;
+	TotalAmmo = 0;
+
 	PlayerMesh = nullptr;
 	if (DefaultMeshRef.Succeeded()) {
 		PlayerMesh = DefaultMeshRef.Object;
