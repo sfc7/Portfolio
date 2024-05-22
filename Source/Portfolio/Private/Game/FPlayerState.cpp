@@ -16,7 +16,7 @@ AFPlayerState::AFPlayerState()
 
 void AFPlayerState::InitPlayerState()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("InitPlayerState")), true, true, FLinearColor::Red, 10.0f);
+	/*UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("InitPlayerState")), true, true, FLinearColor::Red, 10.0f);*/
 	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(FGameInstance)) {
 		if (nullptr != FGameInstance->GetCharacterTable() || nullptr != FGameInstance->GetCharacterTableRowFromLevel(1)) {
@@ -28,9 +28,11 @@ void AFPlayerState::InitPlayerState()
 			TotalAmmo = FGameInstance->TotalAmmo;
 			CurrentAmmo = FGameInstance->CurrentAmmo;
 			MaxEXP = FGameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
-		}
-		//UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FGameInstance Ammo : % d"), FGameInstance->TotalAmmo), true, true, FLinearColor::Red, 10.0f);
-		//UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("PlayerState Ammo : % d"), TotalAmmo), true, true, FLinearColor::Blue, 10.0f);
+		}/*
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FGameInstance Ammo : % d"), FGameInstance->TotalAmmo), true, true, FLinearColor::Red, 10.0f);
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("PlayerState Ammo : % d"), TotalAmmo), true, true, FLinearColor::Blue, 10.0f);*/
+		UE_LOG(LogTemp, Log, TEXT("InitPlayerState Ammo : %d"), TotalAmmo);
+		UE_LOG(LogTemp, Log, TEXT("InitPlayerState CurrentAmmo : %d"), CurrentAmmo);
 	}
 }
 
@@ -38,7 +40,7 @@ void AFPlayerState::SaveFGameInstance()
 {
 	AController* Controller = Cast<AController>(GetOwner());
 	if (Controller && Controller->IsLocalController())
-	{
+	{ 
 		//if (UGameplayStatics::SaveGameToSlot(PlayerStateSave, SaveSlotName, 0)) {
 		//	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Saved.")));
 		//}
@@ -78,7 +80,7 @@ void AFPlayerState::SaveInitValueFromPlayerStateSave()
 bool AFPlayerState::GetWeaponEquipFlag()
 {
 	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
-	if (IsValid(FGameInstance)) {
+	if (IsValid(FGameInstance)) {	
 		return FGameInstance->WeaponEquipFlag;
 	}
 

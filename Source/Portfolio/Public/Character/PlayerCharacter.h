@@ -111,6 +111,8 @@ private:
 
 
 
+
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UInputConfig> PlayerCharacterInputConfigData;

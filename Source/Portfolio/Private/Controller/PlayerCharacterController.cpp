@@ -25,19 +25,11 @@ void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(IsLocalPlayerController()) {
+	if (IsLocalPlayerController()) {
 		SpawnPlayerMove_Server();
 
 		FInputModeGameOnly GameOnlyMode;
 		SetInputMode(GameOnlyMode);
-
-		if (IsValid(CrosshairUIClass)) {
-			UUserWidget* CrosshairUI = CreateWidget<UUserWidget>(this, CrosshairUIClass);
-			if (IsValid(CrosshairUI)) {
-				CrosshairUI->AddToViewport(1);
-				CrosshairUI->SetVisibility(ESlateVisibility::Visible);
-			}
-		}
 
 		if (IsValid(HUDWidgetClass)) {
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
@@ -54,22 +46,6 @@ void APlayerCharacterController::BeginPlay()
 				}
 			}
 		}
-
-		if (IsValid(MenuUIClass)) {
-			MenuUI = CreateWidget<UUserWidget>(this, MenuUIClass);
-			if (IsValid(MenuUI)) {
-				MenuUI->AddToViewport(3);
-				MenuUI->SetVisibility(ESlateVisibility::Collapsed);
-			}
-		}
-
-		if (IsValid(UserNotificationTextUIClass)) {
-			UUserWidget* UserNotificationTextUI = CreateWidget<UUserWidget>(this, UserNotificationTextUIClass);
-			if (IsValid(UserNotificationTextUI)) {
-				UserNotificationTextUI->AddToViewport(1);
-				UserNotificationTextUI->SetVisibility(ESlateVisibility::Visible);
-			}
-		}
 	}
 }
 
@@ -82,21 +58,34 @@ void APlayerCharacterController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
-	if (IsValid(PlayerCharacter)) {
-		AFPlayerState* FPlayerState = PlayerCharacter->GetFPlayerState();
+	if (IsLocalPlayerController()) {
+		SpawnPlayerMove_Server();
 
-		if (IsValid(FPlayerState)) {
-			BindPlayerState();
-		}
-		else {
-			PlayerCharacter->OnFPlayerStateBindDelegate.AddDynamic(this, &ThisClass::BindPlayerState);
+		FInputModeGameOnly GameOnlyMode;
+		SetInputMode(GameOnlyMode);
+
+		if (IsValid(HUDWidgetClass)) {
+			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
+			if (IsValid(HUDWidget)) {
+				HUDWidget->AddToViewport();
+
+				BindPlayerState();
+
+				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
+				if (IsValid(PlayerCharacter)) {
+					UCharacterComponent* CharacterComponent = PlayerCharacter->GetCharacterComponent();
+					if (IsValid(CharacterComponent)) {
+						HUDWidget->BindCharacterComponent(CharacterComponent);
+					}
+				}
+			}
 		}
 	}
-}	
+}
 
 void APlayerCharacterController::BindPlayerState()
-{	
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Bind.")));
 	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 	if (IsValid(FPlayerState)) {
 		if (IsValid(HUDWidget)) {
@@ -108,10 +97,6 @@ void APlayerCharacterController::BindPlayerState()
 void APlayerCharacterController::LevelTransition(const FString& _LevelPath)
 {
 	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%sTransitionType=ServerTravel"), *_LevelPath));
-}
-
-void APlayerCharacterController::BindFirstWeaponAmmo()
-{
 }
 
 void APlayerCharacterController::ToggleMenu()

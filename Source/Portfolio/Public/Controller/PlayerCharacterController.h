@@ -39,8 +39,6 @@ protected:
 
 	virtual void OnRep_PlayerState() override;
 
-	virtual void BindFirstWeaponAmmo();
-
 public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		FText UserNotificationText;

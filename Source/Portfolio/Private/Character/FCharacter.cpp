@@ -41,6 +41,8 @@ AFCharacter::AFCharacter()
 void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ClientRequestEquipWeapon();
 }
 
 void AFCharacter::Tick(float DeltaTime)
@@ -60,24 +62,11 @@ void AFCharacter::Tick(float DeltaTime)
 void AFCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
-	if (HasAuthority()) {
-		FPlayerState = GetPlayerState<AFPlayerState>();
-		FTimerHandle EquipTimer;
-		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
-	}
-
 }
 
 void AFCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
-	if (!HasAuthority()) {
-		FPlayerState = GetPlayerState<AFPlayerState>();
-		FTimerHandle EquipTimer;
-		GetWorld()->GetTimerManager().SetTimer(EquipTimer, this, &ThisClass::EquipWeapon, 0.2f, false);
-	}
 }
 
 void AFCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -142,6 +131,21 @@ void AFCharacter::OnRep_Mesh()
 	}
 }
 
+void AFCharacter::ServerRequestEquipWeapon_Server_Implementation()
+{
+	EquipWeapon();
+}
+
+void AFCharacter::ClientRequestEquipWeapon()
+{
+	if (HasAuthority()) {
+		EquipWeapon();
+	}
+	else {
+		ServerRequestEquipWeapon_Server();
+	}
+}
+
 void AFCharacter::EquipWeapon()
 {
 	if (Rifle) {
@@ -155,7 +159,7 @@ void AFCharacter::EquipWeapon()
 				if (GetCharacterComponent()) {
 					GetCharacterComponent()->EquipWeapon(Weapon);
 				}
-				if (GetPlayerState() && IsValid(FPlayerState) && !FPlayerState->GetWeaponEquipFlag()) {
+				if (GetPlayerState() && !FPlayerState->GetWeaponEquipFlag()) {
 					FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
 					FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 					FPlayerState->SetWeaponEquipFlagOn();
