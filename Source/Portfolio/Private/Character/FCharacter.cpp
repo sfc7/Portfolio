@@ -42,7 +42,10 @@ void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ClientRequestEquipWeapon();
+	if (IsLocallyControlled())
+	{
+		EquipWeapon();
+	}
 }
 
 void AFCharacter::Tick(float DeltaTime)
@@ -133,13 +136,31 @@ void AFCharacter::OnRep_Mesh()
 
 void AFCharacter::ServerRequestEquipWeapon_Server_Implementation()
 {
-	EquipWeapon();
+	if (HasAuthority()) {
+		EquipWeapon();
+		WeaponSetPlayerState_Client();
+	}
+}
+
+void AFCharacter::WeaponSetPlayerState_Client_Implementation()
+{
+	FPlayerState = GetPlayerState<AFPlayerState>();
+
+	if (IsValid(Weapon)) {
+		if (FPlayerState && !FPlayerState->GetWeaponEquipFlag()) {
+			FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
+			FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
+			FPlayerState->SetWeaponEquipFlagOn();
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EquipWeapon1")), true, true, FLinearColor::Blue, 10.0f);
+		}
+	}
 }
 
 void AFCharacter::ClientRequestEquipWeapon()
 {
 	if (HasAuthority()) {
 		EquipWeapon();
+		WeaponSetPlayerState_Client();
 	}
 	else {
 		ServerRequestEquipWeapon_Server();
@@ -159,14 +180,7 @@ void AFCharacter::EquipWeapon()
 				if (GetCharacterComponent()) {
 					GetCharacterComponent()->EquipWeapon(Weapon);
 				}
-				if (GetPlayerState() && !FPlayerState->GetWeaponEquipFlag()) {
-					FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
-					FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-					FPlayerState->SetWeaponEquipFlagOn();
-					UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EquipWeapon")), true, true, FLinearColor::Blue, 10.0f);
-				}
 			}
 		}
 	}
 }
-

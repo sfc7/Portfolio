@@ -1,13 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "UI/PlayerHUD.h"
 #include "Component/CharacterComponent.h"
 #include "UI/Player_HPBar.h"
 #include "UI/Player_EXPBar.h"
 #include "Components/TextBlock.h"
 #include "Game/FGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 #include "Game/FPlayerState.h"
+
 
 void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent)
 {

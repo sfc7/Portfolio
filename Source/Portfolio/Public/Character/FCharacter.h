@@ -35,6 +35,9 @@ public:
 	UFUNCTION(Server, Reliable)
 		void ServerRequestEquipWeapon_Server();
 
+	UFUNCTION(Client, Reliable)
+		void WeaponSetPlayerState_Client();
+
 	void ClientRequestEquipWeapon();
 
 	void EquipWeapon();

@@ -85,7 +85,7 @@ void APlayerCharacterController::OnRep_PlayerState()
 
 void APlayerCharacterController::BindPlayerState()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Bind.")));
+
 	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
 	if (IsValid(FPlayerState)) {
 		if (IsValid(HUDWidget)) {

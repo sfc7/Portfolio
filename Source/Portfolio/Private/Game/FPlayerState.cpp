@@ -14,6 +14,15 @@ AFPlayerState::AFPlayerState()
 	
 }
 
+void AFPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, ReloadMaxAmmo);
+	DOREPLIFETIME(ThisClass, TotalAmmo);
+	DOREPLIFETIME(ThisClass, CurrentAmmo);
+}
+
 void AFPlayerState::InitPlayerState()
 {
 	/*UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("InitPlayerState")), true, true, FLinearColor::Red, 10.0f);*/
@@ -79,7 +88,7 @@ void AFPlayerState::SaveInitValueFromPlayerStateSave()
 
 bool AFPlayerState::GetWeaponEquipFlag()
 {
-	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+	//FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(FGameInstance)) {	
 		return FGameInstance->WeaponEquipFlag;
 	}
@@ -175,5 +184,7 @@ void AFPlayerState::OnDeactivated()
 		UE_LOG(LogTemp, Log, TEXT("FGameInstance CurrentAmmo : %d"), FGameInstance->CurrentAmmo);
 	}
 }
+
+
 
 
