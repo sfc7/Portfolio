@@ -32,13 +32,9 @@ public:
 
 	TObjectPtr<class AFPlayerState> GetFPlayerState() const { return FPlayerState.Get(); }
 
-	UFUNCTION(Server, Reliable)
-		void ServerRequestEquipWeapon_Server();
+	void WeaponSetCharacterComponent();
 
-	UFUNCTION(Client, Reliable)
-		void WeaponSetPlayerState_Client();
-
-	void ClientRequestEquipWeapon();
+	void WeaponSetCharacterComponentOnStart();
 
 	void EquipWeapon();
 
@@ -51,6 +47,7 @@ protected:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+
 	UFUNCTION()
 	virtual	void OnRep_Mesh();
 
@@ -61,7 +58,7 @@ public:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class AWeapon> Rifle;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 		TObjectPtr<AWeapon> Weapon;
 
 protected:

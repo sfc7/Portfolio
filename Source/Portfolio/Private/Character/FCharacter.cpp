@@ -15,6 +15,7 @@
 #include "Engine/Engine.h"
 #include "WorldStatic/Weapon.h"
 #include "Portfolio/Portfolio.h"
+#include "Game/FGameInstance.h"
 
 // Sets default values
 AFCharacter::AFCharacter()
@@ -42,24 +43,19 @@ void AFCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsLocallyControlled())
-	{
+	if (IsLocallyControlled()) {
+		FPlayerState = GetPlayerState<AFPlayerState>();
+
 		EquipWeapon();
+		WeaponSetCharacterComponentOnStart();
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo()), true, true, FLinearColor::Blue, 10.0f);
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo()), true, true, FLinearColor::Blue, 10.0f);
 	}
 }
 
 void AFCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//if (IsValid(FPlayerState)) {
-	//	if (!HasAuthority()) {
-	//		UE_LOG(LogTemp, Log, TEXT("Client PlayerState CurrentAmmo : %d"), FPlayerState->GetCurrentAmmo());
-	//	}
-	//	if (HasAuthority()) {
-	//		UE_LOG(LogTemp, Log, TEXT("Server PlayerState CurrentAmmo : %d"), FPlayerState->GetCurrentAmmo());
-	//	}
-	//}
 }
 
 void AFCharacter::PossessedBy(AController* NewController)
@@ -70,6 +66,21 @@ void AFCharacter::PossessedBy(AController* NewController)
 void AFCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	//if (IsLocallyControlled()) {
+	//	FPlayerState = GetPlayerState<AFPlayerState>();
+
+	//	EquipWeapon();
+	//	WeaponSetPlayerState();
+	//}
+}
+
+void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, ReplicateMesh);
+	DOREPLIFETIME(ThisClass, Weapon);
 }
 
 void AFCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -116,13 +127,6 @@ void AFCharacter::SetPlayerMesh_Client_Implementation(USkeletalMesh* _PlayerMesh
 	GetMesh()->SetSkeletalMesh(_PlayerMesh);
 }
 
-void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ThisClass, ReplicateMesh);
-}
-
 void AFCharacter::OnRep_Mesh()
 {
 	if (!HasAuthority())
@@ -134,36 +138,20 @@ void AFCharacter::OnRep_Mesh()
 	}
 }
 
-void AFCharacter::ServerRequestEquipWeapon_Server_Implementation()
+void AFCharacter::WeaponSetCharacterComponent()
 {
-	if (HasAuthority()) {
-		EquipWeapon();
-		WeaponSetPlayerState_Client();
+	if (IsValid(Weapon) && IsValid(GetCharacterComponent())) {
+		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
+		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 	}
 }
 
-void AFCharacter::WeaponSetPlayerState_Client_Implementation()
+void AFCharacter::WeaponSetCharacterComponentOnStart()
 {
-	FPlayerState = GetPlayerState<AFPlayerState>();
-
-	if (IsValid(Weapon)) {
-		if (FPlayerState && !FPlayerState->GetWeaponEquipFlag()) {
-			FPlayerState->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
-			FPlayerState->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-			FPlayerState->SetWeaponEquipFlagOn();
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EquipWeapon1")), true, true, FLinearColor::Blue, 10.0f);
-		}
-	}
-}
-
-void AFCharacter::ClientRequestEquipWeapon()
-{
-	if (HasAuthority()) {
-		EquipWeapon();
-		WeaponSetPlayerState_Client();
-	}
-	else {
-		ServerRequestEquipWeapon_Server();
+	if (IsValid(Weapon) && IsValid(GetCharacterComponent()) && !GetCharacterComponent()->GetWeaponEquipFlag()) {
+		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
+		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
+		GetCharacterComponent()->SetWeaponEquipFlag();
 	}
 }
 

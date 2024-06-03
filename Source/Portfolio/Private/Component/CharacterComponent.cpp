@@ -11,31 +11,69 @@
 #include "Character/PlayerCharacter.h"
 #include "WorldStatic/Weapon.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Character/PlayerCharacter.h"
 
 UCharacterComponent::UCharacterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, MaxHp);
+	DOREPLIFETIME(ThisClass, CurrentHp);
+	DOREPLIFETIME(ThisClass, bIsAiming);
+	DOREPLIFETIME(ThisClass, bIsDead);
+	DOREPLIFETIME(ThisClass, CurrentState);
+	DOREPLIFETIME(ThisClass, ReloadMaxAmmo);
+	DOREPLIFETIME(ThisClass, TotalAmmo);
+	DOREPLIFETIME(ThisClass, CurrentAmmo);
+	DOREPLIFETIME(ThisClass, bWeaponEquipFlag);
+}
+
+void UCharacterComponent::InitCharacterComponent()
+{
+	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+	if (IsValid(FGameInstance)) {
+		ReloadMaxAmmo = 0;
+		TotalAmmo = FGameInstance->TotalAmmo;
+		CurrentAmmo = FGameInstance->CurrentAmmo;
+	}
+}
+
 void UCharacterComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
-	if (IsValid(GameInstance)) {
-		if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
-			float InstanceMaxHp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxHp;
+	//InitCharacterComponent();
+
+	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+	if (IsValid(FGameInstance)) {
+		if (nullptr != FGameInstance->GetCharacterTable() || nullptr != FGameInstance->GetCharacterTableRowFromLevel(1)) {
+			float InstanceMaxHp = FGameInstance->GetCharacterTableRowFromLevel(1)->MaxHp;
 			SetMaxHp(InstanceMaxHp);
 			SetCurrentHp(InstanceMaxHp);
 		}
 	}
 
-	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
+	PlayerCharacter = GetOwner<APlayerCharacter>();
 	if (IsValid(PlayerCharacter)) {
 		AFPlayerState* PlayerState = Cast<AFPlayerState>(PlayerCharacter->GetPlayerState());
 		if (IsValid(PlayerState)) {
 			if (!PlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
 				PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
+			}
+		}
+
+		if (PlayerCharacter->IsLocallyControlled()) {
+			UFGameInstance* PlayerCharacterGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+			if (IsValid(PlayerCharacterGameInstance)) {
+				SetCurrentAndTotalAmmo(PlayerCharacterGameInstance->CurrentAmmo, PlayerCharacterGameInstance->TotalAmmo);
+				bWeaponEquipFlag = PlayerCharacterGameInstance->bWeaponEquipFlag;
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginPlay TotalAmmo : %d"), TotalAmmo), true, true, FLinearColor::Green, 10.0f);
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginPlay CurrentAmmo : %d"), CurrentAmmo), true, true, FLinearColor::Green, 10.0f);
 			}
 		}
 	}
@@ -103,17 +141,41 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 	}
 }
 
-
-
-void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UCharacterComponent::SetReloadMaxAmmo(int32 _ReloadMaxAmmo)
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	ReloadMaxAmmo = _ReloadMaxAmmo;
+}
 
-	DOREPLIFETIME(ThisClass, MaxHp);
-	DOREPLIFETIME(ThisClass, CurrentHp);
-	DOREPLIFETIME(ThisClass, bIsAiming);
-	DOREPLIFETIME(ThisClass, bIsDead);
-	DOREPLIFETIME(ThisClass, CurrentState);
+void UCharacterComponent::SetTotalAmmo(int32 _TotalAmmo)
+{
+	TotalAmmo = _TotalAmmo;
+
+	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+}
+
+void UCharacterComponent::SetCurrentAmmo(int32 _CurrentAmmo)
+{
+	if (_CurrentAmmo >= 0) {
+		CurrentAmmo = _CurrentAmmo;
+	}
+
+	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+}
+
+void UCharacterComponent::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo)
+{
+	CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
+	TotalAmmo = FMath::Max(0.f, _TotalAmmo);
+
+	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+}
+
+void UCharacterComponent::SetWeaponEquipFlag()
+{
+	bWeaponEquipFlag = true;
+	if (IsValid(FGameInstance)) {
+		FGameInstance->bWeaponEquipFlag = true;
+	}
 }
 
 void UCharacterComponent::SetAiming(bool _bIsAiming)
@@ -129,8 +191,8 @@ void UCharacterComponent::SetAiming_Server_Implementation(bool _bIsAiming)
 
 void UCharacterComponent::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
-	SetMaxHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
-	SetCurrentHp(GameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
+	SetMaxHp(FGameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
+	SetCurrentHp(FGameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
 }
 
 

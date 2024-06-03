@@ -30,7 +30,7 @@ FCharacterTable* UFGameInstance::GetCharacterTableRowFromLevel(int32 Level)
 
 FMonsterTable* UFGameInstance::GetMonsterTableRowFromName(FName _RowName)
 {
-	if (IsValid(MonsterTable)) {
+	if (IsValid(MonsterTable)) {			
 		return MonsterTable->FindRow<FMonsterTable>(_RowName, TEXT(""));
 	}
 

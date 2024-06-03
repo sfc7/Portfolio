@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "PlayerCharacterController.generated.h"
 
+
 /**
  * 
  */
@@ -26,7 +27,7 @@ public:
 	void PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMesh);
 
 	UFUNCTION()
-		virtual void BindPlayerState();
+		virtual void BindPlayerState(AFPlayerState* _PlayerState);
 
 	void LevelTransition(const FString& _LevelPath);
 
@@ -39,7 +40,10 @@ protected:
 
 	virtual void OnRep_PlayerState() override;
 
+
+		
 public:
+
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		FText UserNotificationText;
 

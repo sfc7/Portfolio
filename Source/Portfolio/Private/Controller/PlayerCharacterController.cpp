@@ -11,7 +11,9 @@
 #include "Game/MainGameMode.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "WorldStatic/Weapon.h"
 #include "Kismet/GameplayStatics.h"
+#include "Game/FGameInstance.h"
 #include "Game/FPlayerState.h"
 
 void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -30,18 +32,24 @@ void APlayerCharacterController::BeginPlay()
 
 		FInputModeGameOnly GameOnlyMode;
 		SetInputMode(GameOnlyMode);
-
+		
 		if (IsValid(HUDWidgetClass)) {
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
+
 			if (IsValid(HUDWidget)) {
 				HUDWidget->AddToViewport();
-				BindPlayerState();
 
 				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
 				if (IsValid(PlayerCharacter)) {
 					UCharacterComponent* CharacterComponent = PlayerCharacter->GetCharacterComponent();
 					if (IsValid(CharacterComponent)) {
 						HUDWidget->BindCharacterComponent(CharacterComponent);
+					}
+
+				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+				if (IsValid(FPlayerState)) {
+					BindPlayerState(FPlayerState);
+					FPlayerState->InitPlayerState();
 					}
 				}
 			}
@@ -58,18 +66,12 @@ void APlayerCharacterController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	if (IsLocalPlayerController()) {
-		SpawnPlayerMove_Server();
-
-		FInputModeGameOnly GameOnlyMode;
-		SetInputMode(GameOnlyMode);
+	/*if (IsLocalPlayerController()) {
 
 		if (IsValid(HUDWidgetClass)) {
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
 			if (IsValid(HUDWidget)) {
 				HUDWidget->AddToViewport();
-
-				BindPlayerState();
 
 				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
 				if (IsValid(PlayerCharacter)) {
@@ -78,19 +80,21 @@ void APlayerCharacterController::OnRep_PlayerState()
 						HUDWidget->BindCharacterComponent(CharacterComponent);
 					}
 				}
+
+				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+				if (FPlayerState) {
+					BindPlayerState(FPlayerState);
+					FPlayerState->InitPlayerState();
+				}
 			}
 		}
-	}
+	}*/
 }
 
-void APlayerCharacterController::BindPlayerState()
+void APlayerCharacterController::BindPlayerState(AFPlayerState* _PlayerState)
 {
-
-	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-	if (IsValid(FPlayerState)) {
-		if (IsValid(HUDWidget)) {
-			HUDWidget->BindPlayerState(FPlayerState);
-		}
+	if (IsValid(HUDWidget)) {
+		HUDWidget->BindPlayerState(_PlayerState);
 	}
 }
 
@@ -143,3 +147,4 @@ void APlayerCharacterController::PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMe
 		}
 	}
 }
+

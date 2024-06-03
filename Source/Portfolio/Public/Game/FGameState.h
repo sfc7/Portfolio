@@ -24,7 +24,7 @@ public:
 
 	void IncrementRound() { ++RoundNumber; }
 
-	void SpawnTotalZombiesInRound() { ++TotalZombiesInRound; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound); }
+	void SpawnTotalZombiesInRound() { ++TotalZombiesInRound; }
 
 	void ZombieDie() { --TotalZombiesInRound; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound);  }
 

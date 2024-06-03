@@ -60,7 +60,7 @@ public:
 
 	uint32 CurrentAmmo = 0;
 	uint32 TotalAmmo = 0;
-	bool WeaponEquipFlag = false;
+	bool bWeaponEquipFlag = false;
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))

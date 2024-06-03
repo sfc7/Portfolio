@@ -10,6 +10,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, float, _CurrentHp, float, NewCurrentHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, float, _MaxHp, float, NewMaxHp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
+
 
 UENUM(BlueprintType)
 enum class ECurrentState : uint8
@@ -30,6 +32,8 @@ public:
 
 	friend class APlayerCharacter;
 
+	void InitCharacterComponent();
+
 	float GetCurrentHp() const { return CurrentHp; }
 
 	float GetMaxHp() const { return MaxHp; }
@@ -40,6 +44,23 @@ public:
 
 	void EquipWeapon(class AWeapon* _Weapon);
 
+	int32 GetReloadMaxAmmo() const { return ReloadMaxAmmo; }
+
+	int32 GetCurrentAmmo() const { return CurrentAmmo; }
+
+	int32 GetTotalAmmo() const { return TotalAmmo; }
+
+	uint8 GetWeaponEquipFlag() const { return bWeaponEquipFlag; }
+
+	void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
+
+	void SetTotalAmmo(int32 _TotalAmmo);
+
+	void SetCurrentAmmo(int32 _CurrentAmmo);
+
+	void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
+
+	void SetWeaponEquipFlag();
 protected:
 
 	virtual void BeginPlay() override;
@@ -68,10 +89,12 @@ public:
 	FOnCurrnetHpChangeDelegate OnCurrnetHpChangeDelegate;
 
 	FOnMaxHpChangeDelegate OnMaxHpChangeDelegate;
+
+	FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
 		
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		TObjectPtr<class UFGameInstance> GameInstance;
+		TObjectPtr<class UFGameInstance> FGameInstance;
 
 	class APlayerCharacter* PlayerCharacter;
 
@@ -98,6 +121,15 @@ private:
 	UPROPERTY(Replicated)
 		uint8 bIsDead : 1; 
 
+	UPROPERTY(Replicated)
+		uint8 bWeaponEquipFlag : 1;
 
-		
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+		int32 ReloadMaxAmmo;
+
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+		int32 TotalAmmo;
+
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+		int32 CurrentAmmo;
 };

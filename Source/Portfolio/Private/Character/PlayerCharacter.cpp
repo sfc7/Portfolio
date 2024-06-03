@@ -24,6 +24,7 @@
 #include "Game/PlayerStateSave.h"
 #include "WorldStatic/Weapon.h"
 #include "Animation/PlayerAnimInstance.h"
+#include "Game/FGameInstance.h"
 #include "Character/ZombieCharacter.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -58,11 +59,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
-	//if (!IsLocallyControlled())
-	//{
-	//	return;
-	//}
 
 	if (IsValid(FPlayerState)) {
 		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
@@ -226,6 +222,20 @@ void APlayerCharacter::PostInitializeComponents()
 	}
 }
 
+void APlayerCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (HasAuthority()) {
+		UpdateDestroyedActor();
+	}
+	else {
+		UpdateDestroyedActor_Client();
+	}
+
+
+}
+
 void APlayerCharacter::UpdateInputValue_Server_Implementation(const float& _ForwardInputValue, const float& _RightInputValue)
 {
 	ForwardInputValue = _ForwardInputValue;
@@ -236,7 +246,6 @@ void APlayerCharacter::UpdateAimValue_Server_Implementation(const float& _AimPit
 {
 	AimPitch = _AimPitch;
 	AimYaw = _AimYaw;
-	//UpdateAimValue_NetMulticast(AimPitch, AimYaw);
 }
 
 void APlayerCharacter::UpdateAimValue_NetMulticast_Implementation(const float& _AimPitch, const float& _AimYaw)
@@ -271,9 +280,6 @@ void APlayerCharacter::Look(const FInputActionValue& InValue)
 
 void APlayerCharacter::Attack(const FInputActionValue& InValue)
 {
-	if (!IsValid(FPlayerState)) {
-		return;
-	}
 	if (!IsValid(GetPlayerState())) {
 		return;
 	}
@@ -374,7 +380,7 @@ void APlayerCharacter::FireBullet()
 
 void APlayerCharacter::Reload()
 {
-	if (FPlayerState->GetTotalAmmo() > 0 && FPlayerState->GetReloadMaxAmmo() != FPlayerState->GetCurrentAmmo()) {
+	if (GetCharacterComponent()->GetTotalAmmo() > 0 && GetCharacterComponent()->GetReloadMaxAmmo() != GetCharacterComponent()->GetCurrentAmmo()) {
 		ReloadAnimationPlay();
 		PlayReloadMontage_Server();
 	}
@@ -385,22 +391,33 @@ void APlayerCharacter::Reload()
 
 void APlayerCharacter::ReloadAmmo()
 {
-	int32 AmmoDif = FPlayerState->GetReloadMaxAmmo() - FPlayerState->GetCurrentAmmo();
+	int32 AmmoDif = GetCharacterComponent()->GetReloadMaxAmmo() - GetCharacterComponent()->GetCurrentAmmo();
 	int32 CurrentAmmo;
 	int32 TotalAmmo;
 
-	if (FPlayerState->GetTotalAmmo() < AmmoDif) {
+	if (GetCharacterComponent()->GetTotalAmmo() < AmmoDif) {
 		CurrentAmmo = AmmoDif;
 		TotalAmmo = 0;
 	}
 	else {
-		CurrentAmmo = FPlayerState->GetReloadMaxAmmo();
-		TotalAmmo = FPlayerState->GetTotalAmmo() - AmmoDif;
+		CurrentAmmo = GetCharacterComponent()->GetReloadMaxAmmo();
+		TotalAmmo = GetCharacterComponent()->GetTotalAmmo() - AmmoDif;
 	}
 
-	FPlayerState->SetCurrentAndTotalAmmo(CurrentAmmo, TotalAmmo);
+	GetCharacterComponent()->SetCurrentAndTotalAmmo(CurrentAmmo, TotalAmmo);
 
 	return;
+}
+
+void APlayerCharacter::UpdateDestroyedActor()
+{
+	UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+	if (IsValid(FGameInstance)) {
+		FGameInstance->TotalAmmo = GetCharacterComponent()->GetTotalAmmo();
+		FGameInstance->CurrentAmmo = GetCharacterComponent()->GetCurrentAmmo();
+		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo());
+		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo());
+	}
 }
 
 void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
@@ -436,11 +453,11 @@ void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
 
 void APlayerCharacter::Fire()
 {
-	if (!IsValid(FPlayerState) || FPlayerState->GetCurrentAmmo() == 0) {
+	if (!IsValid(GetCharacterComponent()) || GetCharacterComponent()->GetCurrentAmmo() == 0) {
 		return;
 	}
 
-	FPlayerState->SetCurrentAndTotalAmmo(FPlayerState->GetCurrentAmmo() - 1,FPlayerState->GetTotalAmmo());
+	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
 
 	FireAnimationPlay();
 	PlayAttackMontage_Server();
@@ -472,6 +489,13 @@ void APlayerCharacter::OnHittedRagdollRestoreTimerElapsed()
 	CurrentRagDollBlendWeight = 1.f;
 	bIsNowRagdollBlending = true;
 }
+
+void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
+{
+	UpdateDestroyedActor();
+}
+
+
 
 void APlayerCharacter::PlayRagdoll_NetMulticast_Implementation()
 {

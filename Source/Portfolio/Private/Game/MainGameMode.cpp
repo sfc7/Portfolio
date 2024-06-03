@@ -9,6 +9,8 @@
 #include "WorldStatic/ZombieSpawnPoint.h"
 #include "Kismet/GameplayStatics.h"
 #include "Character/ZombieCharacter.h"
+#include "Game/FGameInstance.h"
+#include "Character/PlayerCharacter.h"
 #include "Game/FGameState.h"
 
 AMainGameMode::AMainGameMode()
@@ -47,10 +49,10 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 		AlivePlayerCharacterControllers.Add(PlayerCharacterController);
 	}
 
-	AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
-	if (IsValid(PlayerState)) {
-		PlayerState->InitPlayerState();
-	}
+	//AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
+	//if (IsValid(PlayerState)) {
+	//	PlayerState->InitPlayerState();
+	//}
 
 	TArray<AActor* > TempArray;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AZombieSpawnPoint::StaticClass(), TempArray);
@@ -61,6 +63,11 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 	}
+}
+
+void AMainGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
 }
 
 void AMainGameMode::SpawnZombie()

@@ -50,6 +50,8 @@ protected:
 
 	virtual void PostInitializeComponents() override;
 
+	virtual void Destroyed() override;
+
 	UFUNCTION()
 		void OnRep_OverlappingWeapon(AWeapon* LastWeapon); // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 
@@ -86,6 +88,8 @@ private:
 
 	void ReloadAmmo();
 
+	void UpdateDestroyedActor();
+
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
 
@@ -109,9 +113,8 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void UpdateAimValue_NetMulticast(const float& _AimPitch, const float& _AimYaw);
 
-
-
-
+	UFUNCTION(Client, Unreliable)
+		void UpdateDestroyedActor_Client();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))

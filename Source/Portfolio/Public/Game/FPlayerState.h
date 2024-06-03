@@ -12,7 +12,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int3
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMoneyChangeDelegate, int32, NewMoney);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
+
+
 
 
 UCLASS()
@@ -23,10 +24,6 @@ public:
     AFPlayerState();
 
     void InitPlayerState();
-
-    void SaveFGameInstance(); 
-
-    void SaveInitValueFromPlayerStateSave();
 
     int32 GetPlayerNumber() const { return PlayerNumber; }
 
@@ -40,14 +37,6 @@ public:
 
     int32 GetMoney() const { return PlayerMoney; }
 
-    int32 GetReloadMaxAmmo() const { return ReloadMaxAmmo; }
-
-    int32 GetCurrentAmmo() const { return CurrentAmmo; }
-
-    int32 GetTotalAmmo() const { return TotalAmmo; }
-
-    bool GetWeaponEquipFlag();
-
     void SetCurrentLevel(int32 _CurrentLevel);
 
     void SetCurrentEXP(float _CurrentEXP);
@@ -56,18 +45,7 @@ public:
 
     void SetMoney(int32 _Money);
 
-    void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
-
-    void SetTotalAmmo(int32 _TotalAmmo);
-
-    void SetCurrentAmmo(int32 _CurrentAmmo);
-
-    void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
-
-    void SetWeaponEquipFlagOn();
-
     virtual void OnDeactivated() override;
-
 
 public:
     FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
@@ -78,11 +56,7 @@ public:
 
     FOnMoneyChangeDelegate OnMoneyChangeDelegate;   
 
-    FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
-
     bool PlayerStateSaveFlag = false;
-
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -106,14 +80,7 @@ private:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         int32 PlayerMoney;
 
-    UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        int32 ReloadMaxAmmo;
 
-    UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        int32 TotalAmmo;
-
-    UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-        int32 CurrentAmmo;
 
 
 

@@ -17,6 +17,7 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 		CharacterComponent = _CharacterComponent;
 		CharacterComponent->OnCurrnetHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnCurrentHpChange);
 		CharacterComponent->OnMaxHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnMaxHpChange);
+		CharacterComponent->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 
 		UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 		if (IsValid(GameInstance)) {
@@ -37,7 +38,6 @@ void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 		PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
 		PlayerState->OnMoneyChangeDelegate.AddDynamic(this, &ThisClass::MoneyChange);
-		PlayerState->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 	}
 	UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(GameInstance)) {

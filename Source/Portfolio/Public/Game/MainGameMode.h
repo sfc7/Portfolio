@@ -36,6 +36,8 @@ protected:
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
+	virtual void Logout(AController* Exiting) override;
+
 private:
 	void SetZombieRemaning();
 
@@ -69,9 +71,9 @@ private:
 	ELevelState LevelState = ELevelState::WaitingRoom;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 WaitingRoomTime = 10;
+		int32 WaitingRoomTime = 20;
 
-	int32 RemaningWaitTime = 10;
+	int32 RemaningWaitTime = 20;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 
