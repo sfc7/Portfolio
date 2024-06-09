@@ -263,7 +263,6 @@ void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()
 
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		MonsterComponent->SetIsDead(true);
-
 	}
 	else {
 		FName PivotBoneName = FName(TEXT("spine1"));

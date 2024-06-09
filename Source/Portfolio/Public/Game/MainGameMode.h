@@ -29,8 +29,9 @@ public:
 
 	void RemaningZombieDie();
 
-	//virtual void SpawnPlayer(APlayerController* _PlayerController) override;
-	
+	void EndMap();
+
+	void TravelMap();
 protected:
 	virtual void BeginPlay() override;
 
@@ -52,7 +53,7 @@ public:
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		TArray<TObjectPtr<class APlayerCharacterController>> AlivePlayerCharacterControllers;
+		TArray<TObjectPtr<class APlayerCharacterController>> PlayerCharacterControllers;
 
 private:
 	TObjectPtr<class AFGameState> FGameState;
@@ -71,9 +72,9 @@ private:
 	ELevelState LevelState = ELevelState::WaitingRoom;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 WaitingRoomTime = 20;
+		int32 WaitingRoomTime = 10;
 
-	int32 RemaningWaitTime = 20;
+	int32 RemaningWaitTime = 10;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 

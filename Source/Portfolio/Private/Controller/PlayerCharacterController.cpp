@@ -54,6 +54,12 @@ void APlayerCharacterController::BeginPlay()
 				}
 			}
 		}
+
+		if (IsValid(LoadingScreenClass)) {
+			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
+			LoadingScreen->AddToViewport();
+			LoadingScreen->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
@@ -98,9 +104,32 @@ void APlayerCharacterController::BindPlayerState(AFPlayerState* _PlayerState)
 	}
 }
 
-void APlayerCharacterController::LevelTransition(const FString& _LevelPath)
+void APlayerCharacterController::EndMap()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%sTransitionType=ServerTravel"), *_LevelPath));
+	if (IsValid(LoadingScreen)/* && IsLocalPlayerController()*/) {
+		LoadingScreen->SetVisibility(ESlateVisibility::Visible);
+
+		FInputModeUIOnly UIMode;
+		UIMode.SetWidgetToFocus(LoadingScreen->GetCachedWidget());
+		SetInputMode(UIMode);
+
+		bShowMouseCursor = true;
+	}
+
+	EndMap_Client();
+}
+
+void APlayerCharacterController::EndMap_Client_Implementation()
+{
+	if (IsValid(LoadingScreen)/* && IsLocalPlayerController()*/) {
+		LoadingScreen->SetVisibility(ESlateVisibility::Visible);
+
+		FInputModeUIOnly UIMode;
+		UIMode.SetWidgetToFocus(LoadingScreen->GetCachedWidget());
+		SetInputMode(UIMode);
+
+		bShowMouseCursor = true;
+	}
 }
 
 void APlayerCharacterController::ToggleMenu()

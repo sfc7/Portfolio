@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Game/MainGameMode.h"
 #include "Game/FPlayerState.h"
 #include "Portfolio/Portfolio.h"
@@ -24,7 +21,7 @@ AMainGameMode::AMainGameMode()
 	static ConstructorHelpers::FClassFinder<APlayerCharacter> PlayerCharacterBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Character/BP_Character.BP_Character_C'"));
 	if (PlayerCharacterBP.Succeeded()) {
 		PlayerCharacterClass = PlayerCharacterBP.Class;
-	}	
+	}
 
 	PlayerStateClass = AFPlayerState::StaticClass();
 }
@@ -46,13 +43,8 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 
 	APlayerCharacterController* PlayerCharacterController = Cast<APlayerCharacterController>(NewPlayer);
 	if (IsValid(PlayerCharacterController)) {
-		AlivePlayerCharacterControllers.Add(PlayerCharacterController);
+		PlayerCharacterControllers.Add(PlayerCharacterController);
 	}
-
-	//AFPlayerState* PlayerState = NewPlayer->GetPlayerState<AFPlayerState>();
-	//if (IsValid(PlayerState)) {
-	//	PlayerState->InitPlayerState();
-	//}
 
 	TArray<AActor* > TempArray;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AZombieSpawnPoint::StaticClass(), TempArray);
@@ -82,6 +74,10 @@ void AMainGameMode::SpawnZombie()
 			if (AZombieCharacter* Zombie = GetWorld()->SpawnActor<AZombieCharacter>(ZombieCharacterClass, Loc, Rot)) {
 				Zombie->SpawnDefaultController();
 				ZombieSpawnRemaning--;
+
+				if (IsValid(FGameState)) {
+					UE_LOG(LogTemp, Log, TEXT("GetTotalZombiesInRound %d"), FGameState->GetTotalZombiesInRound());
+				}
 			}
 		}
 	}
@@ -97,21 +93,21 @@ void AMainGameMode::RemaningZombieDie()
 	}
 }
 
+void AMainGameMode::EndMap()
+{
+	for (APlayerCharacterController* PlayerCharacterController : PlayerCharacterControllers) {
+		if (IsValid(PlayerCharacterController)) {
+			PlayerCharacterController->EndMap_Client();
+		}
+	}
+}
 
-//void AMainGameMode::SpawnPlayer(APlayerController* _PlayerController)
-//{
-//	Super::SpawnPlayer(_PlayerController);
-//
-//	if (HasAuthority()) {
-//		APlayerCharacter* PlayerCharacter = _PlayerController->GetPawn<APlayerCharacter>();
-//		if (IsValid(PlayerCharacter)) {
-//			GetWorld()->DestroyActor(PlayerCharacter);
-//		}
-//
-//		APlayerCharacter* NewPlayerCharacter = GetWorld()->SpawnActor<APlayerCharacter>(PlayerCharacterClass, GetPlayerStartTransform());
-//		_PlayerController->Possess(NewPlayerCharacter);
-//	}
-//}
+void AMainGameMode::TravelMap()
+{
+	EndMap();
+
+	GetWorld()->ServerTravel("/Game/Level/Stage?listen");
+}
 
 void AMainGameMode::SetZombieRemaning()
 {
@@ -124,32 +120,32 @@ void AMainGameMode::SetZombieRemaning()
 void AMainGameMode::OnMainTimerElapsed()
 {
 	switch (LevelState) {
-		case ELevelState::None:
-			break;
-		case ELevelState::WaitingRoom:
-			if (RemaningWaitTime <= 0) {
-				RemaningWaitTime = WaitingRoomTime;
-				LevelState = ELevelState::Stage;
-				GetWorld()->ServerTravel("/Game/Level/Stage?listen");
-			}	
-			else {
-				NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
-				RemaningWaitTime--;
-			}
-			OnNotificationText(NotificationString);
-			break;
-		case ELevelState::Stage:
-			break;
-		case ELevelState::End:
-			break;
-		default:
-			break;
+	case ELevelState::None:
+		break;
+	case ELevelState::WaitingRoom:
+		if (RemaningWaitTime <= 0) {
+			RemaningWaitTime = WaitingRoomTime;
+			LevelState = ELevelState::Stage;
+			TravelMap();
+		}
+		else {
+			NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+			RemaningWaitTime--;
+		}
+		OnNotificationText(NotificationString);
+		break;
+	case ELevelState::Stage:
+		break;
+	case ELevelState::End:
+		break;
+	default:
+		break;
 	}
 }
 
 void AMainGameMode::OnNotificationText(const FString& _NotificationString)
 {
-	for (APlayerCharacterController* AlivePlayerCharacterController : AlivePlayerCharacterControllers) {
+	for (APlayerCharacterController* AlivePlayerCharacterController : PlayerCharacterControllers) {
 		AlivePlayerCharacterController->UserNotificationText = FText::FromString(_NotificationString);
 	}
 }

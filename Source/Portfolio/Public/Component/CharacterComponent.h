@@ -32,8 +32,6 @@ public:
 
 	friend class APlayerCharacter;
 
-	void InitCharacterComponent();
-
 	float GetCurrentHp() const { return CurrentHp; }
 
 	float GetMaxHp() const { return MaxHp; }
@@ -82,8 +80,15 @@ protected:
 private:
 	UFUNCTION(NetMulticast, Reliable)
 		void OnCurrentHPChanged_NetMulticast(float _CurrentHp, float NewCurrntHp);
+
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);
+
+	UFUNCTION()
+		void OnRep_CurrentWeapon(); 
+
+	UFUNCTION()
+		void OnRep_TotalWeapon();
 
 public:
 	FOnCurrnetHpChangeDelegate OnCurrnetHpChangeDelegate;
@@ -127,9 +132,9 @@ private:
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		int32 ReloadMaxAmmo;
 
-	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(ReplicatedUsing = OnRep_TotalWeapon, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		int32 TotalAmmo;
 
-	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		int32 CurrentAmmo;
 };

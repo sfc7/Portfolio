@@ -346,7 +346,7 @@ void APlayerCharacter::FireBullet()
 	bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_GameTraceChannel3, QueryParams);
 
 	if (bIsHit) {
-		DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);
+		DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);	
 
 		AZombieCharacter* HitZombie = Cast<AZombieCharacter>(HitResult.GetActor());
 		
@@ -357,19 +357,20 @@ void APlayerCharacter::FireBullet()
 
 			UKismetSystemLibrary::PrintString(this, BoneNameString);
 			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FireBullet")), true, true, FLinearColor::Red, 10.0f);
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 50.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 500.f, DamageEvent, GetController(), this);
 			}
 			else {
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 10.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 1000.f, DamageEvent, GetController(), this);
 			}
 		}
 	}
 	else {
 		FDamageEvent DamageEvent;
 		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
-		ApplyDamageAndDrawLine_Server(CameraStartLocation, CameraEndLocation, nullptr, 100.f, DamageEvent, GetController(), this);
+		ApplyDamageAndDrawLine_Server(CameraStartLocation, CameraEndLocation, nullptr, 1000.f, DamageEvent, GetController(), this);
 	}
 
 	if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
@@ -415,8 +416,14 @@ void APlayerCharacter::UpdateDestroyedActor()
 	if (IsValid(FGameInstance)) {
 		FGameInstance->TotalAmmo = GetCharacterComponent()->GetTotalAmmo();
 		FGameInstance->CurrentAmmo = GetCharacterComponent()->GetCurrentAmmo();
+		FGameInstance->ReloadMaxAmmo = GetCharacterComponent()->GetReloadMaxAmmo();
+		FGameInstance->bWeaponEquipFlag = GetCharacterComponent()->GetWeaponEquipFlag();
+
+		UE_LOG(LogTemp, Log, TEXT("UpdateDestroyedActor"));
 		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo());
 		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo());
+		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter ReloadMaxAmmo : %d"), GetCharacterComponent()->GetReloadMaxAmmo());
+		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter bWeaponEquipFlag : %d"), GetCharacterComponent()->GetWeaponEquipFlag());
 	}
 }
 

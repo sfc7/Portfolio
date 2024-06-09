@@ -29,7 +29,10 @@ public:
 	UFUNCTION()
 		virtual void BindPlayerState(AFPlayerState* _PlayerState);
 
-	void LevelTransition(const FString& _LevelPath);
+	void EndMap();
+
+	UFUNCTION(Client, Reliable)
+		void EndMap_Client();
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -62,6 +65,12 @@ protected:
 
 	UPROPERTY()
 		TObjectPtr<class UUserWidget> MenuUI;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
+		TSubclassOf<class UUserWidget> LoadingScreenClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
+		TObjectPtr<class UUserWidget> LoadingScreen;
 
 	bool FlagMenu = false;
 

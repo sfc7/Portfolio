@@ -22,6 +22,7 @@ AFCharacter::AFCharacter()
 {	
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	FVector PivotPosition(0.f, 0.f, -88.0f);
 	FRotator PivotRotation(0.f, -90.f, 0.f);
@@ -46,8 +47,8 @@ void AFCharacter::BeginPlay()
 	if (IsLocallyControlled()) {
 		FPlayerState = GetPlayerState<AFPlayerState>();
 
-		EquipWeapon();
-		WeaponSetCharacterComponentOnStart();
+		EquipWeapon_Server();
+
 		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo()), true, true, FLinearColor::Blue, 10.0f);
 		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo()), true, true, FLinearColor::Blue, 10.0f);
 	}
@@ -66,13 +67,6 @@ void AFCharacter::PossessedBy(AController* NewController)
 void AFCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
-	//if (IsLocallyControlled()) {
-	//	FPlayerState = GetPlayerState<AFPlayerState>();
-
-	//	EquipWeapon();
-	//	WeaponSetPlayerState();
-	//}
 }
 
 void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -141,6 +135,7 @@ void AFCharacter::OnRep_Mesh()
 void AFCharacter::WeaponSetCharacterComponent()
 {
 	if (IsValid(Weapon) && IsValid(GetCharacterComponent())) {
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponSetCharacterComponent")));
 		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
 		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 	}
@@ -148,7 +143,9 @@ void AFCharacter::WeaponSetCharacterComponent()
 
 void AFCharacter::WeaponSetCharacterComponentOnStart()
 {
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponSetCharacterComponentOnStart : %d "), GetCharacterComponent()->GetWeaponEquipFlag()));
 	if (IsValid(Weapon) && IsValid(GetCharacterComponent()) && !GetCharacterComponent()->GetWeaponEquipFlag()) {
+
 		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
 		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 		GetCharacterComponent()->SetWeaponEquipFlag();
@@ -171,4 +168,11 @@ void AFCharacter::EquipWeapon()
 			}
 		}
 	}
+}
+
+void AFCharacter::EquipWeapon_Server_Implementation()
+{
+	EquipWeapon();
+
+	WeaponSetCharacterComponentOnStart();
 }

@@ -38,6 +38,10 @@ public:
 
 	void EquipWeapon();
 
+	UFUNCTION(Server, Reliable)
+		void EquipWeapon_Server();
+
+
 protected:
 	virtual void BeginPlay() override;
 		

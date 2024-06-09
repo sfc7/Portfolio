@@ -27,27 +27,17 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ThisClass, bIsAiming);
 	DOREPLIFETIME(ThisClass, bIsDead);
 	DOREPLIFETIME(ThisClass, CurrentState);
-	DOREPLIFETIME(ThisClass, ReloadMaxAmmo);
-	DOREPLIFETIME(ThisClass, TotalAmmo);
-	DOREPLIFETIME(ThisClass, CurrentAmmo);
 	DOREPLIFETIME(ThisClass, bWeaponEquipFlag);
-}
 
-void UCharacterComponent::InitCharacterComponent()
-{
-	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
-	if (IsValid(FGameInstance)) {
-		ReloadMaxAmmo = 0;
-		TotalAmmo = FGameInstance->TotalAmmo;
-		CurrentAmmo = FGameInstance->CurrentAmmo;
-	}
+	DOREPLIFETIME_CONDITION(ThisClass, ReloadMaxAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, CurrentAmmo, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(ThisClass, TotalAmmo, COND_OwnerOnly);
+
 }
 
 void UCharacterComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//InitCharacterComponent();
 
 	FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(FGameInstance)) {
@@ -70,10 +60,10 @@ void UCharacterComponent::BeginPlay()
 		if (PlayerCharacter->IsLocallyControlled()) {
 			UFGameInstance* PlayerCharacterGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 			if (IsValid(PlayerCharacterGameInstance)) {
+
 				SetCurrentAndTotalAmmo(PlayerCharacterGameInstance->CurrentAmmo, PlayerCharacterGameInstance->TotalAmmo);
 				bWeaponEquipFlag = PlayerCharacterGameInstance->bWeaponEquipFlag;
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginPlay TotalAmmo : %d"), TotalAmmo), true, true, FLinearColor::Green, 10.0f);
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginPlay CurrentAmmo : %d"), CurrentAmmo), true, true, FLinearColor::Green, 10.0f);
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("UCharacterComponent BeginPlay : %d "), bWeaponEquipFlag));
 			}
 		}
 	}
@@ -167,15 +157,14 @@ void UCharacterComponent::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _Tota
 	CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
 	TotalAmmo = FMath::Max(0.f, _TotalAmmo);
 
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetCurrentAndTotalAmmo : %d"), CurrentAmmo), true, true, FLinearColor::Green, 10.0f);
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetCurrentAndTotalAmmo : %d"), TotalAmmo), true, true, FLinearColor::Green, 10.0f);
 	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
 }
 
 void UCharacterComponent::SetWeaponEquipFlag()
 {
 	bWeaponEquipFlag = true;
-	if (IsValid(FGameInstance)) {
-		FGameInstance->bWeaponEquipFlag = true;
-	}
 }
 
 void UCharacterComponent::SetAiming(bool _bIsAiming)
@@ -193,6 +182,16 @@ void UCharacterComponent::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
 	SetMaxHp(FGameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
 	SetCurrentHp(FGameInstance->GetCharacterTableRowFromLevel(NewCurrentLevel)->MaxHp);
+}
+
+void UCharacterComponent::OnRep_CurrentWeapon()
+{
+	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+}
+
+void UCharacterComponent::OnRep_TotalWeapon()
+{
+	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
 }
 
 

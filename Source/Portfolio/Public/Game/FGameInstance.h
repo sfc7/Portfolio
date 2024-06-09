@@ -60,7 +60,8 @@ public:
 
 	uint32 CurrentAmmo = 0;
 	uint32 TotalAmmo = 0;
-	bool bWeaponEquipFlag = false;
+	uint32 ReloadMaxAmmo = 0;
+	uint8 bWeaponEquipFlag : 1;
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
