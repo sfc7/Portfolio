@@ -38,20 +38,7 @@ void APlayerCharacterController::BeginPlay()
 
 			if (IsValid(HUDWidget)) {
 				HUDWidget->AddToViewport();
-
 				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
-				if (IsValid(PlayerCharacter)) {
-					UCharacterComponent* CharacterComponent = PlayerCharacter->GetCharacterComponent();
-					if (IsValid(CharacterComponent)) {
-						HUDWidget->BindCharacterComponent(CharacterComponent);
-					}
-
-				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-				if (IsValid(FPlayerState)) {
-					BindPlayerState(FPlayerState);
-					FPlayerState->InitPlayerState();
-					}
-				}
 			}
 		}
 
@@ -59,6 +46,13 @@ void APlayerCharacterController::BeginPlay()
 			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
 			LoadingScreen->AddToViewport();
 			LoadingScreen->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		if (HasAuthority()) {
+			FPlayerState->InitPlayerState();
 		}
 	}
 }
@@ -72,29 +66,11 @@ void APlayerCharacterController::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	/*if (IsLocalPlayerController()) {
+	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+	if (IsValid(FPlayerState)) {
+		FPlayerState->InitPlayerState();
+	}
 
-		if (IsValid(HUDWidgetClass)) {
-			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
-			if (IsValid(HUDWidget)) {
-				HUDWidget->AddToViewport();
-
-				APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
-				if (IsValid(PlayerCharacter)) {
-					UCharacterComponent* CharacterComponent = PlayerCharacter->GetCharacterComponent();
-					if (IsValid(CharacterComponent)) {
-						HUDWidget->BindCharacterComponent(CharacterComponent);
-					}
-				}
-
-				AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-				if (FPlayerState) {
-					BindPlayerState(FPlayerState);
-					FPlayerState->InitPlayerState();
-				}
-			}
-		}
-	}*/
 }
 
 void APlayerCharacterController::BindPlayerState(AFPlayerState* _PlayerState)

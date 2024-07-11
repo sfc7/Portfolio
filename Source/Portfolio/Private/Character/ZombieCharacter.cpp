@@ -41,10 +41,6 @@ void AZombieCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (AFGameState* FGameState = GetWorld()->GetGameState<AFGameState>()) {
-		FGameState->SpawnTotalZombiesInRound();
-	}
-
 	bUseControllerRotationYaw = false;
 
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
@@ -91,8 +87,6 @@ void AZombieCharacter::Tick(float DeltaTime)
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	USER_LOG(LogUser, Log, TEXT("%f"), GetMonsterComponent()->GetCurrentHp());
-
 	if (GetMonsterComponent()->GetIsDead())
 	{
 		return 0.f;
@@ -130,16 +124,17 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		IsDead_NetMulticast();
 
-		if (IsLocallyControlled()) {
-			APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
-			if (IsValid(CauserCharacter)) {
-				AFPlayerState* CauserCharacterPlayerState = Cast<AFPlayerState>(CauserCharacter->GetPlayerState());
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("TakeDamage")));
+		
+		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
+		if (IsValid(CauserCharacter)) {
+			UCharacterComponent* CharacterComponent = CauserCharacter->GetCharacterComponent();
 
-				if (IsValid(CauserCharacterPlayerState)) {
-					CauserCharacterPlayerState->SetCurrentEXP(CauserCharacterPlayerState->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
-				}
+			if (IsValid(CharacterComponent)) {
+				CharacterComponent->SetCurrentEXP(CharacterComponent->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
 			}
 		}
+		
 	}
 
 	PlayRagdoll_NetMulticast();
@@ -167,12 +162,12 @@ void AZombieCharacter::PostInitializeComponents()
 void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitResult)
 {
 	if (IsValid(Player)) {
-		AFPlayerState* FPlayerState = Player->GetPlayerState<AFPlayerState>();
+		UCharacterComponent* CharacterComponent = Player->GetCharacterComponent();
 
-		if (IsValid(FPlayerState)) {
+		if (IsValid(CharacterComponent)) {
 			FString BoneName = _HitResult.BoneName.ToString();
 			uint16 Money = GetMoneyFromHitPart(BoneName);
-			FPlayerState->SetMoney(FPlayerState->GetMoney() + Money);
+			CharacterComponent->SetMoney(CharacterComponent->GetMoney() + Money);
 		}
 	}
 }
@@ -218,7 +213,7 @@ void AZombieCharacter::Attack_BasicHit()
 	if (Result && Cast<APlayerCharacter>(HitResult.GetActor())) {
 		DrawColor = FColor::Green;
 		APlayerCharacter* HitActor = Cast<APlayerCharacter>(HitResult.GetActor());
-		UGameplayStatics::ApplyDamage(HitActor, AttackDamage, GetController(), this, NULL);
+		UGameplayStatics::ApplyDamage(HitActor, AttackDamage, GetController(), this, NULL); 
 	}
 	else {
 		DrawColor = FColor::Red;

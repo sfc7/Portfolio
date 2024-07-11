@@ -12,6 +12,12 @@
 
 AMainGameMode::AMainGameMode()
 {
+	if (IsValid(ZombieRoundTable) && ZombieRoundTable->GetRowMap().Num() > 0) {
+		for (int32 i = 1; i <= ZombieRoundTable->GetRowMap().Num(); i++) {
+			check(nullptr != GetZombieRoundTableRowFromRound(i));
+		}
+	}
+
 	static ConstructorHelpers::FClassFinder<APlayerCharacterController> PlayerControllerBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Controller/BP_PlayerCharacterController.BP_PlayerCharacterController_C'"));
 	if (PlayerControllerBP.Succeeded())
 	{
@@ -26,15 +32,24 @@ AMainGameMode::AMainGameMode()
 	PlayerStateClass = AFPlayerState::StaticClass();
 }
 
+
+FZombieRoundTable* AMainGameMode::GetZombieRoundTableRowFromRound(int _Round)
+{
+		
+	if (IsValid(ZombieRoundTable)) {
+		return ZombieRoundTable->FindRow<FZombieRoundTable>(*FString::FromInt(_Round), TEXT(""));
+	}
+
+	return nullptr;
+}
+
 void AMainGameMode::BeginPlay()
 {
 	FGameState = GetGameState<AFGameState>();
 
 	SetLevelStateFromLevelName();
-	SetZombieRemaning();
 
 	GetWorld()->GetTimerManager().SetTimer(MainTimerHandle, this, &ThisClass::OnMainTimerElapsed, 1.0f, true);
-	GetWorld()->GetTimerManager().SetTimer(ZombieSpawnHandle, this, &ThisClass::SpawnZombie, 2.0f, true);
 }
 
 void AMainGameMode::PostLogin(APlayerController* NewPlayer)
@@ -76,6 +91,7 @@ void AMainGameMode::SpawnZombie()
 				ZombieSpawnRemaning--;
 
 				if (IsValid(FGameState)) {
+					FGameState->SpawnTotalZombiesInRound();
 					UE_LOG(LogTemp, Log, TEXT("GetTotalZombiesInRound %d"), FGameState->GetTotalZombiesInRound());
 				}
 			}
@@ -83,10 +99,11 @@ void AMainGameMode::SpawnZombie()
 	}
 	else {
 		GetWorld()->GetTimerManager().PauseTimer(ZombieSpawnHandle);
+		SetLevelStateFromString("WaitingStage");
 	}
 }
 
-void AMainGameMode::RemaningZombieDie()
+void AMainGameMode::ZombieDie()
 {
 	if (IsValid(FGameState)) {
 		FGameState->ZombieDie();
@@ -102,19 +119,20 @@ void AMainGameMode::EndMap()
 	}
 }
 
-void AMainGameMode::TravelMap()
+void AMainGameMode::InRoom()
 {
-	EndMap();
+	if (RemaningWaitTime <= 0) {
+		RemaningWaitTime = RoomTime;
 
-	GetWorld()->ServerTravel("/Game/Level/Stage?listen");
-}
+		EndMap();
 
-void AMainGameMode::SetZombieRemaning()
-{
-	if (IsValid(FGameState)) {
-		uint8 RoundNumber = FGameState->GetRoundNumber();
-		ZombieSpawnRemaning = RoundNumber * 3;
+		GetWorld()->ServerTravel("/Game/Level/Stage?listen");
 	}
+	else {
+		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+		RemaningWaitTime--;
+	}
+	OnNotificationText(NotificationString);
 }
 
 void AMainGameMode::OnMainTimerElapsed()
@@ -122,19 +140,14 @@ void AMainGameMode::OnMainTimerElapsed()
 	switch (LevelState) {
 	case ELevelState::None:
 		break;
-	case ELevelState::WaitingRoom:
-		if (RemaningWaitTime <= 0) {
-			RemaningWaitTime = WaitingRoomTime;
-			LevelState = ELevelState::Stage;
-			TravelMap();
-		}
-		else {
-			NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
-			RemaningWaitTime--;
-		}
-		OnNotificationText(NotificationString);
+	case ELevelState::Room:
+		InRoom();
+		break;
+	case ELevelState::WaitingStage:
+		WaitStage();
 		break;
 	case ELevelState::Stage:
+		InStage();
 		break;
 	case ELevelState::End:
 		break;
@@ -156,10 +169,65 @@ void AMainGameMode::SetLevelStateFromLevelName()
 	LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
 
 	if (LevelName == "Stage") {
-		LevelState = ELevelState::Stage;
+		LevelState = ELevelState::WaitingStage;
 	}
-	else if (LevelName == "WaitingRoom") {
-		LevelState = ELevelState::WaitingRoom;
+	else if (LevelName == "Room") {
+		LevelState = ELevelState::Room;
 	}
 }
+
+void AMainGameMode::SetLevelStateFromString(const FString& _LevelState)
+{
+	if (_LevelState == "Stage") {
+		LevelState = ELevelState::Stage;
+	}
+	else if (_LevelState == "Room") {
+		LevelState = ELevelState::Room;
+	}
+	else if (_LevelState == "WaitingStage") {
+		LevelState = ELevelState::WaitingStage;
+	}
+	else if (_LevelState == "End") {
+		LevelState = ELevelState::End;
+	}
+	else {
+		LevelState = ELevelState::None;
+	}
+}
+
+void AMainGameMode::SetZombieRemaning()
+{
+	if (IsValid(FGameState)) {
+		CurrentRound = FGameState->GetRoundNumber();
+		ZombieSpawnRemaning = GetZombieRoundTableRowFromRound(CurrentRound++)->Number;
+		UE_LOG(LogTemp, Log, TEXT("SetZombieRemaning ZombieSpawnRemaning %d"), ZombieSpawnRemaning);
+		FGameState->IncrementRound();
+	}
+}
+
+
+void AMainGameMode::WaitStage()
+{
+	if (RemaningWaitTime <= 0) {
+		RemaningWaitTime = RoomTime;
+		SetZombieRemaning();
+		LevelState = ELevelState::Stage;
+		GetWorld()->GetTimerManager().SetTimer(ZombieSpawnHandle, this, &ThisClass::SpawnZombie, 2.0f, true);
+	}
+	else if (CurrentRound > 3) {
+		EndMap();
+
+		GetWorld()->ServerTravel("/Game/Level/Room?listen");
+	}
+	else {
+		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+		RemaningWaitTime--;
+
+	}
+}
+
+void AMainGameMode::InStage()
+{
+}
+
 

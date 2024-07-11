@@ -51,9 +51,9 @@ public:
 
 	UDataTable* GetMonsterTable() const  { return MonsterTable; }
 
-	FCharacterTable* UFGameInstance::GetCharacterTableRowFromLevel(int32 Level);
+	FCharacterTable* GetCharacterTableRowFromLevel(int32 Level);
 
-	FMonsterTable* UFGameInstance::GetMonsterTableRowFromName(FName _RowName);
+	FMonsterTable* GetMonsterTableRowFromName(FName _RowName);
 
 public:
 	FStreamableManager StreamableManager = FStreamableManager();
@@ -62,10 +62,17 @@ public:
 	uint32 TotalAmmo = 0;
 	uint32 ReloadMaxAmmo = 0;
 	uint8 bWeaponEquipFlag : 1;
+	uint32 CurrentLevel = 1;
+	float CurrentEXP = 0;
+	uint32 PlayerMoney = 0;
+
+
+	UPROPERTY()
+		TSubclassOf<class AWeapon> CurrentWeaponType;
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
-		class UDataTable* CharacterTable;
+		UDataTable* CharacterTable;	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
-		class UDataTable* MonsterTable;
+		UDataTable* MonsterTable;
 };

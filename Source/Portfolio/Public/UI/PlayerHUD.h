@@ -28,6 +28,9 @@ protected:
 
 	UFUNCTION()
 		virtual void CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo);
+
+	UFUNCTION()
+		virtual void BindRenewal(class UCharacterComponent* _CharacterComponent);
 	
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;

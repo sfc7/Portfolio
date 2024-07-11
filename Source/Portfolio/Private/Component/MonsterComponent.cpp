@@ -3,6 +3,7 @@
 #include "Component/MonsterComponent.h"
 #include "Game/FGameInstance.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
 
 UMonsterComponent::UMonsterComponent()
 {
@@ -28,7 +29,6 @@ void UMonsterComponent::BeginPlay()
 			float InstanceMaxHp = GameInstance->GetMonsterTableRowFromName(MonsterName)->MaxHp;
 			SetMaxHp(InstanceMaxHp);	
 			SetCurrentHp(InstanceMaxHp);
-
 			float InstanceExpValue = GameInstance->GetMonsterTableRowFromName(MonsterName)->EXP;
 			SetMonsterExpValue(InstanceExpValue);
 ;		}

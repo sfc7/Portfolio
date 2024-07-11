@@ -26,6 +26,7 @@
 #include "Animation/PlayerAnimInstance.h"
 #include "Game/FGameInstance.h"
 #include "Character/ZombieCharacter.h"
+#include "UI/PlayerHUD.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -60,11 +61,11 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	if (IsValid(FPlayerState)) {
-		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
-			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
-		}
-	}
+	//if (IsValid(FPlayerState)) {
+	//	if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
+	//		FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
+	//	}
+	//}
 }
 
 void APlayerCharacter::BeginPlay()
@@ -86,11 +87,11 @@ void APlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	if (IsValid(FPlayerState)) {
+	/*if (IsValid(FPlayerState)) {
 		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
 			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
 		}
-	}
+	}*/
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
@@ -226,14 +227,7 @@ void APlayerCharacter::Destroyed()
 {
 	Super::Destroyed();
 
-	if (HasAuthority()) {
-		UpdateDestroyedActor();
-	}
-	else {
-		UpdateDestroyedActor_Client();
-	}
-
-
+	UpdateDestroyedActor();
 }
 
 void APlayerCharacter::UpdateInputValue_Server_Implementation(const float& _ForwardInputValue, const float& _RightInputValue)
@@ -322,7 +316,7 @@ void APlayerCharacter::EndAiming(const FInputActionValue& InValue)
 
 void APlayerCharacter::FireBullet()
 {
-	if (/*HasAuthority() ||*/ GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
+	if (GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
 	{
 		return;
 	}
@@ -332,6 +326,8 @@ void APlayerCharacter::FireBullet()
 	{
 		return;
 	}
+
+	UseAmmo_Server();
 
 	FHitResult HitResult;
 
@@ -357,7 +353,7 @@ void APlayerCharacter::FireBullet()
 
 			UKismetSystemLibrary::PrintString(this, BoneNameString);
 			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FireBullet")), true, true, FLinearColor::Red, 10.0f);
+
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
 				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 500.f, DamageEvent, GetController(), this);
@@ -417,14 +413,17 @@ void APlayerCharacter::UpdateDestroyedActor()
 		FGameInstance->TotalAmmo = GetCharacterComponent()->GetTotalAmmo();
 		FGameInstance->CurrentAmmo = GetCharacterComponent()->GetCurrentAmmo();
 		FGameInstance->ReloadMaxAmmo = GetCharacterComponent()->GetReloadMaxAmmo();
-		FGameInstance->bWeaponEquipFlag = GetCharacterComponent()->GetWeaponEquipFlag();
+		FGameInstance->CurrentWeaponType = GetCharacterComponent()->GetCurrentWeaponType();
 
-		UE_LOG(LogTemp, Log, TEXT("UpdateDestroyedActor"));
-		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo());
-		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo());
-		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter ReloadMaxAmmo : %d"), GetCharacterComponent()->GetReloadMaxAmmo());
-		UE_LOG(LogTemp, Log, TEXT("APlayerCharacter bWeaponEquipFlag : %d"), GetCharacterComponent()->GetWeaponEquipFlag());
+		FGameInstance->CurrentLevel = GetCharacterComponent()->GetCurrentLevel();
+		FGameInstance->CurrentEXP = GetCharacterComponent()->GetCurrentEXP();
+		FGameInstance->PlayerMoney = GetCharacterComponent()->GetMoney();
 	}
+}
+
+void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
+{
+	UpdateDestroyedActor();
 }
 
 void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
@@ -464,7 +463,6 @@ void APlayerCharacter::Fire()
 		return;
 	}
 
-	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
 
 	FireAnimationPlay();
 	PlayAttackMontage_Server();
@@ -497,13 +495,6 @@ void APlayerCharacter::OnHittedRagdollRestoreTimerElapsed()
 	bIsNowRagdollBlending = true;
 }
 
-void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
-{
-	UpdateDestroyedActor();
-}
-
-
-
 void APlayerCharacter::PlayRagdoll_NetMulticast_Implementation()
 {
 	if (!IsValid(GetCharacterComponent())) {
@@ -528,7 +519,7 @@ void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(const FVecto
 		HitCharacter->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
 
-	DrawLine_NetMulticast(DrawStart, DrawEnd);
+	/*DrawLine_NetMulticast(DrawStart, DrawEnd);*/
 }
 
 void APlayerCharacter::DrawLine_NetMulticast_Implementation(const FVector& DrawStart, const FVector& DrawEnd)
@@ -590,6 +581,11 @@ void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapo
 	if (LastWeapon) {
 		LastWeapon->ShowPickUpText(false);
 	}
+}
+
+void APlayerCharacter::UseAmmo_Server_Implementation()
+{
+	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
 }
 
 void APlayerCharacter::FireAnimationPlay()

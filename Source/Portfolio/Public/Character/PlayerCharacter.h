@@ -80,8 +80,6 @@ private:
 
 	void Fire();
 
-	void LineTracingFromFire();
-
 	void FireBullet();
 
 	void Reload();
@@ -113,7 +111,7 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void UpdateAimValue_NetMulticast(const float& _AimPitch, const float& _AimYaw);
 
-	UFUNCTION(Client, Unreliable)
+	UFUNCTION(Client, Reliable)
 		void UpdateDestroyedActor_Client();
 
 private:
@@ -145,6 +143,9 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 		void DrawLine_NetMulticast(const FVector& DrawStart, const FVector& DrawEnd);
+
+	UFUNCTION(Server, Reliable)
+		void UseAmmo_Server();
 
 	void FireAnimationPlay();
 	//

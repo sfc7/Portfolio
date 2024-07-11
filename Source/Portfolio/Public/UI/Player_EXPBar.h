@@ -16,7 +16,7 @@ class PORTFOLIO_API UPlayer_EXPBar : public UPlayer_Bar
 public:
 	void SetMaxExp(float _MaxEXP);
 
-	void InitalizeEXPBarWidget(class AFPlayerState* NewPlayerState);
+	void InitalizeEXPBarWidget(class UCharacterComponent* _CharacterComponent);
 
 	UFUNCTION()
 		void OnCurrentEXPChange(float NewEXP);

@@ -31,7 +31,6 @@ public:
 private:
 	uint8 RoundNumber;
 	uint16 TotalZombiesInRound;
-	uint8 ZombiesOnMap;
 
 
 

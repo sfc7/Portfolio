@@ -16,6 +16,7 @@
 #include "WorldStatic/Weapon.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/FGameInstance.h"
+#include "UI/PlayerHUD.h"
 
 // Sets default values
 AFCharacter::AFCharacter()
@@ -33,11 +34,6 @@ AFCharacter::AFCharacter()
 
 	CharacterComponent = CreateDefaultSubobject<UCharacterComponent>(TEXT("CharacterComponent"));
 	CharacterComponent->SetIsReplicated(true);
-
-	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Rifle.BP_Rifle_C'"));
-	if (RifleBP.Succeeded()) {
-		Rifle = RifleBP.Class;
-	}
 }
 
 void AFCharacter::BeginPlay()
@@ -47,10 +43,21 @@ void AFCharacter::BeginPlay()
 	if (IsLocallyControlled()) {
 		FPlayerState = GetPlayerState<AFPlayerState>();
 
-		EquipWeapon_Server();
+		APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+		if (IsValid(PlayerController)) {
+			if (IsValid(CharacterComponent)) {
+				PlayerController->GetHUDWidget()->BindCharacterComponent(CharacterComponent);
+			}
+		}
 
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter TotalAmmo : %d"), GetCharacterComponent()->GetTotalAmmo()), true, true, FLinearColor::Blue, 10.0f);
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("AFCharacter CurrentAmmo : %d"), GetCharacterComponent()->GetCurrentAmmo()), true, true, FLinearColor::Blue, 10.0f);
+		if (HasAuthority()) {
+			EquipWeapon();
+			WeaponSetCharacterComponentOnStart();
+		}
+		else {
+			EquipWeapon_Server();
+			WeaponSetCharacterComponentOnStart_Server();
+		}
 	}
 }
 
@@ -132,40 +139,37 @@ void AFCharacter::OnRep_Mesh()
 	}
 }
 
-void AFCharacter::WeaponSetCharacterComponent()
+void AFCharacter::WeaponSetCharacterComponentOnStart()
 {
-	if (IsValid(Weapon) && IsValid(GetCharacterComponent())) {
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponSetCharacterComponent")));
+	if (IsValid(Weapon) && IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
+		GetCharacterComponent()->SetCurrentWeaponType(GetCharacterComponent()->GetDefaultWeaponType());
+		GetCharacterComponent()->EquipWeapon(Weapon);
 		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
 		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
 	}
 }
 
-void AFCharacter::WeaponSetCharacterComponentOnStart()
+void AFCharacter::WeaponSetCharacterComponentOnStart_Server_Implementation()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponSetCharacterComponentOnStart : %d "), GetCharacterComponent()->GetWeaponEquipFlag()));
-	if (IsValid(Weapon) && IsValid(GetCharacterComponent()) && !GetCharacterComponent()->GetWeaponEquipFlag()) {
-
-		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
-		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-		GetCharacterComponent()->SetWeaponEquipFlag();
-	}
+	WeaponSetCharacterComponentOnStart();
 }
 
 void AFCharacter::EquipWeapon()
 {
-	if (Rifle) {
-		Weapon = GetWorld()->SpawnActor<AWeapon>(Rifle);
-		if (IsValid(Weapon)) {
-			FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
-			if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
-				Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-				Weapon->SetOwner(this);
-				Weapon->ShowPickUpText(false);
-				if (GetCharacterComponent()) {
-					GetCharacterComponent()->EquipWeapon(Weapon);
-				}
-			}
+
+	if (IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
+		Weapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetDefaultWeaponType());
+	}
+	else if (IsValid(GetCharacterComponent()) && IsValid(GetCharacterComponent()->GetCurrentWeaponType())) {
+		Weapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetCurrentWeaponType());
+	}
+
+	if (IsValid(Weapon)) {
+		FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
+		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
+			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+			Weapon->SetOwner(this);
+			Weapon->ShowPickUpText(false);
 		}
 	}
 }
@@ -173,6 +177,4 @@ void AFCharacter::EquipWeapon()
 void AFCharacter::EquipWeapon_Server_Implementation()
 {
 	EquipWeapon();
-
-	WeaponSetCharacterComponentOnStart();
 }

@@ -3,14 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "Game/FGameMode.h"
 #include "MainGameMode.generated.h"
+
+USTRUCT(BlueprintType)
+struct FZombieRoundTable : public FTableRowBase
+{
+	GENERATED_BODY()
+public:
+	FZombieRoundTable() {}
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int Round;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int Number;
+};
 
 UENUM(BlueprintType)
 enum class ELevelState : uint8
 {
 	None,
-	WaitingRoom,
+	Room,
+	WaitingStage,
 	Stage,
 	End
 };
@@ -27,11 +42,20 @@ public:
 
 	void SpawnZombie();	
 
-	void RemaningZombieDie();
+	void ZombieDie();
 
 	void EndMap();
 
-	void TravelMap();
+	void InRoom();
+
+	void WaitStage();
+
+	void InStage();
+
+	UDataTable* GetZombieRoundTable() const { return ZombieRoundTable; }
+
+	FZombieRoundTable* GetZombieRoundTableRowFromRound(int _Round);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -49,7 +73,9 @@ private:
 
 	void SetLevelStateFromLevelName();
 
+	void SetLevelStateFromString(const FString& _LevelState);
 public:
+	
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -58,21 +84,26 @@ protected:
 private:
 	TObjectPtr<class AFGameState> FGameState;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
+		class UDataTable* ZombieRoundTable;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class AZombieCharacter> ZombieCharacterClass;
 
 	FTimerHandle ZombieSpawnHandle;
 		
-	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;
+	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;	
 
-	uint16 ZombieSpawnRemaning = 0 ;
+	uint32 CurrentRound = 1;
+
+	uint16 ZombieSpawnRemaning = 0;
 
 	FTimerHandle MainTimerHandle;
 
-	ELevelState LevelState = ELevelState::WaitingRoom;
+	ELevelState LevelState = ELevelState::Room;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 WaitingRoomTime = 10;
+		int32 RoomTime = 10;
 
 	int32 RemaningWaitTime = 10;
 
