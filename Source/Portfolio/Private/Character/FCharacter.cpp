@@ -13,10 +13,11 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-#include "WorldStatic/Weapon.h"
+#include "WorldStatic/Weapon/Weapon.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/FGameInstance.h"
 #include "UI/PlayerHUD.h"
+
 
 // Sets default values
 AFCharacter::AFCharacter()

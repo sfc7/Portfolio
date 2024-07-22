@@ -185,6 +185,11 @@ private:
 	//Weapon
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 		TObjectPtr<class AWeapon> OverlapWeapon;
+
+	UPROPERTY()
+		TObjectPtr<class AWeapon> OverlapWeapons;
+
+
 	// 
 
 	//Death

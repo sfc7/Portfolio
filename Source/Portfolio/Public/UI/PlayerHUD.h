@@ -31,7 +31,7 @@ protected:
 
 	UFUNCTION()
 		virtual void BindRenewal(class UCharacterComponent* _CharacterComponent);
-	
+		
 protected:
 	TWeakObjectPtr<class UCharacterComponent> CharacterComponent;
 

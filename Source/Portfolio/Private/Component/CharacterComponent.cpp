@@ -9,7 +9,7 @@
 #include "Engine/Engine.h"
 #include "Game/FPlayerState.h"
 #include "Character/PlayerCharacter.h"
-#include "WorldStatic/Weapon.h"
+#include "WorldStatic/Weapon/Weapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Character/PlayerCharacter.h"
 

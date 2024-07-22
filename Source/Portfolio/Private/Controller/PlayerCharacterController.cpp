@@ -11,10 +11,11 @@
 #include "Game/MainGameMode.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-#include "WorldStatic/Weapon.h"
+#include "WorldStatic/Weapon/Weapon.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/FGameInstance.h"
 #include "Game/FPlayerState.h"
+
 
 void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -153,3 +154,24 @@ void APlayerCharacterController::PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMe
 	}
 }
 
+void APlayerCharacterController::WeaponBuyShow(bool ShowFlag)
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow")));
+	if (ShowFlag) {
+		if (IsValid(WeaponBuyWidgetClass)) {
+			WeaponBuyWidget = CreateWidget<UUserWidget>(this, WeaponBuyWidgetClass);
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow2")));
+			if (IsValid(WeaponBuyWidget)) {
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow3")));
+				WeaponBuyWidget->AddToViewport();
+			}
+		}	
+	}
+	else {
+		if (IsValid(WeaponBuyWidget)) {
+			WeaponBuyWidget->RemoveFromParent();
+			WeaponBuyWidget = nullptr;
+		}
+	}
+
+}

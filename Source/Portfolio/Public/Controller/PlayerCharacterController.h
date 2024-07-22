@@ -34,6 +34,8 @@ public:
 	UFUNCTION(Client, Reliable)
 		void EndMap_Client();
 
+	void WeaponBuyShow(bool ShowFlag);
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -46,12 +48,13 @@ protected:
 
 		
 public:
-
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		FText UserNotificationText;
 
+
+
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> CrosshairUIClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
@@ -60,7 +63,7 @@ protected:
 	UPROPERTY()
 		TObjectPtr<class UPlayerHUD> HUDWidget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> MenuUIClass;
 
 	UPROPERTY()
@@ -69,13 +72,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
 		TSubclassOf<class UUserWidget> LoadingScreenClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
+	UPROPERTY()
 		TObjectPtr<class UUserWidget> LoadingScreen;
+
+	UPROPERTY()
+		TObjectPtr<class UUserWidget> WeaponBuyWidget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
+		TSubclassOf<class UUserWidget> WeaponBuyWidgetClass;
 
 	bool FlagMenu = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> UserNotificationTextUIClass;
+	 //TObjectPtr //
+	
 
 
 

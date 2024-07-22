@@ -22,7 +22,7 @@
 #include "Game/MainGameMode.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/PlayerStateSave.h"
-#include "WorldStatic/Weapon.h"
+#include "WorldStatic/Weapon/Weapon.h"
 #include "Animation/PlayerAnimInstance.h"
 #include "Game/FGameInstance.h"
 #include "Character/ZombieCharacter.h"
@@ -542,14 +542,24 @@ void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
 
 void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
 {
-	if (OverlapWeapon) {
-		OverlapWeapon->ShowPickUpText(false); // 서버 Owner에게
-	}
-	OverlapWeapon = _Weapon;
-	if (IsLocallyControlled()) {
-		if (OverlapWeapon) {
-			OverlapWeapon->ShowPickUpText(true); // 서버 Owner에게
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon")));
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+
+	if (IsValid(PlayerController)) {
+		OverlapWeapons = _Weapon;
+		if (OverlapWeapons) {
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon2")));
+			PlayerController->WeaponBuyShow(true);
 		}
+		else {
+			PlayerController->WeaponBuyShow(false);
+		}
+		//OverlapWeapon = _Weapon;
+		//if (IsLocallyControlled()) {
+		//	if (OverlapWeapon) {
+		//		OverlapWeapon->ShowPickUpText(true); // 서버 Owner에게
+		//	}
+		//}
 	}
 }
 
