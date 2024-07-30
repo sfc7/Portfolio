@@ -34,7 +34,7 @@ public:
 	UFUNCTION(Client, Reliable)
 		void EndMap_Client();
 
-	void WeaponBuyShow(bool ShowFlag);
+	void WeaponBuyShow(bool ShowFlag, struct FInteractableData* InteractableData);
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -76,10 +76,10 @@ protected:
 		TObjectPtr<class UUserWidget> LoadingScreen;
 
 	UPROPERTY()
-		TObjectPtr<class UUserWidget> WeaponBuyWidget;
+		TObjectPtr<class UPlayerWeaponBuy> WeaponBuyWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
-		TSubclassOf<class UUserWidget> WeaponBuyWidgetClass;
+		TSubclassOf<class UPlayerWeaponBuy> WeaponBuyWidgetClass;
 
 	bool FlagMenu = false;
 

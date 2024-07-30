@@ -7,7 +7,22 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Component/CharacterComponent.h"
+#include "Interface/InteractionInterface.h"
 #include "PlayerCharacter.generated.h"
+
+USTRUCT()
+struct FInteractionData {
+	GENERATED_USTRUCT_BODY()
+
+	FInteractionData() : CurrentInteractable(nullptr), LastInteractionCheckTime(0.0f) {
+	};
+
+	UPROPERTY()
+	AActor* CurrentInteractable;
+
+	UPROPERTY()
+	float LastInteractionCheckTime;
+};
 
 UCLASS()
 class PORTFOLIO_API APlayerCharacter : public AFCharacter
@@ -34,6 +49,8 @@ public:
 	bool IsDead();
 
 	ECurrentState IsCurrentState();
+
+	bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimerHandle); }
 
 protected:
 	virtual void BeginPlay() override;
@@ -113,6 +130,20 @@ private:
 
 	UFUNCTION(Client, Reliable)
 		void UpdateDestroyedActor_Client();
+
+	void PerformInteractionCheck();
+	
+	void FoundInteractable(AActor* NewInteractable);
+
+	void NoInteractableFound();
+	
+	void BeginInteract();
+
+	void EndInteract();
+
+	void Interact();
+
+
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -205,4 +236,18 @@ private:
 		void PlayReloadMontage_NetMulticast();
 
 	void ReloadAnimationPlay();
+	
+
+	//interaction
+	
+	UPROPERTY(VisibleAnywhere)
+		TScriptInterface<IInteractionInterface> TargetInteractable;
+
+	float InteractionCheckFrequency = 0.1f;
+
+	float InteractionCheckRange = 400.0f;
+
+	FTimerHandle InteractionTimerHandle;
+
+	FInteractionData InteractionData;
 };	

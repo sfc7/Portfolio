@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/InteractionInterface.h"
 #include "Weapon.generated.h"
 
 
@@ -18,7 +19,7 @@ enum class EWeaponState : uint8
 };
 
 UCLASS()
-class PORTFOLIO_API AWeapon : public AActor
+class PORTFOLIO_API AWeapon : public AActor, public IInteractionInterface
 {
 	GENERATED_BODY()
 	
@@ -37,6 +38,12 @@ public:
 	uint32 GetTotalAmmo() { return TotalAmmo; }
 
 	uint32 GetReloadMaxAmmo() { return ReloadMaxAmmo; }
+	
+	virtual void BeginFocus();
+	virtual void EndFoucs();
+	virtual void BeginInteract();
+	virtual void EndInteract();
+	virtual void Interact();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -56,7 +63,7 @@ protected:
 
 protected:
 	UPROPERTY(EditAnywhere)
-		USkeletalMeshComponent* WeaponMesh;
+		UStaticMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditAnywhere)
 		USphereComponent* SphereComponent;
@@ -73,6 +80,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 		uint32 ReloadMaxAmmo;
 
+	UPROPERTY(EditInstanceOnly)
+		FInteractableData InstanceInteractableData;
 
 
 

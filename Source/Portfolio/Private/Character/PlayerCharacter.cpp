@@ -143,6 +143,12 @@ void APlayerCharacter::Tick(float DeltaTime)
 			UpdateInputValue_Server(ForwardInputValue, RightInputValue);
 		}
 	}
+
+	if (IsLocallyControlled()) {
+		if (GetWorld()->TimeSince(InteractionData.LastInteractionCheckTime) > InteractionCheckFrequency) {
+			PerformInteractionCheck();
+		}
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -164,6 +170,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ReloadAction, ETriggerEvent::Started, this, &ThisClass::Reload);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Triggered, this, &ThisClass::BeginInteract);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Completed, this, &ThisClass::EndInteract);
 	}
 }
 
@@ -336,6 +344,7 @@ void APlayerCharacter::FireBullet()
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActor(Weapon);
 	QueryParams.AddIgnoredComponent((const UPrimitiveComponent*)CameraComponent);
 	QueryParams.bTraceComplex = true;	
 
@@ -518,7 +527,7 @@ void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(const FVecto
 	if (IsValid(HitCharacter)) {
 		HitCharacter->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	}
-
+	
 	/*DrawLine_NetMulticast(DrawStart, DrawEnd);*/
 }
 
@@ -542,7 +551,7 @@ void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
 
 void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon")));
+	/*UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon")));
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
 
 	if (IsValid(PlayerController)) {
@@ -553,15 +562,15 @@ void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
 		}
 		else {
 			PlayerController->WeaponBuyShow(false);
-		}
+		}*/
 		//OverlapWeapon = _Weapon;
 		//if (IsLocallyControlled()) {
 		//	if (OverlapWeapon) {
 		//		OverlapWeapon->ShowPickUpText(true); // 서버 Owner에게
 		//	}
 		//}
-	}
-}
+	//}
+}				
 
 bool APlayerCharacter::IsAiming()
 {
@@ -636,5 +645,121 @@ void APlayerCharacter::PlayReloadMontage_NetMulticast_Implementation()
 {
 	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
 		ReloadAnimationPlay();
+	}
+}
+
+void APlayerCharacter::PerformInteractionCheck()
+{
+	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
+
+	FVector CameraStartLocation = CameraComponent->GetComponentLocation();
+	FVector CameraEndLocation = CameraStartLocation + CameraComponent->GetForwardVector() * InteractionCheckRange;
+
+	float LookDirection = FVector::DotProduct(GetActorForwardVector(), CameraComponent->GetForwardVector());
+	if (LookDirection > 0) {
+		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);
+
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		FHitResult HitResult;
+
+		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_Visibility, QueryParams);
+		if (IsHit) {
+			if (HitResult.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass())) {
+
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s"),*HitResult.GetActor()->GetName()));
+				if (HitResult.GetActor() != InteractionData.CurrentInteractable) {
+					FoundInteractable(HitResult.GetActor());
+					return;
+				}
+
+				if (HitResult.GetActor() == InteractionData.CurrentInteractable) {
+					return;
+				}
+			}
+		}
+	}
+
+	NoInteractableFound();
+}
+
+void APlayerCharacter::FoundInteractable(AActor* NewInteractable)
+{
+	if (IsInteracting()) {
+		EndInteract();
+	}
+
+	if (InteractionData.CurrentInteractable) {
+		TargetInteractable = InteractionData.CurrentInteractable;
+		TargetInteractable->EndFoucs();
+	}
+
+	InteractionData.CurrentInteractable = NewInteractable;
+	TargetInteractable = NewInteractable;
+
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+	PlayerController->WeaponBuyShow(true, &TargetInteractable->InteractableData);
+
+
+	TargetInteractable->BeginFocus();
+}
+
+void APlayerCharacter::NoInteractableFound()
+{
+	if (IsInteracting()) {
+		GetWorldTimerManager().ClearTimer(InteractionTimerHandle);
+	}
+
+	if (InteractionData.CurrentInteractable) {
+		if (IsValid(TargetInteractable.GetObject())) {
+			TargetInteractable->EndFoucs();
+		}
+	}
+
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+	PlayerController->WeaponBuyShow(false, &TargetInteractable->InteractableData);
+
+	InteractionData.CurrentInteractable = nullptr;
+	TargetInteractable = nullptr;
+}
+
+
+//아무것도 변하지 않았는지 확인하기위한 안전장치, 동일한 것을 보고 있다는 것을 확인
+void APlayerCharacter::BeginInteract()
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginInteract")));
+	PerformInteractionCheck();
+
+	if (InteractionData.CurrentInteractable) {
+		if (IsValid(TargetInteractable.GetObject())) {
+			TargetInteractable->BeginInteract();
+
+			if (FMath::IsNearlyZero(TargetInteractable->InteractableData.InteractionDuration, 0.1f)) {
+				Interact();
+			}
+			else {
+				GetWorldTimerManager().SetTimer(InteractionTimerHandle, this, &APlayerCharacter::Interact, TargetInteractable->InteractableData.InteractionDuration, false);
+			}
+		}
+	}
+}
+
+void APlayerCharacter::EndInteract()
+{
+	GetWorldTimerManager().ClearTimer(InteractionTimerHandle);
+
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->EndInteract();
+	}
+}
+
+void APlayerCharacter::Interact()
+{
+	GetWorldTimerManager().ClearTimer(InteractionTimerHandle);
+
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		TargetInteractable->Interact(this);
 	}
 }

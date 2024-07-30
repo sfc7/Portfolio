@@ -36,5 +36,7 @@ public:
 		TObjectPtr<class UInputAction> CrouchAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> ReloadAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> E_InteractionAction;
 		
 };

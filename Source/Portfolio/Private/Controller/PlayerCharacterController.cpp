@@ -15,6 +15,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/FGameInstance.h"
 #include "Game/FPlayerState.h"
+#include "Interface/InteractionInterface.h"
+#include "UI/PlayerWeaponBuy.h"
+
 
 
 void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +30,16 @@ void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!WeaponBuyWidgetClass) {
+		UE_LOG(LogTemp, Error, TEXT("WeaponBuyWidgetClass is not set in the Blueprint"));
+	}
+	else if (!WeaponBuyWidgetClass->IsChildOf(UPlayerWeaponBuy::StaticClass())) {
+		UE_LOG(LogTemp, Error, TEXT("WeaponBuyWidgetClass is not of type UPlayerWeaponBuy"));
+	}
+	else {
+		UE_LOG(LogTemp, Log, TEXT("WeaponBuyWidgetClass is correctly set"));
+	}
 
 	if (IsLocalPlayerController()) {
 		SpawnPlayerMove_Server();
@@ -46,7 +59,13 @@ void APlayerCharacterController::BeginPlay()
 		if (IsValid(LoadingScreenClass)) {
 			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
 			LoadingScreen->AddToViewport();
-			LoadingScreen->SetVisibility(ESlateVisibility::Hidden);
+			LoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+		if (IsValid(WeaponBuyWidgetClass)) {
+			WeaponBuyWidget = CreateWidget<UPlayerWeaponBuy>(this, WeaponBuyWidgetClass);
+			WeaponBuyWidget->AddToViewport();
+			WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
@@ -154,24 +173,19 @@ void APlayerCharacterController::PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMe
 	}
 }
 
-void APlayerCharacterController::WeaponBuyShow(bool ShowFlag)
-{
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow")));
+void APlayerCharacterController::WeaponBuyShow(bool ShowFlag, FInteractableData* InteractableData)
+{\
 	if (ShowFlag) {
-		if (IsValid(WeaponBuyWidgetClass)) {
-			WeaponBuyWidget = CreateWidget<UUserWidget>(this, WeaponBuyWidgetClass);
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow2")));
-			if (IsValid(WeaponBuyWidget)) {
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyShow3")));
-				WeaponBuyWidget->AddToViewport();
+		if (IsValid(WeaponBuyWidget)) {
+			if (WeaponBuyWidget->GetVisibility() == ESlateVisibility::Collapsed) {
+				WeaponBuyWidget->SetVisibility(ESlateVisibility::Visible);
 			}
-		}	
+			WeaponBuyWidget->UpdateWidget(InteractableData);
+		}
 	}
 	else {
 		if (IsValid(WeaponBuyWidget)) {
-			WeaponBuyWidget->RemoveFromParent();
-			WeaponBuyWidget = nullptr;
+			WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
-
 }

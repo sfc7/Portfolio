@@ -15,7 +15,7 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
-	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
 
 	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
@@ -30,7 +30,7 @@ AWeapon::AWeapon()
 	PickUpText = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickUpText"));
 	PickUpText->SetupAttachment(RootComponent);
 }
-	
+
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
@@ -46,7 +46,17 @@ void AWeapon::BeginPlay()
 		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
 		SphereComponent->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereOverlapEnd);
 	}
+
+	InteractableData = InstanceInteractableData;
 }
+
+// Called every frame
+void AWeapon::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -91,13 +101,6 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
-// Called every frame
-void AWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void AWeapon::ShowPickUpText(bool ShowFlag)
 {
 	if (PickUpText) {
@@ -105,5 +108,32 @@ void AWeapon::ShowPickUpText(bool ShowFlag)
 	}
 }
 
+void AWeapon::BeginFocus()
+{
+	if (WeaponMesh) {
+		WeaponMesh->SetRenderCustomDepth(true);
+	}
+}
 
+void AWeapon::EndFoucs()
+{
+	if (WeaponMesh) {
+		WeaponMesh->SetRenderCustomDepth(false);
+	}
+}
+
+void AWeapon::BeginInteract()
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginInteract")));
+}
+
+void AWeapon::EndInteract()
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EndInteract")));
+}
+
+void AWeapon::Interact()
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Interact")));
+}
 
