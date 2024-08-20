@@ -7,19 +7,8 @@
 #include "Interface/InteractionInterface.h"
 #include "Weapon.generated.h"
 
-
-
-UENUM(BlueprintType)
-enum class EWeaponState : uint8
-{
-	None UMETA(DisplayName = "None"),
-	Equip UMETA(DisplayName = "Equip"),
-	Buy UMETA(DisplayName = "Drop"),
-	End UMETA(DisplayName = "End")
-};
-
 UCLASS()
-class PORTFOLIO_API AWeapon : public AActor, public IInteractionInterface
+class PORTFOLIO_API AWeapon : public AActor, public IInteractionInterface 
 {
 	GENERATED_BODY()
 	
@@ -29,15 +18,9 @@ public:
 	
 	virtual void Tick(float DeltaTime) override;
 
-	void ShowPickUpText(bool ShowFlag);
+	int32 GetTotalAmmo() { return TotalAmmo; }
 
-	void SetWeaponState(EWeaponState _WeaponState);
-
-	class USphereComponent* GetSphereComponent() const { return SphereComponent; }
-
-	uint32 GetTotalAmmo() { return TotalAmmo; }
-
-	uint32 GetReloadMaxAmmo() { return ReloadMaxAmmo; }
+	int32 GetReloadMaxAmmo() { return ReloadMaxAmmo; }
 	
 	virtual void BeginFocus();
 	virtual void EndFoucs();
@@ -50,42 +33,20 @@ protected:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION()
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UFUNCTION()
-		void OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-			int32 OtherBodyIndex);
-
-	UFUNCTION()
-		void OnRep_WeaponState();
 
 protected:
 	UPROPERTY(EditAnywhere)
-		UStaticMeshComponent* WeaponMesh;
+		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditAnywhere)
-		USphereComponent* SphereComponent;
+		int32 TotalAmmo;
 
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere)
-		EWeaponState WeaponState;
+	UPROPERTY(EditAnywhere)
+		int32 ReloadMaxAmmo;
 
-	UPROPERTY(VisibleAnywhere)
-		class UWidgetComponent* PickUpText;
-
-	UPROPERTY(VisibleAnywhere)
-		uint32 TotalAmmo;
-
-	UPROPERTY(VisibleAnywhere)
-		uint32 ReloadMaxAmmo;
-
-	UPROPERTY(EditInstanceOnly)
-		FInteractableData InstanceInteractableData;
-
-
-
-
-
-
+	UPROPERTY(EditAnywhere)
+		FString WeaponName;
+	
+	FInteractableData InstanceInteractableData;
 };

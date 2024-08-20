@@ -6,33 +6,9 @@
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Engine/AssetManager.h"
+#include "Data/DataStruct.h"
 #include "FGameInstance.generated.h"
 
-USTRUCT(BlueprintType)
-struct FCharacterTable : public FTableRowBase
-{
-	GENERATED_BODY()
-public:
-	FCharacterTable() {}
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float MaxHp;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float MaxEXP;
-};
-
-USTRUCT(BlueprintType)
-struct FMonsterTable : public FTableRowBase
-{
-	GENERATED_BODY()
-public:
-	FMonsterTable() {}
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float MaxHp;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float EXP;
-};
 
 
 /**
@@ -58,13 +34,13 @@ public:
 public:
 	FStreamableManager StreamableManager = FStreamableManager();
 
-	uint32 CurrentAmmo = 0;
-	uint32 TotalAmmo = 0;
-	uint32 ReloadMaxAmmo = 0;
+	int32 CurrentAmmo = 0;
+	int32 TotalAmmo = 0;
+	int32 ReloadMaxAmmo = 0;
 	uint8 bWeaponEquipFlag : 1;
-	uint32 CurrentLevel = 1;
+	int32 CurrentLevel = 1;
 	float CurrentEXP = 0;
-	uint32 PlayerMoney = 0;
+	int32 PlayerMoney = 0;
 
 
 	UPROPERTY()

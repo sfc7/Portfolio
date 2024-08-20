@@ -24,5 +24,6 @@ void IInteractionInterface::EndInteract()
 
 void IInteractionInterface::Interact(AFCharacter* FCharacter)
 {
+
 }
 

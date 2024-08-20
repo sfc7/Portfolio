@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "Data/DataStruct.h"
 #include "Game/FPlayerState.h"
 #include "Character/PlayerCharacter.h"
 #include "WorldStatic/Weapon/Weapon.h"
@@ -180,7 +181,6 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;
 
 	EquippedWeapon = _Weapon;
-	EquippedWeapon->SetWeaponState(EWeaponState::Equip);
 	FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
 	if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
 		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));

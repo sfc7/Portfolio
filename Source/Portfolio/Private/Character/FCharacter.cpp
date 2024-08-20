@@ -170,7 +170,6 @@ void AFCharacter::EquipWeapon()
 		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
 			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 			Weapon->SetOwner(this);
-			Weapon->ShowPickUpText(false);
 		}
 	}
 }

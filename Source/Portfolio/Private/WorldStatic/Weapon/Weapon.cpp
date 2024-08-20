@@ -2,7 +2,6 @@
 
 
 #include "WorldStatic/Weapon/Weapon.h"
-#include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Character/PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,20 +14,14 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
-	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);
 
-	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);    
+	WeaponMesh->SetCollisionResponseToChannel(ECC_Visibility, ECollisionResponse::ECR_Block);
 
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
-	SphereComponent->SetupAttachment(RootComponent);
-	SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	PickUpText = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickUpText"));
-	PickUpText->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -36,76 +29,22 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (PickUpText) {
-		PickUpText->SetVisibility(false);
-	}
+	InstanceInteractableData.Name = FText::FromString(WeaponName);
+	InstanceInteractableData.InteractableType = EInteractableType::Trade;
 
-	if (HasAuthority()) {
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap);
-		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
-		SphereComponent->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereOverlapEnd);
-	}
+	InteractableData = InstanceInteractableData; // InteractableData 와 InstanceInteractableData를 분리해서 만든 이유 : InstanceInteractableData는 기본 값, InteractableData는 현재값으로 분리하여 초기 상태로 복구 가능하게끔
 
-	InteractableData = InstanceInteractableData;
 }
 
 // Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AWeapon, WeaponState);
-}
-
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
-	if (PlayerCharacter) {
-		PlayerCharacter->SetOverlapWeapon(this);
-	}
-}
-
-void AWeapon::OnSphereOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OtherActor);
-	if (PlayerCharacter) {
-		PlayerCharacter->SetOverlapWeapon(nullptr);
-	}
-}
-
-void AWeapon::SetWeaponState(EWeaponState _WeaponState)
-{
-	WeaponState = _WeaponState;
-	switch (WeaponState) {
-	case EWeaponState::Equip:	
-		ShowPickUpText(false);
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		break;
-	}
-
-}
-void AWeapon::OnRep_WeaponState()
-{
-	switch (WeaponState) {
-	case EWeaponState::Equip:
-		ShowPickUpText(false);
-		break;
-	}
-}
-
-void AWeapon::ShowPickUpText(bool ShowFlag)
-{
-	if (PickUpText) {
-		PickUpText->SetVisibility(ShowFlag);
-	}
 }
 
 void AWeapon::BeginFocus()
@@ -124,16 +63,14 @@ void AWeapon::EndFoucs()
 
 void AWeapon::BeginInteract()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginInteract")));
 }
 
 void AWeapon::EndInteract()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("EndInteract")));
 }
 
 void AWeapon::Interact()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("Interact")));
+	Destroy();
 }
 

@@ -15,22 +15,15 @@ class PORTFOLIO_API UPlayerWeaponBuy : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void UpdateWidget(struct FInteractableData* InteractableData);
+	void UpdateWidget(struct FPurchasableWeaponData* PurchasableWeaponData);
 
 protected:
 	virtual void NativeOnInitialized();
 	virtual void NativeConstruct();
-		
-	UFUNCTION()
-	float UpdateInteractionProgress();
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget, AllowPrivateaccess = true))
 		TObjectPtr<class UTextBlock> WeaponName;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget, AllowPrivateaccess = true))
 		TObjectPtr<class UTextBlock> WeaponPrice;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget, AllowPrivateaccess = true))
-		TObjectPtr<class UProgressBar> InteractionProgressBar;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget, AllowPrivateaccess = true))
-		float CurrentInteractionDuration;
 };

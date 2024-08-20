@@ -54,6 +54,9 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void PlayRagdoll_NetMulticast();
 
+	uint8 GetHitPart(FString BoneName);
+
+	uint8 GetMoneyFromHitPart(uint8 HitPart);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))

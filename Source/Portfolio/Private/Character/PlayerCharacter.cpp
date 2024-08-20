@@ -27,6 +27,7 @@
 #include "Game/FGameInstance.h"
 #include "Character/ZombieCharacter.h"
 #include "UI/PlayerHUD.h"
+#include "Data/DataStruct.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -170,8 +171,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ReloadAction, ETriggerEvent::Started, this, &ThisClass::Reload);
-		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Triggered, this, &ThisClass::BeginInteract);
-		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Completed, this, &ThisClass::EndInteract);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Started, this, &ThisClass::WeaponBuyInteract);
 	}
 }
 
@@ -365,17 +365,16 @@ void APlayerCharacter::FireBullet()
 
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 500.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 100.f, DamageEvent, GetController(), this);
 			}
 			else {
-				ApplyDamageAndDrawLine_Server(CameraStartLocation, HitResult.Location, HitZombie, 1000.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 10.f, DamageEvent, GetController(), this);
 			}
 		}
 	}
 	else {
 		FDamageEvent DamageEvent;
 		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
-		ApplyDamageAndDrawLine_Server(CameraStartLocation, CameraEndLocation, nullptr, 1000.f, DamageEvent, GetController(), this);
 	}
 
 	if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
@@ -522,7 +521,7 @@ void APlayerCharacter::PlayRagdoll_NetMulticast_Implementation()
 	}
 }
 
-void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(const FVector& DrawStart, const FVector& DrawEnd, ACharacter* HitCharacter, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (IsValid(HitCharacter)) {
 		HitCharacter->TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
@@ -537,7 +536,7 @@ void APlayerCharacter::DrawLine_NetMulticast_Implementation(const FVector& DrawS
 }
 
 void APlayerCharacter::PlayAttackMontage_Server_Implementation()
-{
+{	
 	FireAnimationPlay();
 	PlayAttackMontage_NetMulticast();
 }
@@ -594,12 +593,6 @@ ECurrentState APlayerCharacter::IsCurrentState()
 
 void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 {
-	if (OverlapWeapon) {
-		OverlapWeapon->ShowPickUpText(true); // 클라이언트 Owner에게
-	}
-	if (LastWeapon) {
-		LastWeapon->ShowPickUpText(false);
-	}
 }
 
 void APlayerCharacter::UseAmmo_Server_Implementation()
@@ -657,17 +650,15 @@ void APlayerCharacter::PerformInteractionCheck()
 
 	float LookDirection = FVector::DotProduct(GetActorForwardVector(), CameraComponent->GetForwardVector());
 	if (LookDirection > 0) {
-		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);
+		/*DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);*/
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(this);
 		FHitResult HitResult;
-
+		
 		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_Visibility, QueryParams);
 		if (IsHit) {
 			if (HitResult.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass())) {
-
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s"),*HitResult.GetActor()->GetName()));
 				if (HitResult.GetActor() != InteractionData.CurrentInteractable) {
 					FoundInteractable(HitResult.GetActor());
 					return;
@@ -685,6 +676,7 @@ void APlayerCharacter::PerformInteractionCheck()
 
 void APlayerCharacter::FoundInteractable(AActor* NewInteractable)
 {
+
 	if (IsInteracting()) {
 		EndInteract();
 	}
@@ -696,9 +688,12 @@ void APlayerCharacter::FoundInteractable(AActor* NewInteractable)
 
 	InteractionData.CurrentInteractable = NewInteractable;
 	TargetInteractable = NewInteractable;
+	FindTargetInteractableInfo();
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
-	PlayerController->WeaponBuyShow(true, &TargetInteractable->InteractableData);
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("TargetInteractable: %s"), *TargetInteractable->InteractableData.Name.ToString()));
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FindTargetWeaponData: %s"), *FindTargetWeaponData.Name.ToString()));
+	PlayerController->WeaponBuyShow(&FindTargetWeaponData);
 
 
 	TargetInteractable->BeginFocus();
@@ -717,17 +712,16 @@ void APlayerCharacter::NoInteractableFound()
 	}
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
-	PlayerController->WeaponBuyShow(false, &TargetInteractable->InteractableData);
+	PlayerController->WeaponBuyHide();
 
 	InteractionData.CurrentInteractable = nullptr;
 	TargetInteractable = nullptr;
 }
 
 
-//아무것도 변하지 않았는지 확인하기위한 안전장치, 동일한 것을 보고 있다는 것을 확인
+//아무것도 변하지 않았는지 확인하기위한 안전장치, 동일한 것을 보고 있다는 것을 확인, 미사용중
 void APlayerCharacter::BeginInteract()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BeginInteract")));
 	PerformInteractionCheck();
 
 	if (InteractionData.CurrentInteractable) {
@@ -754,12 +748,61 @@ void APlayerCharacter::EndInteract()
 	}
 }
 
+//
+
 void APlayerCharacter::Interact()
 {
 	GetWorldTimerManager().ClearTimer(InteractionTimerHandle);
 
 	if (IsValid(TargetInteractable.GetObject()))
 	{
+		TargetInteractable->Interact(this);
+	}
+}
+
+void APlayerCharacter::FindTargetInteractableInfo()
+{	
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		switch (TargetInteractable->InteractableData.InteractableType)
+		{
+		case EInteractableType::Active:
+			break;
+		case EInteractableType::Toggle:
+			break;
+		case EInteractableType::Trade:
+		{
+			FName ItemName = FName(*TargetInteractable->InteractableData.Name.ToString());
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ItemName : %s"), *ItemName.ToString()));
+			
+			FPurchasableWeaponData* ItemData = PurchasableItemData->FindRow<FPurchasableWeaponData>(ItemName, ItemName.ToString());
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ItemData : %s"), *ItemData->Name.ToString()));
+
+			if (ItemData) {
+				FindTargetWeaponData.Name = ItemData->Name;
+				FindTargetWeaponData.CurrentAmmo = ItemData->CurrentAmmo;
+				FindTargetWeaponData.TotalAmmo = ItemData->TotalAmmo;
+				FindTargetWeaponData.ReloadMaxAmmo = ItemData->ReloadMaxAmmo;
+				FindTargetWeaponData.Price = ItemData->Price;
+				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("2222: %s"), *FindTargetWeaponData.Name.ToString()));
+			}
+		break;
+		}	
+		default:
+			break;
+		}
+	}
+}
+
+void APlayerCharacter::WeaponBuyInteract()
+{
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyInteract")));
+	if (IsValid(TargetInteractable.GetObject()))
+	{
+		//if (GetCharacterComponent()->GetMoney() > FindTargetWeaponData.Price) {
+		//	
+		//}
+
 		TargetInteractable->Interact(this);
 	}
 }

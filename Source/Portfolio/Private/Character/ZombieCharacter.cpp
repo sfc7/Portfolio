@@ -144,8 +144,17 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 
 		if (IsValid(CharacterComponent)) {
 			FString BoneName = _HitResult.BoneName.ToString();
-			uint16 Money = GetMoneyFromHitPart(BoneName);
-			CharacterComponent->SetMoney(CharacterComponent->GetMoney() + Money);
+			if (BoneName == FString("None")) {
+				return;
+			}
+			else {
+				if (uint8 HitPart = GetHitPart(BoneName))
+				{
+					if (uint8 RecentGetMoney = GetMoneyFromHitPart(HitPart)) {
+						CharacterComponent->SetMoney(CharacterComponent->GetMoney() + RecentGetMoney);
+					}
+				}
+			}
 		}
 	}
 }
@@ -226,6 +235,44 @@ void AZombieCharacter::OnHittedRagdollRestoreTimerElapsed()
 	CurrentRagDollPercent = 1.f;
 	bIsRagdoll = true;
 
+}
+
+uint8 AZombieCharacter::GetHitPart(FString BoneName)
+{
+	if (BoneName.Contains(FString("Left")) || BoneName.Contains(FString("Right")))
+	{
+		return 1;
+	}
+	else if (BoneName.Contains(FString("Spine")) || BoneName.Contains(FString("Pelvis")))
+	{
+		return 2;
+	}
+	else if (BoneName.Contains(FString("Neck")) || BoneName.Contains(FString("Head")))
+	{
+		return 3;
+	}
+
+
+	return 0;
+}
+
+uint8 AZombieCharacter::GetMoneyFromHitPart(uint8 HitPart)
+{
+	switch (HitPart) {
+		case 1:
+			return 30;
+			break;
+		case 2:
+			return 50;
+			break;
+		case 3:
+			return 100;
+			break;
+		default:
+			break;
+	}
+
+	return 0;
 }
 
 void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()

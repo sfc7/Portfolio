@@ -34,7 +34,9 @@ public:
 	UFUNCTION(Client, Reliable)
 		void EndMap_Client();
 
-	void WeaponBuyShow(bool ShowFlag, struct FInteractableData* InteractableData);
+	void WeaponBuyShow(struct FPurchasableWeaponData* PurchasableWeaponData);
+
+	void WeaponBuyHide();
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

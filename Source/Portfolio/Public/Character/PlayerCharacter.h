@@ -8,7 +8,10 @@
 #include "InputActionValue.h"
 #include "Component/CharacterComponent.h"
 #include "Interface/InteractionInterface.h"
+#include "Data/DataStruct.h"
+#include "Engine/DataTable.h"
 #include "PlayerCharacter.generated.h"
+
 
 USTRUCT()
 struct FInteractionData {
@@ -143,6 +146,10 @@ private:
 
 	void Interact();
 
+	void FindTargetInteractableInfo();
+
+	void WeaponBuyInteract();
+
 
 
 private:
@@ -161,6 +168,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UPlayerAnimInstance> AnimInstance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
+		UDataTable* PurchasableItemData;
+
 	// Attack
 	UFUNCTION(Server, Unreliable)
 		void PlayAttackMontage_Server();
@@ -169,8 +179,7 @@ private:
 		void PlayAttackMontage_NetMulticast();
 
 	UFUNCTION(Server, Reliable)
-		void ApplyDamageAndDrawLine_Server(const FVector& DrawStart, const FVector& DrawEnd, class ACharacter* HittedCharacter,
-			float Damage, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+		void ApplyDamageAndDrawLine_Server(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void DrawLine_NetMulticast(const FVector& DrawStart, const FVector& DrawEnd);
@@ -250,4 +259,6 @@ private:
 	FTimerHandle InteractionTimerHandle;
 
 	FInteractionData InteractionData;
+
+	FPurchasableWeaponData FindTargetWeaponData;
 };	

@@ -18,8 +18,6 @@
 #include "Interface/InteractionInterface.h"
 #include "UI/PlayerWeaponBuy.h"
 
-
-
 void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -30,16 +28,6 @@ void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 void APlayerCharacterController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (!WeaponBuyWidgetClass) {
-		UE_LOG(LogTemp, Error, TEXT("WeaponBuyWidgetClass is not set in the Blueprint"));
-	}
-	else if (!WeaponBuyWidgetClass->IsChildOf(UPlayerWeaponBuy::StaticClass())) {
-		UE_LOG(LogTemp, Error, TEXT("WeaponBuyWidgetClass is not of type UPlayerWeaponBuy"));
-	}
-	else {
-		UE_LOG(LogTemp, Log, TEXT("WeaponBuyWidgetClass is correctly set"));
-	}
 
 	if (IsLocalPlayerController()) {
 		SpawnPlayerMove_Server();
@@ -66,6 +54,14 @@ void APlayerCharacterController::BeginPlay()
 			WeaponBuyWidget = CreateWidget<UPlayerWeaponBuy>(this, WeaponBuyWidgetClass);
 			WeaponBuyWidget->AddToViewport();
 			WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+		if (IsValid(CrosshairUIClass)) {
+			UUserWidget* CrosshairUI = CreateWidget<UUserWidget>(this, CrosshairUIClass);
+			if (IsValid(CrosshairUI)) {
+				CrosshairUI->AddToViewport(1);
+				CrosshairUI->SetVisibility(ESlateVisibility::Visible);
+			}
 		}
 	}
 
@@ -173,19 +169,19 @@ void APlayerCharacterController::PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMe
 	}
 }
 
-void APlayerCharacterController::WeaponBuyShow(bool ShowFlag, FInteractableData* InteractableData)
-{\
-	if (ShowFlag) {
-		if (IsValid(WeaponBuyWidget)) {
-			if (WeaponBuyWidget->GetVisibility() == ESlateVisibility::Collapsed) {
-				WeaponBuyWidget->SetVisibility(ESlateVisibility::Visible);
-			}
-			WeaponBuyWidget->UpdateWidget(InteractableData);
+void APlayerCharacterController::WeaponBuyShow(FPurchasableWeaponData* PurchasableWeaponData)
+{
+	if (IsValid(WeaponBuyWidget)) {
+		if (WeaponBuyWidget->GetVisibility() == ESlateVisibility::Collapsed) {
+			WeaponBuyWidget->SetVisibility(ESlateVisibility::Visible);
 		}
+		WeaponBuyWidget->UpdateWidget(PurchasableWeaponData);
 	}
-	else {
-		if (IsValid(WeaponBuyWidget)) {
-			WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
+}
+
+void APlayerCharacterController::WeaponBuyHide() 
+{
+	if (IsValid(WeaponBuyWidget)) {
+		WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
