@@ -182,10 +182,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		int32 CurrentAmmo;
 
-	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<AWeapon> DefaultWeaponType;
 
-	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<AWeapon> CurrentWeaponType;
 
 	UPROPERTY(Replicated)

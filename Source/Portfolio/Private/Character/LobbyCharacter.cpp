@@ -8,7 +8,7 @@ ALobbyCharacter::ALobbyCharacter()
 	CameraComponent->SetupAttachment(RootComponent);
 	/*CameraComponent->SetRelativeLocation(FVector(180.f, 0.f, 0.f));*/
 	CameraComponent->SetAbsolute(true, true, false);
-	CameraComponent->SetWorldLocation(FVector(1700.f, 1000.f, 45.f));
+	CameraComponent->SetWorldLocation(FVector(600.f, 250.f, 90.f));
 	CameraComponent->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 	CameraComponent->FieldOfView = 45.f;
 

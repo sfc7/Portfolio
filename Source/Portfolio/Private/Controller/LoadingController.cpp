@@ -9,12 +9,11 @@ void ALoadingController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
-	//if (IsValid(GM)) {
-	//	FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel")));
-	//	UGameplayStatics::OpenLevel(GM, *NextLevel, false);
+	AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
+	if (IsValid(GM)) {
+		FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel")));
 
-	//	UE_LOG(LogTemp, Log, TEXT("load"));
-	//}
- 
+		UGameplayStatics::OpenLevel(GM, *NextLevel, false);
+	}
 }
+

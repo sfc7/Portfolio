@@ -20,8 +20,6 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);    
 	WeaponMesh->SetCollisionResponseToChannel(ECC_Visibility, ECollisionResponse::ECR_Block);
-
-
 }
 
 // Called when the game starts or when spawned

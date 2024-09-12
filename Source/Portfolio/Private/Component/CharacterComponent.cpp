@@ -18,8 +18,8 @@
 UCharacterComponent::UCharacterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
 	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Rifle.BP_Rifle_C'"));
+
 	if (RifleBP.Succeeded()) {
 		DefaultWeaponType = RifleBP.Class;
 	}
@@ -180,12 +180,28 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 {
 	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;
 
-	EquippedWeapon = _Weapon;
-	FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
-	if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
-		const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
-		WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
+
+	if (GetCurrentWeaponType() == nullptr) {
+		EquippedWeapon = _Weapon;
+		SetCurrentAndTotalAmmo(EquippedWeapon->GetReloadMaxAmmo(), EquippedWeapon->GetTotalAmmo());
+		SetReloadMaxAmmo(EquippedWeapon->GetReloadMaxAmmo());
+		SetCurrentWeaponType(GetDefaultWeaponType());
 	}
+	else {
+		EquippedWeapon = _Weapon;
+		SetCurrentWeaponType(EquippedWeapon->GetClass());
+
+	}
+
+
+
+
+
+	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
+	//if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
+	//	const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
+	//	WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
+	//}
 }
 
 void UCharacterComponent::SetReloadMaxAmmo(int32 _ReloadMaxAmmo)

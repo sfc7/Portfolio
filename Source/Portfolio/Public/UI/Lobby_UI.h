@@ -20,50 +20,29 @@ protected:
     virtual void NativeConstruct() override;
 
 private:
-    UFUNCTION()
-        void OnRedTeamButtonClicked();
-
-    UFUNCTION()
-        void OnBlueTeamButtonClicked();
 
     UFUNCTION()
         void OnSubmitButtonClicked();
 
     UFUNCTION()
-        void OnTestButtonClicked();
+        void OnPreviousButtonClicked();
+
+
 
     void SaveInitializedSaveData();
 
 protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
-        TObjectPtr<class UButton> RedTeamButton;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
-        TObjectPtr<class UButton> BlueTeamButton;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
-        TObjectPtr<class UEditableText> EditPlayerName;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
         TObjectPtr<class UButton> SubmitButton;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
-        TObjectPtr<class UButton> TestButton;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        class USkeletalMesh* RedTeamMesh;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        class USkeletalMesh* BlueTeamMesh;
+        TObjectPtr<class UButton> PreviousButton;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         class USkeletalMesh* CurrentSkeletalMesh;
 
     TWeakObjectPtr<class USkeletalMeshComponent> CurrentSkeletalMeshComponent;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess, BindWidget))
-        TObjectPtr<class UEditableText> EditServerIP;
 
     FString PlayerName = TEXT("DefaultPlayerName");
 };

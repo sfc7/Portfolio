@@ -5,6 +5,7 @@
 #include "Components/Button.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Controller/UIController.h"
 #include "Game/PlayerStateSave.h"
 
 UTitle_UI::UTitle_UI(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -14,22 +15,28 @@ UTitle_UI::UTitle_UI(const FObjectInitializer& ObjectInitializer) : Super(Object
 
 void UTitle_UI::NativeConstruct()
 {
-	CreateGameButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnCreateGameButtonClicked);
 	JoinGameButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnJoinGameButtonClicked);
 	ExitGameButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnExitGameButtonClicked);
 }
 
-void UTitle_UI::OnCreateGameButtonClicked()
-{
-	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=127.0.0.1:17777")));
-}
-
 void UTitle_UI::OnJoinGameButtonClicked()
 {
-	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=ServerJoin")));
+    //APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+    //if (PlayerController->HasAuthority())
+    //{
+    //     서버인 경우
+    //    UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=Lobby")));
+    //}
+    //else
+    //{
+    //     클라이언트인 경우
+    //    UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=127.0.0.1:7777")));
+    //}
+
+    UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=Lobby")));
 }
 
 void UTitle_UI::OnExitGameButtonClicked()		
 {
 	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, false);
-}
+}	

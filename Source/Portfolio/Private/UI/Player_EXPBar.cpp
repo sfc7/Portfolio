@@ -45,9 +45,4 @@ void UPlayer_EXPBar::OnMaxEXPChange(float NewMaxEXP)
 void UPlayer_EXPBar::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	APlayerCharacter* OwningCharacter = Cast<APlayerCharacter>(OwningActor);
-	if (IsValid(OwningCharacter)) {
-		OwningCharacter->SetWidget(this);
-	}
 }

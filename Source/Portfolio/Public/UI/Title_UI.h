@@ -18,10 +18,8 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
-private:
-    UFUNCTION()
-        void OnCreateGameButtonClicked();
 
+private:
     UFUNCTION()
         void OnJoinGameButtonClicked();
 
@@ -29,8 +27,6 @@ private:
         void OnExitGameButtonClicked();
 
 private:
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess, BindWidget))
-        TObjectPtr<class UButton> CreateGameButton;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess, BindWidget))
         TObjectPtr<class UButton> JoinGameButton;

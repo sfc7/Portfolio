@@ -24,17 +24,6 @@ AZombieCharacter::AZombieCharacter()
 
 	AIControllerClass = AZombieAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-
-
-
-	//const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
-	//if (0 < CDO->ZombieCharacterMeshPaths.Num())
-	//{
-	//	for (FSoftObjectPath PlayerCharacterMeshPath : CDO->ZombieCharacterMeshPaths)
-	//	{
-	//		UE_LOG(LogTemp, Warning, TEXT("Path: %s"), *(PlayerCharacterMeshPath.ToString()));
-	//	}
-	//}
 }
 
 void AZombieCharacter::BeginPlay()
@@ -47,18 +36,18 @@ void AZombieCharacter::BeginPlay()
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 200.f;
 
-	//const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
-	//int32 RandIndex = FMath::RandRange(0, CDO->ZombieCharacterMeshPaths.Num() - 1);
-	//CurrentZombieCharacterMeshPath = CDO->ZombieCharacterMeshPaths[RandIndex];
+	const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
+	int32 RandIndex = FMath::RandRange(0, CDO->ZombieCharacterMeshPaths.Num() - 1);
+	CurrentZombieCharacterMeshPath = CDO->ZombieCharacterMeshPaths[RandIndex];
 
-	//// CharacterComponent의 gameinstance 이용
-	//UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetGameInstance());
-	//if (IsValid(FGameInstance)) {
-	//	AssetStreamableHandle = FGameInstance->StreamableManager.RequestAsyncLoad(
-	//		CurrentZombieCharacterMeshPath,
-	//		FStreamableDelegate::CreateUObject(this, &ThisClass::MeshAssetLoad)
-	//	);
-	//}
+	// CharacterComponent의 gameinstance 이용
+	UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetGameInstance());
+	if (IsValid(FGameInstance)) {
+		AssetStreamableHandle = FGameInstance->StreamableManager.RequestAsyncLoad(
+			CurrentZombieCharacterMeshPath,
+			FStreamableDelegate::CreateUObject(this, &ThisClass::MeshAssetLoad)
+		);
+	}
 }
 
 void AZombieCharacter::Tick(float DeltaTime)
@@ -79,7 +68,8 @@ void AZombieCharacter::Tick(float DeltaTime)
 		if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 			GetMesh()->SetSimulatePhysics(true);
 			GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
-			
+
+
 			bIsRagdoll = false;
 		}
 	}
@@ -164,7 +154,7 @@ void AZombieCharacter::MeshAssetLoad()
 	AssetStreamableHandle->ReleaseHandle();
 	TSoftObjectPtr<USkeletalMesh> LoadedAsset(CurrentZombieCharacterMeshPath);
 	if (LoadedAsset.IsValid()) {
-		//GetMesh()->SetSkeletalMesh(LoadedAsset.Get());
+		GetMesh()->SetSkeletalMesh(LoadedAsset.Get());
 	}
 }
 
@@ -288,8 +278,10 @@ void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()
 void AZombieCharacter::IsDead_NetMulticast_Implementation()
 {
 	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECollisionResponse::ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
+
 
 	AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
 	if (IsValid(AIController)) {

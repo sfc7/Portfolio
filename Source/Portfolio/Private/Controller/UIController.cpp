@@ -15,7 +15,7 @@ void AUIController::BeginPlay()
 
 
 	if (IsLocalPlayerController()) {
-		SpawnPlayerMove_Server();
+		//SpawnPlayerMove_Server();
 
 		if (IsValid(WBP_UIClass)) {
 			WBP_UI = CreateWidget<UUserWidget>(this, WBP_UIClass);
@@ -34,17 +34,20 @@ void AUIController::BeginPlay()
 
 void AUIController::JoinServer(const FString& IPAddress)
 {
-	UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString::Printf(TEXT("NextLevel=%s"), *IPAddress));
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnSubmitButtonClicked")));
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s"), *IPAddress));
+
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Loading"), true, FString::Printf(TEXT("NextLevel=%s?Saved=false"), *IPAddress));
 }
 
 void AUIController::SpawnPlayerMove_Server_Implementation()
 {
-	ALobbyGameMode* LobbyGameMode = Cast<ALobbyGameMode>(GetWorld()->GetAuthGameMode());
-	if (IsValid(LobbyGameMode)) {
-		FTransform PlayerStartTransform = LobbyGameMode->GetPlayerStartTransform();
-		ALobbyCharacter* LobbyCharacter = this->GetPawn<ALobbyCharacter>();
-		LobbyCharacter->SetActorLocationAndRotation(PlayerStartTransform.GetLocation(), PlayerStartTransform.GetRotation(), false, 0, ETeleportType::None);
-	}	
+	//ALobbyGameMode* LobbyGameMode = Cast<ALobbyGameMode>(GetWorld()->GetAuthGameMode());
+	//if (IsValid(LobbyGameMode)) {
+	//	FTransform PlayerStartTransform = LobbyGameMode->GetPlayerStartTransform();
+	//	ALobbyCharacter* LobbyCharacter = this->GetPawn<ALobbyCharacter>();
+	//	LobbyCharacter->SetActorLocationAndRotation(PlayerStartTransform.GetLocation(), PlayerStartTransform.GetRotation(), false, 0, ETeleportType::None);
+	//}	
 }
 
 

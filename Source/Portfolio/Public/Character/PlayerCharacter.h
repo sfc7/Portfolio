@@ -43,10 +43,6 @@ public:
 
 	float GetAimYaw() const { return AimYaw; }
 
-	void SetWidget(class UPlayerWidget* _PlayerWidget) {}
-
-	void SetOverlapWeapon(class AWeapon* _Weapon);
-
 	bool IsAiming();
 
 	bool IsDead();
@@ -71,9 +67,6 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	virtual void Destroyed() override;
-
-	UFUNCTION()
-		void OnRep_OverlappingWeapon(AWeapon* LastWeapon); // LastWeapon은 Replicate하기 전 OverlapWeapon 값
 
 	virtual void OnRep_PlayerState() override;
 
@@ -221,16 +214,8 @@ private:
 	float CurrentRagDollBlendWeight = 0.f;
 	bool bIsNowRagdollBlending = false;
 	//
-	
-	//Weapon
-	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
-		TObjectPtr<class AWeapon> OverlapWeapon;
-
-	UPROPERTY()
-		TObjectPtr<class AWeapon> OverlapWeapons;
 
 
-	// 
 
 	//Death
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess))
@@ -261,4 +246,6 @@ private:
 	FInteractionData InteractionData;
 
 	FPurchasableWeaponData FindTargetWeaponData;
+
+	AWeapon* interactableWeapon;
 };	

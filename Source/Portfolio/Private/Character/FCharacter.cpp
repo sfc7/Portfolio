@@ -157,7 +157,6 @@ void AFCharacter::WeaponSetCharacterComponentOnStart_Server_Implementation()
 
 void AFCharacter::EquipWeapon()
 {
-
 	if (IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
 		Weapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetDefaultWeaponType());
 	}

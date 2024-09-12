@@ -213,7 +213,6 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, RightInputValue);
 	DOREPLIFETIME(ThisClass, AimPitch);
 	DOREPLIFETIME(ThisClass, AimYaw);
-	DOREPLIFETIME_CONDITION(ThisClass, OverlapWeapon, COND_OwnerOnly);
 }
 
 void APlayerCharacter::PostInitializeComponents()
@@ -546,30 +545,7 @@ void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
 	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
 		FireAnimationPlay();
 	}
-}
-
-void APlayerCharacter::SetOverlapWeapon(AWeapon* _Weapon)
-{
-	/*UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon")));
-	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
-
-	if (IsValid(PlayerController)) {
-		OverlapWeapons = _Weapon;
-		if (OverlapWeapons) {
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetOverlapWeapon2")));
-			PlayerController->WeaponBuyShow(true);
-		}
-		else {
-			PlayerController->WeaponBuyShow(false);
-		}*/
-		//OverlapWeapon = _Weapon;
-		//if (IsLocallyControlled()) {
-		//	if (OverlapWeapon) {
-		//		OverlapWeapon->ShowPickUpText(true); // 서버 Owner에게
-		//	}
-		//}
-	//}
-}				
+}			
 
 bool APlayerCharacter::IsAiming()
 {
@@ -589,10 +565,6 @@ ECurrentState APlayerCharacter::IsCurrentState()
 	else {
 		return ECurrentState::None;
 	}
-}
-
-void APlayerCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) // LastWeapon은 Replicate하기 전 OverlapWeapon 값
-{
 }
 
 void APlayerCharacter::UseAmmo_Server_Implementation()
@@ -656,7 +628,7 @@ void APlayerCharacter::PerformInteractionCheck()
 		QueryParams.AddIgnoredActor(this);
 		FHitResult HitResult;
 		
-		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_Visibility, QueryParams);
+		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_GameTraceChannel6, QueryParams);
 		if (IsHit) {
 			if (HitResult.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass())) {
 				if (HitResult.GetActor() != InteractionData.CurrentInteractable) {
@@ -773,10 +745,8 @@ void APlayerCharacter::FindTargetInteractableInfo()
 		case EInteractableType::Trade:
 		{
 			FName ItemName = FName(*TargetInteractable->InteractableData.Name.ToString());
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ItemName : %s"), *ItemName.ToString()));
 			
 			FPurchasableWeaponData* ItemData = PurchasableItemData->FindRow<FPurchasableWeaponData>(ItemName, ItemName.ToString());
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ItemData : %s"), *ItemData->Name.ToString()));
 
 			if (ItemData) {
 				FindTargetWeaponData.Name = ItemData->Name;
@@ -784,7 +754,6 @@ void APlayerCharacter::FindTargetInteractableInfo()
 				FindTargetWeaponData.TotalAmmo = ItemData->TotalAmmo;
 				FindTargetWeaponData.ReloadMaxAmmo = ItemData->ReloadMaxAmmo;
 				FindTargetWeaponData.Price = ItemData->Price;
-				UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("2222: %s"), *FindTargetWeaponData.Name.ToString()));
 			}
 		break;
 		}	
@@ -796,12 +765,12 @@ void APlayerCharacter::FindTargetInteractableInfo()
 
 void APlayerCharacter::WeaponBuyInteract()
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyInteract")));
+	
 	if (IsValid(TargetInteractable.GetObject()))
 	{
-		//if (GetCharacterComponent()->GetMoney() > FindTargetWeaponData.Price) {
-		//	
-		//}
+		if (GetCharacterComponent()->GetMoney() > FindTargetWeaponData.Price) {
+			interactableWeapon = Cast<AWeapon>(InteractionData.CurrentInteractable);
+		 }
 
 		TargetInteractable->Interact(this);
 	}
