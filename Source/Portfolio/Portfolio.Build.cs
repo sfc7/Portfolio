@@ -12,7 +12,7 @@ public class Portfolio : ModuleRules
             "NavigationSystem", "AIModule", "GameplayTasks"});
 
         PrivateDependencyModuleNames.AddRange(new string[] {
-              "PortfolioSettings"
+              "PortfolioSettings", "Slate", "SlateCore"
         });
   
 

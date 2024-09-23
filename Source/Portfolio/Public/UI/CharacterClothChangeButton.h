@@ -22,11 +22,17 @@ protected:
 	UFUNCTION()
 		void OnClothChangeButtonClicked();
 
+	UFUNCTION()
+		void OnClothChangeButtonHovered();
+
+	UFUNCTION()
+		void OnClothChangeButtonUnHovered();
+
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		TObjectPtr<class UButton> ClothChangeButton;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		TObjectPtr<class UImage> ClothChangeImage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

@@ -15,16 +15,6 @@
 
 ULobby_UI::ULobby_UI(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-    //static ConstructorHelpers::FObjectFinder<USkeletalMesh> RedTeamMeshAsset(TEXT("/Script/Engine.SkeletalMesh'/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
-    //if (RedTeamMeshAsset.Succeeded()) {
-    //    RedTeamMesh = RedTeamMeshAsset.Object;
-    //}
-
-    //static ConstructorHelpers::FObjectFinder<USkeletalMesh> BlueTeamMeshAsset(TEXT("/Script/Engine.SkeletalMesh'/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin_2.SK_Mannequin_2'"));
-    //if (BlueTeamMeshAsset.Succeeded()) {
-    //    BlueTeamMesh = BlueTeamMeshAsset.Object;
-    //}
-
 }
 
 void ULobby_UI::NativeConstruct()
@@ -34,45 +24,28 @@ void ULobby_UI::NativeConstruct()
     AFCharacter* FCharacter = Cast<AFCharacter>(GetOwningPlayerPawn());
     CurrentSkeletalMeshComponent = FCharacter->GetMesh();
 
+    PreviousButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnPreviousButtonClicked);
     SubmitButton.Get()->OnClicked.AddDynamic(this, &ThisClass::OnSubmitButtonClicked);
-
 }
-
-//void ULobby_UI::OnRedTeamButtonClicked()
-//{
-//    UPlayerStateSave* PlayerStateSave = NewObject<UPlayerStateSave>();
-//    PlayerStateSave->PlayerCharacterName = PlayerName;
-//
-//    UGameplayStatics::SaveGameToSlot(PlayerStateSave, FString::FromInt(GPlayInEditorID), 0);
-//}
-//
-//void ULobby_UI::OnBlueTeamButtonClicked()
-//{
-//    if (IsValid(BlueTeamMesh)) {
-//        
-//        ALobbyCharacter* LobbyCharacter = Cast<ALobbyCharacter>(GetOwningPlayerPawn());
-//        if (IsValid(LobbyCharacter)) {
-//            LobbyCharacter->SetSkeletalMeshInPlayerStateSave(BlueTeamMesh);
-//        }   
-//    }
-//}
 
 void ULobby_UI::OnSubmitButtonClicked()
 {   
-    
     SaveInitializedSaveData();
 
-    //AUIController* PlayerUIController = GetOwningPlayer<AUIController>();
-    //if (IsValid(PlayerUIController))
-    //{
-    //    FText ServerIP = EditServerIP->GetText();
-    //    PlayerUIController->JoinServer(ServerIP.ToString());
-
-    //}
+    AUIController* PlayerUIController = GetOwningPlayer<AUIController>();
+    if (IsValid(PlayerUIController))
+    {
+        PlayerUIController->JoinServer(FString(TEXT("127.0.0.1:17777")));
+    }
 }
 
 void ULobby_UI::OnPreviousButtonClicked()
 {
+    AUIController* PlayerUIController = GetOwningPlayer<AUIController>();
+    if (IsValid(PlayerUIController))
+    {
+        PlayerUIController->JoinServer(FString(TEXT("Title")));
+    }
 }
 
 void ULobby_UI::SaveInitializedSaveData()

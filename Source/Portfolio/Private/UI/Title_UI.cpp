@@ -30,7 +30,7 @@ void UTitle_UI::OnJoinGameButtonClicked()
     //else
     //{
     //     클라이언트인 경우
-    //    UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=127.0.0.1:7777")));
+    //    UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("\127.0.0.1:7777")));
     //}
 
     UGameplayStatics::OpenLevel(GetWorld(), FName(TEXT("Loading")), true, FString(TEXT("NextLevel=Lobby")));

@@ -9,10 +9,10 @@
 #include "Portfolio/Portfolio.h"
 #include "Game/LobbyGameMode.h"
 #include "Character/LobbyCharacter.h"
+
 void AUIController::BeginPlay()
 {
 	Super::BeginPlay();
-
 
 	if (IsLocalPlayerController()) {
 		//SpawnPlayerMove_Server();
@@ -34,9 +34,6 @@ void AUIController::BeginPlay()
 
 void AUIController::JoinServer(const FString& IPAddress)
 {
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnSubmitButtonClicked")));
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s"), *IPAddress));
-
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Loading"), true, FString::Printf(TEXT("NextLevel=%s?Saved=false"), *IPAddress));
 }
 

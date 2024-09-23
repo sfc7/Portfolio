@@ -23,9 +23,5 @@ void ALobbyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FTimerHandle StateTimer;
-	GetWorld()->GetTimerManager().SetTimer(StateTimer, FTimerDelegate::CreateLambda([&] {
-		GetMesh()->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
-	}), 0.2f, false);
 }
-				
+			
