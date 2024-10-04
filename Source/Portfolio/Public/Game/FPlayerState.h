@@ -18,6 +18,7 @@ public:
     void InitPlayerState();
 
     int32 GetPlayerNumber() const { return PlayerNumber; }
+
     void SetPlayerNumber(int32 _PlayerNumber);
 
 
@@ -30,10 +31,4 @@ private:
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
         int32 PlayerNumber = 99;
-
-
-
-
-
-
 };

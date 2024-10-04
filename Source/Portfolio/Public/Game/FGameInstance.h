@@ -30,6 +30,12 @@ public:
 	FCharacterTable* GetCharacterTableRowFromLevel(int32 Level);
 
 	FMonsterTable* GetMonsterTableRowFromName(FName _RowName);
+	
+	int32 GetTotalRoundNumber() const { return TotalRoundNumber; }
+
+	void SetTotalRoundNumber(uint32 _Number) { TotalRoundNumber = _Number;  }
+
+	void IncrementTotalRoundNumber() { TotalRoundNumber++; }
 
 public:
 	FStreamableManager StreamableManager = FStreamableManager();
@@ -51,4 +57,6 @@ private:
 		UDataTable* CharacterTable;	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
 		UDataTable* MonsterTable;
+
+	int32 TotalRoundNumber = 1;
 };

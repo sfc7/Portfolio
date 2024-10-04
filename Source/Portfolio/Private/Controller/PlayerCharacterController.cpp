@@ -6,7 +6,6 @@
 #include "UI/PlayerHUD.h"
 #include "Component/CharacterComponent.h"
 #include "Character/PlayerCharacter.h"
-#include "Blueprint/UserWidget.h"
 #include "Portfolio/Portfolio.h"
 #include "Game/MainGameMode.h"
 #include "Net/UnrealNetwork.h"
@@ -23,6 +22,7 @@ void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, UserNotificationText);
+	DOREPLIFETIME(ThisClass, WaveText);
 }
 
 void APlayerCharacterController::BeginPlay()
@@ -34,7 +34,7 @@ void APlayerCharacterController::BeginPlay()
 
 		FInputModeGameOnly GameOnlyMode;
 		SetInputMode(GameOnlyMode);
-		
+
 		if (IsValid(HUDWidgetClass)) {
 			HUDWidget = CreateWidget<UPlayerHUD>(this, HUDWidgetClass);
 
@@ -46,14 +46,18 @@ void APlayerCharacterController::BeginPlay()
 
 		if (IsValid(LoadingScreenClass)) {
 			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
-			LoadingScreen->AddToViewport();
-			LoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
+			if (LoadingScreen) {
+				LoadingScreen->AddToViewport();
+				LoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
 
 		if (IsValid(WeaponBuyWidgetClass)) {
 			WeaponBuyWidget = CreateWidget<UPlayerWeaponBuy>(this, WeaponBuyWidgetClass);
-			WeaponBuyWidget->AddToViewport();
-			WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
+			if(IsValid(WeaponBuyWidget)){
+				WeaponBuyWidget->AddToViewport();
+				WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
 
 		if (IsValid(CrosshairUIClass)) {
@@ -63,11 +67,27 @@ void APlayerCharacterController::BeginPlay()
 				CrosshairUI->SetVisibility(ESlateVisibility::Visible);
 			}
 		}
+
+		if (IsValid(UserNotificationTextUIClass)) {
+			UserNotificationTextUI = CreateWidget<UUserWidget>(this, UserNotificationTextUIClass);
+			if (IsValid(UserNotificationTextUI)) {
+				UserNotificationTextUI->AddToViewport(1);
+				UserNotificationTextUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+
+		if (IsValid(WaveTextUIClass)) {
+			WaveTextUI = CreateWidget<UUserWidget>(this, WaveTextUIClass);
+			if (IsValid(WaveTextUI)) {
+				WaveTextUI->AddToViewport(1);
+				WaveTextUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
 	}
 
-	AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
-	if (IsValid(FPlayerState)) {
-		if (HasAuthority()) {
+	if (IsLocalPlayerController()) {
+		AFPlayerState* FPlayerState = GetPlayerState<AFPlayerState>();
+		if (IsValid(FPlayerState)) {
 			FPlayerState->InitPlayerState();
 		}
 	}
@@ -156,16 +176,6 @@ void APlayerCharacterController::SpawnPlayerMove_Server_Implementation()
 		FTransform PlayerStartTransform = MainGameMode->GetPlayerStartTransform();
 		APlayerCharacter* PlayerCharacter = this->GetPawn<APlayerCharacter>();
 		PlayerCharacter->SetActorLocationAndRotation(PlayerStartTransform.GetLocation(), PlayerStartTransform.GetRotation(), false, 0, ETeleportType::None);
-	}
-}
-
-void APlayerCharacterController::PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMesh)
-{
-	if (IsLocalPlayerController()) {
-		APlayerCharacter* PlayerCharacter = GetPawn<APlayerCharacter>();
-		if (IsValid(PlayerCharacter)) {
-			PlayerCharacter->SetPlayerMesh_Server(_PlayerMesh);
-		}
 	}
 }
 

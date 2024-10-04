@@ -9,6 +9,7 @@
 #include "Portfolio/Portfolio.h"
 #include "Game/LobbyGameMode.h"
 #include "Character/LobbyCharacter.h"
+#include "Engine/World.h"
 
 void AUIController::BeginPlay()
 {
@@ -29,6 +30,12 @@ void AUIController::BeginPlay()
 				bShowMouseCursor = true;
 			}
 		}
+
+		if (IsValid(LoadingScreenClass)) {
+			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
+			LoadingScreen->AddToViewport();
+			LoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 
@@ -36,6 +43,26 @@ void AUIController::JoinServer(const FString& IPAddress)
 {
 	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Loading"), true, FString::Printf(TEXT("NextLevel=%s?Saved=false"), *IPAddress));
 }
+
+void AUIController::EndMap()
+{
+	if (IsValid(LoadingScreen) && IsLocalPlayerController()) {
+		LoadingScreen->SetVisibility(ESlateVisibility::Visible);
+
+		FInputModeUIOnly UIMode;
+		UIMode.SetWidgetToFocus(LoadingScreen->GetCachedWidget());
+		SetInputMode(UIMode);
+
+		bShowMouseCursor = true;
+	}
+}
+
+void AUIController::JoinOpen_Server_Implementation()
+{
+	ClientTravel(*FString(TEXT("Room")), ETravelType::TRAVEL_Absolute);
+}
+
+
 
 void AUIController::SpawnPlayerMove_Server_Implementation()
 {

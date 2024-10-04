@@ -4,7 +4,7 @@
 #include "Game/FGameInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Game/MainGameMode.h"
 UMonsterComponent::UMonsterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -72,6 +72,12 @@ void UMonsterComponent::SetIsAttacking(uint8 _bIsAttacking)
 void UMonsterComponent::SetIsDead(uint8 _bIsDead)
 {
 	bIsDead = _bIsDead;
+
+	AMainGameMode* MainGamemode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	if (IsValid(MainGamemode)) {
+		MainGamemode->ZombieDie();
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetIsDead")));
+	}
 }
 
 

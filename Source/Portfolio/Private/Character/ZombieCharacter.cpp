@@ -41,13 +41,16 @@ void AZombieCharacter::BeginPlay()
 	CurrentZombieCharacterMeshPath = CDO->ZombieCharacterMeshPaths[RandIndex];
 
 	// CharacterComponentÀÇ gameinstance ÀÌ¿ë
-	UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetGameInstance());
-	if (IsValid(FGameInstance)) {
-		AssetStreamableHandle = FGameInstance->StreamableManager.RequestAsyncLoad(
-			CurrentZombieCharacterMeshPath,
-			FStreamableDelegate::CreateUObject(this, &ThisClass::MeshAssetLoad)
-		);
+	if (HasAuthority()) {
+		UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetGameInstance());
+		if (IsValid(FGameInstance)) {
+			AssetStreamableHandle = FGameInstance->StreamableManager.RequestAsyncLoad(
+				CurrentZombieCharacterMeshPath,
+				FStreamableDelegate::CreateUObject(this, &ThisClass::MeshAssetLoad)
+			);
+		}
 	}
+
 }
 
 void AZombieCharacter::Tick(float DeltaTime)
@@ -89,8 +92,6 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		MonsterComponent->SetIsDead(true);
 		IsDead_NetMulticast();
-
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("TakeDamage")));
 		
 		APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
 		if (IsValid(CauserCharacter)) {
@@ -149,12 +150,20 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 	}
 }
 
+void AZombieCharacter::SetMesh_NetMulticast_Implementation(USkeletalMesh* NewMesh)
+{
+	if (NewMesh) {
+		GetMesh()->SetSkeletalMesh(NewMesh);
+	}
+}
+
 void AZombieCharacter::MeshAssetLoad()
 {
 	AssetStreamableHandle->ReleaseHandle();
 	TSoftObjectPtr<USkeletalMesh> LoadedAsset(CurrentZombieCharacterMeshPath);
 	if (LoadedAsset.IsValid()) {
 		GetMesh()->SetSkeletalMesh(LoadedAsset.Get());
+		SetMesh_NetMulticast(LoadedAsset.Get());
 	}
 }
 

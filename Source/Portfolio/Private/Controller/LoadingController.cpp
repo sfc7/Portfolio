@@ -11,7 +11,7 @@ void ALoadingController::BeginPlay()
 
 	AGameModeBase* GM = UGameplayStatics::GetGameMode(this);
 	if (IsValid(GM)) {
-		FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel")));
+		FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel"))) + "?listen";
 
 		UGameplayStatics::OpenLevel(GM, *NextLevel, false);
 	}

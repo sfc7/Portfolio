@@ -48,7 +48,7 @@ public:
 
 	void InRoom();
 
-	void WaitStage();
+	void InWaitingStage();
 
 	void InStage();
 
@@ -69,7 +69,9 @@ private:
 	UFUNCTION()
 	void OnMainTimerElapsed();
 
-	void OnNotificationText(const FString& NotificationString);
+	void ChangeNotificationText(const FString& _NotificationString);
+
+	void ChangeWaveText(const FString& _WaveString);
 
 	void SetLevelStateFromLevelName();
 
@@ -84,6 +86,8 @@ protected:
 private:
 	TObjectPtr<class AFGameState> FGameState;
 
+	TObjectPtr<class UFGameInstance> FGameInstance;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
 		class UDataTable* ZombieRoundTable;
 
@@ -94,23 +98,27 @@ private:
 		
 	TArray<TObjectPtr<class AZombieSpawnPoint>> ZombieSpawnPointArray;	
 
-	uint32 CurrentRound = 1;
-
-	uint16 ZombieSpawnRemaning = 0;
+	int16 ZombieSpawnRemaning = 0;
 
 	FTimerHandle MainTimerHandle;
 
 	ELevelState LevelState = ELevelState::Room;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RoomTime = 100;
+		int32 RoomTime = 10;
 
-	int32 RemaningWaitTime = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 RemaningWaitTime = 10;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 
 	FString NotificationString;
 
+	FString WaveString;
+
 	FString CurrentLevelName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 MaxRoundNumber = 9;
 
 };

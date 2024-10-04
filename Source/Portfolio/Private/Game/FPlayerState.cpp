@@ -6,8 +6,10 @@
 #include "Game/FGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/PlayerStateSave.h"
-#include "Character/PlayerCharacter.h"
+#include "Character/FCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Game/PlayerStateSave.h"
+#include "Controller/PlayerCharacterController.h"
 
 AFPlayerState::AFPlayerState()
 {
@@ -21,7 +23,15 @@ void AFPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 void AFPlayerState::InitPlayerState()
 {
-
+	APlayerController* PlayerController = Cast<APlayerController>(GetOwner());
+	AFCharacter* FCharacter = Cast<AFCharacter>(PlayerController->GetPawn());
+	UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID),0));
+	
+	if (IsValid(PlayerStateSave)) {
+		if (IsValid(FCharacter)) {
+			FCharacter->SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
+		}
+	}
 }
 
 void AFPlayerState::SetPlayerNumber(int32 _PlayerNumber)

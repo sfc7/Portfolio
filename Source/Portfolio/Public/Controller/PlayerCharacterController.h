@@ -24,8 +24,6 @@ public:
 	UFUNCTION(Server, Reliable)
 		void SpawnPlayerMove_Server();
 
-	void PlayerBeginPlaySetMesh(USkeletalMesh* _PlayerMesh);
-
 	UFUNCTION()
 		virtual void BindPlayerState(AFPlayerState* _PlayerState);
 
@@ -50,10 +48,29 @@ protected:
 
 		
 public:
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		FText UserNotificationText;
 
+	UPROPERTY(Replicated, BlueprintReadWrite)
+		FText WaveText;
 
+	UPROPERTY()
+		TObjectPtr<class UPlayerHUD> HUDWidget;
+
+	UPROPERTY()
+		TObjectPtr<class UUserWidget> MenuUI;
+
+	UPROPERTY()
+		TObjectPtr<class UUserWidget> LoadingScreen;
+
+	UPROPERTY()
+		TObjectPtr<class UPlayerWeaponBuy> WeaponBuyWidget;
+
+	UPROPERTY(Replicated)
+		TObjectPtr<class UUserWidget> UserNotificationTextUI;
+
+	UPROPERTY(Replicated)
+		TObjectPtr<class UUserWidget> WaveTextUI;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
@@ -62,31 +79,24 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UPlayerHUD> HUDWidgetClass;
 
-	UPROPERTY()
-		TObjectPtr<class UPlayerHUD> HUDWidget;
+	bool FlagMenu = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> MenuUIClass;
 
-	UPROPERTY()
-		TObjectPtr<class UUserWidget> MenuUI;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
 		TSubclassOf<class UUserWidget> LoadingScreenClass;
-
-	UPROPERTY()
-		TObjectPtr<class UUserWidget> LoadingScreen;
-
-	UPROPERTY()
-		TObjectPtr<class UPlayerWeaponBuy> WeaponBuyWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
 		TSubclassOf<class UPlayerWeaponBuy> WeaponBuyWidgetClass;
 
-	bool FlagMenu = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> UserNotificationTextUIClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		TSubclassOf<class UUserWidget> WaveTextUIClass;
+
+
 	 //TObjectPtr //
 	
 

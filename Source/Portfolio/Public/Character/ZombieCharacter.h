@@ -32,6 +32,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	UFUNCTION(NetMulticast, Reliable)
+		void SetMesh_NetMulticast(USkeletalMesh* NewMesh);
+
 	UFUNCTION()
 		void MeshAssetLoad();
 
@@ -86,4 +89,5 @@ private:
 	float CurrentRagDollPercent = 0.f;
 
 	bool bIsRagdoll = false;
+
 };

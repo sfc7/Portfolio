@@ -5,7 +5,7 @@
 
 AFGameState::AFGameState()
 {
-	RoundNumber = 1;
+	CurrentRoundNumber = 1;
 }
 
 void AFGameState::SetTotalZombiesInRound(uint16 _TotalZombiesInRound)

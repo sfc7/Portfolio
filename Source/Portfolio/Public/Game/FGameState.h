@@ -16,20 +16,20 @@ class PORTFOLIO_API AFGameState : public AGameState
 public:
 	AFGameState();
 
-	uint8 GetRoundNumber() const { return RoundNumber; }
+	uint8 GetCurrentRoundNumber() const { return CurrentRoundNumber; }
 
 	void SetTotalZombiesInRound (uint16 _TotalZombiesInRound);
 
 	uint16 GetTotalZombiesInRound() const { return TotalZombiesInRound; }
 
-	void IncrementRound() { ++RoundNumber; }
+	void IncrementCurrentRoundNumber() { CurrentRoundNumber++; }
 
-	void SpawnTotalZombiesInRound() { ++TotalZombiesInRound; }
+	void SpawnTotalZombiesInRound() { TotalZombiesInRound++; }
 
-	void ZombieDie() { --TotalZombiesInRound; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound);  }
+	void ZombieDie() { TotalZombiesInRound--; UE_LOG(LogTemp, Log, TEXT("TotalZombiesInRound : %d"), TotalZombiesInRound);  }
 
 private:
-	uint8 RoundNumber;
+	uint8 CurrentRoundNumber;
 	uint16 TotalZombiesInRound;
 
 

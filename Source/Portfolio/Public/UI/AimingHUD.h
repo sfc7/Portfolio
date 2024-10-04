@@ -3,15 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
-#include "ServerJoin_UI.generated.h"
+#include "GameFramework/HUD.h"
+#include "AimingHUD.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PORTFOLIO_API UServerJoin_UI : public UUserWidget
+class PORTFOLIO_API AAimingHUD : public AHUD
 {
 	GENERATED_BODY()
-	
+public:
+	virtual void DrawHUD() override;
 };

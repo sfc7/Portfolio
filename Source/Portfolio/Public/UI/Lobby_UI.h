@@ -39,11 +39,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
         TObjectPtr<class UButton> PreviousButton;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        class USkeletalMesh* CurrentSkeletalMesh;
-
-    TWeakObjectPtr<class USkeletalMeshComponent> CurrentSkeletalMeshComponent;
-
     FString PlayerName = TEXT("DefaultPlayerName");
 };
     
