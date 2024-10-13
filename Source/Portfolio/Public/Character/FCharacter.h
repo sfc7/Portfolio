@@ -31,11 +31,6 @@ public:
 	class UCharacterComponent* GetCharacterComponent() { return CharacterComponent; }
 
 	TObjectPtr<class AFPlayerState> GetFPlayerState() const { return FPlayerState.Get(); }
-		
-	void WeaponSetCharacterComponentOnStart();
-
-	UFUNCTION(Server, Reliable)
-		void WeaponSetCharacterComponentOnStart_Server();
 
 	void EquipWeapon();
 

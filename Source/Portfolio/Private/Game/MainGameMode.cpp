@@ -116,27 +116,6 @@ void AMainGameMode::EndMap()
 	}
 }
 
-void AMainGameMode::InRoom()
-{
-	if (RemaningWaitTime <= 0) {
-		RemaningWaitTime = RoomTime;
-
-		NotificationString = FString::Printf(TEXT(""));
-
-		EndMap();
-
-		GetWorld()->ServerTravel("/Game/Level/Stage?listen");
-	}
-	else {
-		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
-
-		RemaningWaitTime--;
-	}
-
-	ChangeNotificationText(NotificationString);
-
-}
-
 void AMainGameMode::OnMainTimerElapsed()
 {
 	FGameState = GetGameState<AFGameState>();
@@ -224,6 +203,26 @@ void AMainGameMode::SetZombieRemaning()
 	}
 }
 
+void AMainGameMode::InRoom()
+{
+	if (RemaningWaitTime <= 0) {
+		RemaningWaitTime = RoomTime;
+
+		NotificationString = FString::Printf(TEXT(""));
+
+		EndMap();
+
+		GetWorld()->ServerTravel("/Game/Level/Stage?listen");
+	}
+	else {
+		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+
+		RemaningWaitTime--;
+	}
+
+	ChangeNotificationText(NotificationString);
+
+}
 
 void AMainGameMode::InWaitingStage()
 {
@@ -237,7 +236,6 @@ void AMainGameMode::InWaitingStage()
 	}
 	else if (FGameState->GetCurrentRoundNumber() >= 4) {
 		ChangeWaveText(WaveString);
-
 		EndMap();
 
 		GetWorld()->ServerTravel("/Game/Level/Room?listen");

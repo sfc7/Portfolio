@@ -78,6 +78,14 @@ void UPlayerAnimInstance::PlayRifleIronSightReloadAnimMontage()
 	}
 }
 
+void UPlayerAnimInstance::PlayChangeWeaponAnimMontage()
+{
+	if (!Montage_IsPlaying(ChangeWeaponAnimMontage)) {
+		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ChangeWeaponAnimMontage")));
+		Montage_Play(ChangeWeaponAnimMontage);
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_FireMontage()
 {
 	FireMontage.Broadcast();	
@@ -96,5 +104,10 @@ void UPlayerAnimInstance::AnimNotify_ReloadMontage()
 void UPlayerAnimInstance::AnimNotify_ReloadMontageEnd()
 {
 	ReloadMontageEnd.Broadcast();
+}
+
+void UPlayerAnimInstance::AnimNotify_ChangeWeaponMontage()
+{
+	ChangeWeaponMontage.Broadcast();
 }
 

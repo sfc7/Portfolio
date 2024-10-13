@@ -105,10 +105,10 @@ private:
 	ELevelState LevelState = ELevelState::Room;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RoomTime = 10;
+		int32 RoomTime = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RemaningWaitTime = 10;
+		int32 RemaningWaitTime = 100;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 

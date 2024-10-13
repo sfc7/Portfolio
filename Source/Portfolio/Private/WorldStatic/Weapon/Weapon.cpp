@@ -72,3 +72,14 @@ void AWeapon::Interact()
 	Destroy();
 }
 
+void AWeapon::SpawnMuzzleFlash_Server_Implementation()
+{
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
+	SpawnMuzzleFlash_NetMulticast();
+}
+
+void AWeapon::SpawnMuzzleFlash_NetMulticast_Implementation()
+{
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
+}
+

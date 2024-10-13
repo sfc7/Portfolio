@@ -35,7 +35,7 @@ struct FInteractableData
 	UPROPERTY(VisibleAnywhere)
 		float InteractionDuration;
 };
-// This class does not need to be modified.
+
 UINTERFACE(MinimalAPI)
 class UInteractionInterface : public UInterface
 {
@@ -52,7 +52,6 @@ public:
 	virtual void BeginInteract();
 	virtual void EndInteract();
 	virtual void Interact(class AFCharacter* FCharacter);
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	FInteractableData InteractableData;
 };

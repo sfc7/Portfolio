@@ -27,14 +27,37 @@ public:
 	virtual void BeginInteract();
 	virtual void EndInteract();
 	virtual void Interact();
+
+	UFUNCTION(Server, Reliable)
+		void SpawnMuzzleFlash_Server();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void SpawnMuzzleFlash_NetMulticast();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+public:
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairCenter;
 
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairLeft;
 
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairRight;
+
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairTop;
+
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairBottom;
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* ImpactEffect;
 protected:
 	UPROPERTY(EditAnywhere)
 		USkeletalMeshComponent* WeaponMesh;
@@ -49,4 +72,10 @@ protected:
 		FString WeaponName;
 	
 	FInteractableData InstanceInteractableData;
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* MuzzleFlash;
+
+
+
 };

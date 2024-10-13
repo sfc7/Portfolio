@@ -13,11 +13,16 @@
 #include "WorldStatic/Weapon/Weapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Character/PlayerCharacter.h"
-
+#include "Controller/PlayerCharacterController.h"
+#include "UI/AimingHUD.h"
+#include "WorldStatic/Weapon/Weapon.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UCharacterComponent::UCharacterComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+
 	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Rifle.BP_Rifle_C'"));
 
 	if (RifleBP.Succeeded()) {
@@ -37,6 +42,7 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ThisClass, CurrentWeaponType);
 	DOREPLIFETIME(ThisClass, DefaultWeaponType);
 
+	DOREPLIFETIME_CONDITION(ThisClass, EquippedWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, ReloadMaxAmmo, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, CurrentAmmo, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, TotalAmmo, COND_OwnerOnly);
@@ -45,7 +51,6 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME_CONDITION(ThisClass, CurrentEXP, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, PlayerMoney, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, MaxLevel, COND_OwnerOnly);
-
 }
 
 void UCharacterComponent::BeginPlay()
@@ -79,14 +84,11 @@ void UCharacterComponent::BeginPlay()
 					CurrentLevel = FGameInstance->CurrentLevel;
 					CurrentEXP = FGameInstance->CurrentEXP;
 					MaxEXP = FGameInstance->GetCharacterTableRowFromLevel(CurrentLevel)->MaxEXP;
-					PlayerMoney = FGameInstance->PlayerMoney;
+					/*PlayerMoney = FGameInstance->PlayerMoney;*/
+					PlayerMoney = 300000;
 				}
 
 				SendGameInstanceXPVariable_Server(CurrentLevel, CurrentEXP, PlayerMoney);
-
-				//UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("UCharacterComponent beginplay TotalAmmo : %d"), GetTotalAmmo()));
-				//UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("UCharacterComponent beginplay CurrentAmmo : %d"), GetCurrentAmmo()));
-				//UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("UCharacterComponent beginplay ReloadMaxAmmo : %d"), GetReloadMaxAmmo()));
 			}
 		}
 	}
@@ -95,6 +97,8 @@ void UCharacterComponent::BeginPlay()
 void UCharacterComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SetHUDCrossHair(DeltaTime);
 }
 
 void UCharacterComponent::SetCurrentLevel(int32 _CurrentLevel)
@@ -171,6 +175,66 @@ void UCharacterComponent::SetCurrenState(ECurrentState _CurrentState)
 	SetCurrenState_Server(_CurrentState);
 }
 
+void UCharacterComponent::SetHUDCrossHair(float DeltaTime)
+{
+	if (PlayerCharacter == nullptr) {
+		return;
+	}
+
+	if (PlayerCharacter->GetController() == nullptr) {
+		return;
+	}
+
+
+	PlayerCharacterController = Cast<APlayerCharacterController>(PlayerCharacter->GetController());
+	if (IsValid(PlayerCharacterController)) {
+		AimingHUD = Cast<AAimingHUD>(PlayerCharacterController->GetHUD());
+		if (AimingHUD) {
+			if (EquippedWeapon) {
+				CrossHairTexture.CrossHairCenter = EquippedWeapon->CrossHairCenter;
+				CrossHairTexture.CrossHairLeft = EquippedWeapon->CrossHairLeft;
+				CrossHairTexture.CrossHairRight = EquippedWeapon->CrossHairRight;
+				CrossHairTexture.CrossHairTop = EquippedWeapon->CrossHairTop;
+				CrossHairTexture.CrossHairBottom = EquippedWeapon->CrossHairBottom;
+			}
+			else {
+				CrossHairTexture.CrossHairCenter = nullptr;
+				CrossHairTexture.CrossHairLeft = nullptr;
+				CrossHairTexture.CrossHairRight = nullptr;
+				CrossHairTexture.CrossHairTop = nullptr;
+				CrossHairTexture.CrossHairBottom = nullptr;
+			}
+
+			FVector2D CharacterWalkSpeedRange(0.f, PlayerCharacter->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D ClampedValue(0.f, 1.f);
+			FVector Velocity = PlayerCharacter->GetVelocity();
+			Velocity.Z = 0.f;
+
+			CrossHairVelocityValue = FMath::GetMappedRangeValueClamped(CharacterWalkSpeedRange, ClampedValue, Velocity.Size());
+
+			if (PlayerCharacter->GetCharacterMovement()->IsFalling()) {
+				CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 1.5f, DeltaTime, 1.5f);
+			}
+			else {
+				CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 0.f, DeltaTime, 30.f);
+			}
+
+			if (bIsAiming) {
+				CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.58f, DeltaTime, 30.f);
+			}
+			else {
+				CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.f, DeltaTime, 30.f);
+			}
+
+			CrossHairShootingValue = FMath::FInterpTo(CrossHairShootingValue, 0.f, DeltaTime, 10.f);
+			CrossHairTexture.CrossHairSpread = 0.5f + CrossHairVelocityValue + CrossHairJumpValue - CrossHairAimingValue + CrossHairShootingValue;
+
+
+			AimingHUD->SetCrossHairTexture(CrossHairTexture);
+		}
+	}
+}
+
 void UCharacterComponent::SetCurrenState_Server_Implementation(ECurrentState _CurrentState)
 {
 	CurrentState = _CurrentState;
@@ -180,23 +244,18 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 {
 	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;
 
+	EquippedWeapon = _Weapon;
 
 	if (GetCurrentWeaponType() == nullptr) {
-		EquippedWeapon = _Weapon;
 		SetCurrentAndTotalAmmo(EquippedWeapon->GetReloadMaxAmmo(), EquippedWeapon->GetTotalAmmo());
 		SetReloadMaxAmmo(EquippedWeapon->GetReloadMaxAmmo());
 		SetCurrentWeaponType(GetDefaultWeaponType());
 	}
 	else {
-		EquippedWeapon = _Weapon;
 		SetCurrentWeaponType(EquippedWeapon->GetClass());
-
 	}
 
-
-
-
-
+	
 	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
 	//if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
 	//	const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
@@ -305,4 +364,20 @@ void UCharacterComponent::SendGameInstanceXPVariable_Server_Implementation(int32
 	CurrentLevel = _CurrentLevel;
 	CurrentEXP = _CurrentEXP;
 	PlayerMoney = _Money;
+}
+
+void UCharacterComponent::SetCrossHairColor_Red()
+{
+	CrossHairTexture.CrossHairColor = FLinearColor::Red;
+	FTimerHandle CrossHairColorHandle;
+
+	if(GetWorld()->GetTimerManager().IsTimerActive(CrossHairColorHandle))
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CrossHairColorHandle);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(CrossHairColorHandle, FTimerDelegate::CreateLambda([this]() {
+		CrossHairTexture.CrossHairColor = FLinearColor::White;
+	}), 2.0f, false);
+
 }

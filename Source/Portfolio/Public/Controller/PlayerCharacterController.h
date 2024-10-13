@@ -36,6 +36,8 @@ public:
 
 	void WeaponBuyHide();
 
+	void OnHeadShotUI();
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -72,9 +74,10 @@ public:
 	UPROPERTY(Replicated)
 		TObjectPtr<class UUserWidget> WaveTextUI;
 
+	UPROPERTY(Replicated)
+		TObjectPtr<class UUserWidget> HeadShotUI;
+
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
-		TSubclassOf<class UUserWidget> CrosshairUIClass;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		TSubclassOf<class UPlayerHUD> HUDWidgetClass;
@@ -96,13 +99,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UUserWidget> WaveTextUIClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		TSubclassOf<class UUserWidget> HeadShotUIClass;
 
-	 //TObjectPtr //
-	
-
-
-
-
-
+	FTimerHandle HeadShotHanldle;
 
 };

@@ -23,6 +23,7 @@ void APlayerCharacterController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 
 	DOREPLIFETIME(ThisClass, UserNotificationText);
 	DOREPLIFETIME(ThisClass, WaveText);
+	DOREPLIFETIME(ThisClass, HeadShotUI);
 }
 
 void APlayerCharacterController::BeginPlay()
@@ -47,7 +48,7 @@ void APlayerCharacterController::BeginPlay()
 		if (IsValid(LoadingScreenClass)) {
 			LoadingScreen = CreateWidget<UUserWidget>(this, LoadingScreenClass);
 			if (LoadingScreen) {
-				LoadingScreen->AddToViewport();
+				LoadingScreen->AddToViewport(999);
 				LoadingScreen->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
@@ -57,14 +58,6 @@ void APlayerCharacterController::BeginPlay()
 			if(IsValid(WeaponBuyWidget)){
 				WeaponBuyWidget->AddToViewport();
 				WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
-			}
-		}
-
-		if (IsValid(CrosshairUIClass)) {
-			UUserWidget* CrosshairUI = CreateWidget<UUserWidget>(this, CrosshairUIClass);
-			if (IsValid(CrosshairUI)) {
-				CrosshairUI->AddToViewport(1);
-				CrosshairUI->SetVisibility(ESlateVisibility::Visible);
 			}
 		}
 
@@ -81,6 +74,14 @@ void APlayerCharacterController::BeginPlay()
 			if (IsValid(WaveTextUI)) {
 				WaveTextUI->AddToViewport(1);
 				WaveTextUI->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+
+		if (IsValid(HeadShotUIClass)) {
+			HeadShotUI = CreateWidget<UUserWidget>(this, HeadShotUIClass);
+			if (IsValid(HeadShotUI)) {
+				HeadShotUI->AddToViewport(1);
+				HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
 			}
 		}
 	}
@@ -195,3 +196,26 @@ void APlayerCharacterController::WeaponBuyHide()
 		WeaponBuyWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
+
+void APlayerCharacterController::OnHeadShotUI()
+{
+	if (IsValid(HeadShotUI)) {
+		if (HeadShotUI->GetVisibility() == ESlateVisibility::Collapsed) {
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnHeadShotUI")));
+			HeadShotUI->SetVisibility(ESlateVisibility::Visible);
+			GetWorld()->GetTimerManager().SetTimer(HeadShotHanldle, FTimerDelegate::CreateLambda([this]() {
+				HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
+		}), 2.0f, false);
+		}
+		else {
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnHeadShotUI2")));
+			HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
+			HeadShotUI->SetVisibility(ESlateVisibility::Visible);
+			GetWorld()->GetTimerManager().SetTimer(HeadShotHanldle, FTimerDelegate::CreateLambda([this]() {
+				HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
+			}), 2.0f, false);
+		}
+	}
+	
+}
+

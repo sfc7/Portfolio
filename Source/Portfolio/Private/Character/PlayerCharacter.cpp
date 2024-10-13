@@ -82,6 +82,16 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(PlayerCharacterInputMappingContext, 0);
 		}
 	}
+
+	FOnTimelineFloat RecoilCurve_X;
+	FOnTimelineFloat RecoilCurve_Y;
+
+	RecoilCurve_X.BindUFunction(this, FName("StartHorizontalRecoil"));
+	RecoilCurve_Y.BindUFunction(this, FName("StartVerticalRecoil"));
+
+	RecoilTimeline.AddInterpFloat(HorizontalCurve, RecoilCurve_X);
+	RecoilTimeline.AddInterpFloat(VerticalCurve, RecoilCurve_Y);
+
 }
 
 void APlayerCharacter::OnRep_PlayerState()
@@ -100,7 +110,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 35.f);
-	CameraComponent->SetFieldOfView(CurrentFOV);	
+	CameraComponent->SetFieldOfView(CurrentFOV);
 	if (IsValid(GetController())) {
 		FRotator ControlRotation = GetController()->GetControlRotation();
 		AimPitch = ControlRotation.Pitch;
@@ -150,12 +160,32 @@ void APlayerCharacter::Tick(float DeltaTime)
 			PerformInteractionCheck();
 		}
 	}
+
+	if (RecoilTimeline.IsPlaying()) {
+
+		RecoilTimeline.TickTimeline(DeltaTime);
+	}
+
+	if (RecoilTimeline.IsReversing()) {
+
+		if (FMath::Abs(YawInput) > 0 || FMath::Abs(PitchInput) > 0) { 
+			RecoilTimeline.Stop();
+			return;
+		}
+
+		RecoilTimeline.TickTimeline(DeltaTime);
+
+		FRotator NewRotation = UKismetMathLibrary::RInterpTo(GetControlRotation(), StartRotation, DeltaTime, 4.5f);
+
+
+		Controller->ClientSetRotation(NewRotation);
+	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	
 	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	if (IsValid(EnhancedInputComponent)) {
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
@@ -227,6 +257,7 @@ void APlayerCharacter::PostInitializeComponents()
 	if (IsValid(AnimInstance)) {
 		AnimInstance->FireMontage.AddUObject(this, &ThisClass::FireBullet);
 		AnimInstance->ReloadMontageEnd.AddUObject(this, &ThisClass::ReloadAmmo);
+		AnimInstance->ChangeWeaponMontage.AddUObject(this, &ThisClass::ChangeWeapon);
 	}
 }
 
@@ -274,6 +305,9 @@ void APlayerCharacter::Move(const FInputActionValue& InValue)
 void APlayerCharacter::Look(const FInputActionValue& InValue)
 {
 	FVector2D LookVector = InValue.Get<FVector2D>();
+
+	PitchInput = LookVector.Y;
+	YawInput = LookVector.X;
 
 	AddControllerPitchInput(LookVector.Y);
 	AddControllerYawInput(LookVector.X);
@@ -341,6 +375,9 @@ void APlayerCharacter::FireBullet()
 	FVector CameraStartLocation = CameraComponent->GetComponentLocation();
 	FVector CameraEndLocation = CameraStartLocation + CameraComponent->GetForwardVector() * GunRange;
 
+	CameraEndLocation.Y += CameraEndLocation.Y * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
+	CameraEndLocation.Z += CameraEndLocation.Z * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
+
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActor(Weapon);
@@ -356,15 +393,31 @@ void APlayerCharacter::FireBullet()
 		
 		if (IsValid(HitZombie)) {
 			HitZombie->ZombieHitted(this, HitResult);
+
+			FVector ShotDirection = -(CameraComponent->GetComponentRotation().Vector());
+			UParticleSystem* ImpactEffect = GetCharacterComponent()->EquippedWeapon->ImpactEffect;
+			SpawnImpactEffect_Server(ImpactEffect, HitResult.Location, ShotDirection.Rotation());
+
+			FString HitActorClass = HitResult.GetActor()->GetClass()->GetSuperClass()->GetName();
+			if (HitActorClass == FString(TEXT("ZombieCharacter"))) {
+				SpawnBloodEffect_Server(HitResult.Location, ShotDirection.Rotation());
+			}
+
 			FString BoneNameString = HitResult.BoneName.ToString();		
 			FDamageEvent DamageEvent;
 
-			UKismetSystemLibrary::PrintString(this, BoneNameString);
 			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
-
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
 				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 100.f, DamageEvent, GetController(), this);
+				if (GetCharacterComponent()) {
+					GetCharacterComponent()->SetCrossHairColor_Red();
+					
+					APlayerCharacterController* PlayerCharacterController = GetController<APlayerCharacterController>();
+					if (IsValid(PlayerCharacterController)) {
+						PlayerCharacterController->OnHeadShotUI();
+					}
+				}
 			}
 			else {
 				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 10.f, DamageEvent, GetController(), this);
@@ -380,6 +433,15 @@ void APlayerCharacter::FireBullet()
 	{ 
 		PlayerController->ClientStartCameraShake(FireShake);
 	}
+
+	if (GetCharacterComponent()) {
+		GetCharacterComponent()->EquippedWeapon->SpawnMuzzleFlash_Server();
+	}
+}
+
+void APlayerCharacter::UseAmmo_Server_Implementation()
+{
+	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
 }
 
 void APlayerCharacter::Reload()
@@ -428,9 +490,28 @@ void APlayerCharacter::UpdateDestroyedActor()
 	}
 }
 
-void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
+void APlayerCharacter::StartHorizontalRecoil(float Value)
 {
-	UpdateDestroyedActor();
+	if (RecoilTimeline.IsReversing()) return;
+	AddControllerYawInput(Value);
+}
+
+void APlayerCharacter::StartVerticalRecoil(float Value)
+{
+	if (RecoilTimeline.IsReversing()) {
+		return;
+	}
+	AddControllerPitchInput(Value);
+}
+
+void APlayerCharacter::StartRecoil()
+{
+	RecoilTimeline.PlayFromStart();
+}
+
+void APlayerCharacter::ReverseRecoil()
+{
+	RecoilTimeline.ReverseFromEnd();
 }
 
 void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
@@ -446,6 +527,8 @@ void APlayerCharacter::ToggleBurstTrigger(const FInputActionValue& InValue)
 void APlayerCharacter::AttackOnBurstTrigger(const FInputActionValue& InValue)
 {
 	if (bIsBurstTrigger) {
+		StartRotation = GetControlRotation();
+		StartRecoil();
 		GetWorldTimerManager().SetTimer(BetweenShotsTimer, this, &ThisClass::Fire, TimeBetWeenFire, true);
 	}
 }
@@ -453,6 +536,23 @@ void APlayerCharacter::AttackOnBurstTrigger(const FInputActionValue& InValue)
 void APlayerCharacter::StopFire(const FInputActionValue& InValue)
 {
 	GetWorldTimerManager().ClearTimer(BetweenShotsTimer);
+	ReverseRecoil();
+}
+
+void APlayerCharacter::Fire()
+{
+	if (!IsValid(GetCharacterComponent()) || GetCharacterComponent()->GetCurrentAmmo() == 0) {
+		ReverseRecoil();
+		GetWorldTimerManager().ClearTimer(BetweenShotsTimer);
+		return;
+	}
+
+	FireAnimationPlay();
+	PlayAttackMontage_Server();
+
+	if (GetCharacterComponent()->EquippedWeapon) {
+		GetCharacterComponent()->CrossHairShootingValue += 0.75f;
+	}
 }
 
 void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
@@ -464,15 +564,9 @@ void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
 	}
 }
 
-void APlayerCharacter::Fire()
+void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
 {
-	if (!IsValid(GetCharacterComponent()) || GetCharacterComponent()->GetCurrentAmmo() == 0) {
-		return;
-	}
-
-
-	FireAnimationPlay();
-	PlayAttackMontage_Server();
+	UpdateDestroyedActor();
 }
 
 void APlayerCharacter::SpawnLandMine(const FInputActionValue& InValue)
@@ -534,19 +628,6 @@ void APlayerCharacter::DrawLine_NetMulticast_Implementation(const FVector& DrawS
 	DrawDebugLine(GetWorld(), DrawStart, DrawEnd, FColor(255, 255, 255, 64), false, 2.0f, 0U, 0.5f);
 }
 
-void APlayerCharacter::PlayAttackMontage_Server_Implementation()
-{	
-	FireAnimationPlay();
-	PlayAttackMontage_NetMulticast();
-}
-
-void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
-{
-	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
-		FireAnimationPlay();
-	}
-}			
-
 bool APlayerCharacter::IsAiming()
 {
 	return (GetCharacterComponent() && GetCharacterComponent()->bIsAiming);
@@ -565,11 +646,6 @@ ECurrentState APlayerCharacter::IsCurrentState()
 	else {
 		return ECurrentState::None;
 	}
-}
-
-void APlayerCharacter::UseAmmo_Server_Implementation()
-{
-	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
 }
 
 void APlayerCharacter::FireAnimationPlay()
@@ -600,17 +676,25 @@ void APlayerCharacter::ReloadAnimationPlay()
 	}
 }
 
-void APlayerCharacter::PlayReloadMontage_Server_Implementation()
-{
-	ReloadAnimationPlay();
-	PlayReloadMontage_NetMulticast();
-}
 
-void APlayerCharacter::PlayReloadMontage_NetMulticast_Implementation()
-{
-	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
-		ReloadAnimationPlay();
+void APlayerCharacter::WeaponChangeAnimationPlay()
+{	
+	if (!IsValid(AnimInstance)) {
+		return;
 	}
+
+	//if (IsAiming()) {
+	//	if (GetCharacterComponent()) {
+	//		GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
+	//		TargetFOV = 70.f;
+
+	//		if (GetCharacterComponent()) {
+	//			GetCharacterComponent()->SetAiming(false);
+	//		}
+	//	}
+	//}
+
+	AnimInstance->PlayChangeWeaponAnimMontage();
 }
 
 void APlayerCharacter::PerformInteractionCheck()
@@ -648,7 +732,6 @@ void APlayerCharacter::PerformInteractionCheck()
 
 void APlayerCharacter::FoundInteractable(AActor* NewInteractable)
 {
-
 	if (IsInteracting()) {
 		EndInteract();
 	}
@@ -717,7 +800,7 @@ void APlayerCharacter::EndInteract()
 	if (IsValid(TargetInteractable.GetObject()))
 	{
 		TargetInteractable->EndInteract();
-	}
+	} 
 }
 
 //
@@ -765,13 +848,95 @@ void APlayerCharacter::FindTargetInteractableInfo()
 
 void APlayerCharacter::WeaponBuyInteract()
 {
-	
 	if (IsValid(TargetInteractable.GetObject()))
 	{
 		if (GetCharacterComponent()->GetMoney() > FindTargetWeaponData.Price) {
 			interactableWeapon = Cast<AWeapon>(InteractionData.CurrentInteractable);
+			int32 CalCulatedMoney = GetCharacterComponent()->GetMoney() - FindTargetWeaponData.Price;
+			GetCharacterComponent()->SetMoney(CalCulatedMoney);
+
+			PlayWeaponChangeMontage_Server();
 		 }
 
 		TargetInteractable->Interact(this);
+		// or Interact();
+	}
+}
+
+void APlayerCharacter::ChangeWeapon()
+{
+	if (IsLocallyControlled() && GetCharacterComponent()) {
+		GetCharacterComponent()->EquipWeapon(interactableWeapon);
+		GetCharacterComponent()->SetCurrentAndTotalAmmo(FindTargetWeaponData.CurrentAmmo, FindTargetWeaponData.TotalAmmo);
+		GetCharacterComponent()->SetReloadMaxAmmo(FindTargetWeaponData.ReloadMaxAmmo);
+	}
+}
+
+void APlayerCharacter::SpawnBloodEffect_Server_Implementation(FVector _Location, FRotator _Rotation)
+{
+	if (BloodEffect) {
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodEffect, _Location, _Rotation);
+	}
+	SpawnBloodEffect_NetMulticast(_Location, _Rotation);
+}
+
+void APlayerCharacter::SpawnBloodEffect_NetMulticast_Implementation(FVector _Location, FRotator _Rotation)
+{
+	if (BloodEffect) {
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BloodEffect, _Location, _Rotation);
+	}
+}
+
+void APlayerCharacter::SpawnImpactEffect_Server_Implementation(UParticleSystem* _ImpactEffect, FVector _Location, FRotator _Rotation)
+{
+	if (GetCharacterComponent()) {
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), _ImpactEffect, _Location, _Rotation);
+	}
+	SpawnImpactEffect_NetMulticast(_ImpactEffect, _Location, _Rotation);
+}
+
+void APlayerCharacter::SpawnImpactEffect_NetMulticast_Implementation(UParticleSystem* _ImpactEffect, FVector _Location, FRotator _Rotation)
+{
+	if (GetCharacterComponent()) {
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), _ImpactEffect, _Location, _Rotation);
+	}
+}
+
+void APlayerCharacter::PlayReloadMontage_Server_Implementation()
+{
+	ReloadAnimationPlay();
+	PlayReloadMontage_NetMulticast();
+}
+
+void APlayerCharacter::PlayReloadMontage_NetMulticast_Implementation()
+{
+	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
+		ReloadAnimationPlay();
+	}
+}
+
+void APlayerCharacter::PlayAttackMontage_Server_Implementation()
+{
+	FireAnimationPlay();
+	PlayAttackMontage_NetMulticast();
+}
+
+void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
+{
+	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
+		FireAnimationPlay();
+	}
+}
+
+void APlayerCharacter::PlayWeaponChangeMontage_Server_Implementation()
+{
+	WeaponChangeAnimationPlay();
+	PlayWeaponChangeMontage_NetMulticast();
+}
+
+void APlayerCharacter::PlayWeaponChangeMontage_NetMulticast_Implementation()
+{
+	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
+		WeaponChangeAnimationPlay();
 	}
 }

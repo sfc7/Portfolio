@@ -9,16 +9,18 @@
 #include "Component/CharacterComponent.h"
 #include "Interface/InteractionInterface.h"
 #include "Data/DataStruct.h"
+#include "Components/TimeLineComponent.h" 
 #include "Engine/DataTable.h"
 #include "PlayerCharacter.generated.h"
-
 
 USTRUCT()
 struct FInteractionData {
 	GENERATED_USTRUCT_BODY()
 
-	FInteractionData() : CurrentInteractable(nullptr), LastInteractionCheckTime(0.0f) {
-	};
+	FInteractionData() : 
+		CurrentInteractable(nullptr), 
+		LastInteractionCheckTime(0.0f) 
+	{};
 
 	UPROPERTY()
 	AActor* CurrentInteractable;
@@ -102,6 +104,35 @@ private:
 	void UpdateDestroyedActor();
 
 	UFUNCTION()
+		void StartHorizontalRecoil(float Value);
+
+	UFUNCTION()
+		void StartVerticalRecoil(float Value);
+
+	void StartRecoil();
+
+	void ReverseRecoil();
+
+	// Attack
+	UFUNCTION(Server, Unreliable)
+		void PlayAttackMontage_Server();
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayAttackMontage_NetMulticast();
+
+	UFUNCTION(Server, Reliable)
+		void ApplyDamageAndDrawLine_Server(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void DrawLine_NetMulticast(const FVector& DrawStart, const FVector& DrawEnd);
+
+	UFUNCTION(Server, Reliable)
+		void UseAmmo_Server();
+
+	void FireAnimationPlay();
+	//
+
+	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
 
 	void SpawnLandMine(const FInputActionValue& InValue);
@@ -143,7 +174,19 @@ private:
 
 	void WeaponBuyInteract();
 
+	UFUNCTION(Server, Unreliable)
+		void SpawnImpactEffect_Server(UParticleSystem* _ImpactEffect, FVector _Location, FRotator _Rotation);
 
+	UFUNCTION(NetMulticast, Unreliable)
+		void SpawnImpactEffect_NetMulticast(UParticleSystem* _ImpactEffect, FVector _Location, FRotator _Rotation);
+
+	UFUNCTION(Server, Unreliable)
+		void SpawnBloodEffect_Server(FVector _Location, FRotator _Rotation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void SpawnBloodEffect_NetMulticast(FVector _Location, FRotator _Rotation);
+
+	void ChangeWeapon();
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -164,24 +207,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
 		UDataTable* PurchasableItemData;
 
-	// Attack
-	UFUNCTION(Server, Unreliable)
-		void PlayAttackMontage_Server();
 
-	UFUNCTION(NetMulticast, Unreliable)
-		void PlayAttackMontage_NetMulticast();
-
-	UFUNCTION(Server, Reliable)
-		void ApplyDamageAndDrawLine_Server(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
-
-	UFUNCTION(NetMulticast, Reliable)
-		void DrawLine_NetMulticast(const FVector& DrawStart, const FVector& DrawEnd);
-
-	UFUNCTION(Server, Reliable)
-		void UseAmmo_Server();
-
-	void FireAnimationPlay();
-	//
 
 	// Zoom 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
@@ -247,5 +273,36 @@ private:
 
 	FPurchasableWeaponData FindTargetWeaponData;
 
+	//
+
 	AWeapon* interactableWeapon;
+
+	FTimeline RecoilTimeline;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		class UCurveFloat* VerticalCurve;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		class UCurveFloat* HorizontalCurve;
+
+	float PitchInput;
+	float YawInput;
+
+	FRotator StartRotation;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		float RandomSpreadValue = 0.05f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		UParticleSystem* BloodEffect;
+
+	//
+
+	UFUNCTION(Server, Unreliable)
+		void PlayWeaponChangeMontage_Server();
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayWeaponChangeMontage_NetMulticast();
+
+	void WeaponChangeAnimationPlay();
 };	

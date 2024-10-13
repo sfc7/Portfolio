@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "UI/AimingHUD.h"
 #include "CharacterComponent.generated.h"
 
 // 각 게임의 세션 안에서만 유효한 값들
@@ -89,6 +90,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 		void SendGameInstanceXPVariable_Server(int32 _CurrentLevel, int32 _CurrentEXP, int32 _Money);
+
+	void SetCrossHairColor_Red();
 	
 protected:
 
@@ -107,6 +110,8 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 		void SetCurrenState_Server(ECurrentState _CurrentState);
+
+	void SetHUDCrossHair(float DeltaTime);
 
 private:
 	UFUNCTION(NetMulticast, Reliable)
@@ -148,13 +153,33 @@ public:
 
 	FOnMoneyChangeDelegate OnMoneyChangeDelegate;
 
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+		class UTexture2D* CrosshairCenter;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+		UTexture2D* CrosshairLeft;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+		UTexture2D* CrosshairRight;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+		UTexture2D* CrosshairTop;
+
+	UPROPERTY(EditAnywhere, Category = Crosshair)
+		UTexture2D* CrosshairBottom;
+
 		
 private:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UFGameInstance> FGameInstance;
 
+	class APlayerCharacterController* PlayerCharacterController;
+
+	class AAimingHUD* AimingHUD;
+
 	class APlayerCharacter* PlayerCharacter;
 
+	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -203,5 +228,13 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerMoney, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		int32 PlayerMoney;
 
+	FCrossHairTexture CrossHairTexture;
 
+	float CrossHairVelocityValue;
+
+	float CrossHairJumpValue;
+
+	float CrossHairAimingValue;
+
+	float CrossHairShootingValue;
 };

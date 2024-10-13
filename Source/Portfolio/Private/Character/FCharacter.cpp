@@ -53,11 +53,9 @@ void AFCharacter::BeginPlay()
 
 		if (HasAuthority()) {
 			EquipWeapon();
-			WeaponSetCharacterComponentOnStart();
 		}
 		else {
 			EquipWeapon_Server();
-			WeaponSetCharacterComponentOnStart_Server();
 		}
 	}
 }
@@ -140,21 +138,6 @@ void AFCharacter::OnRep_Mesh()
 	}
 }
 
-void AFCharacter::WeaponSetCharacterComponentOnStart()
-{
-	if (IsValid(Weapon) && IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
-		GetCharacterComponent()->SetCurrentWeaponType(GetCharacterComponent()->GetDefaultWeaponType());
-		GetCharacterComponent()->EquipWeapon(Weapon);
-		GetCharacterComponent()->SetCurrentAndTotalAmmo(Weapon->GetReloadMaxAmmo(), Weapon->GetTotalAmmo());
-		GetCharacterComponent()->SetReloadMaxAmmo(Weapon->GetReloadMaxAmmo());
-	}
-}
-
-void AFCharacter::WeaponSetCharacterComponentOnStart_Server_Implementation()
-{
-	WeaponSetCharacterComponentOnStart();
-}
-
 void AFCharacter::EquipWeapon()
 {
 	if (IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
@@ -171,6 +154,8 @@ void AFCharacter::EquipWeapon()
 			Weapon->SetOwner(this);
 		}
 	}
+
+	GetCharacterComponent()->EquipWeapon(Weapon);
 }
 
 void AFCharacter::EquipWeapon_Server_Implementation()
