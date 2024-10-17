@@ -6,6 +6,7 @@
 #include "Character/ZombieCharacter.h"
 #include "NavigationSystem.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UBTTask_GetEndPatrolPosition::UBTTask_GetEndPatrolPosition()
 {
@@ -19,6 +20,7 @@ EBTNodeResult::Type UBTTask_GetEndPatrolPosition::ExecuteTask(UBehaviorTreeCompo
 	if (EBTNodeResult::Failed == Result) {
 		return Result;
 	}
+
 
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (IsValid(AIController)) {

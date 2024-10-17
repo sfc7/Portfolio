@@ -230,6 +230,11 @@ float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
 	}
 
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	if (IsValid(MainGameMode)) {
+		MainGameMode->AlivePlayerCharacterControllers.Remove(Cast<APlayerCharacterController>(GetController()));
+	}
+
 	PlayRagdoll_NetMulticast();
 
 	return ActualDamage;
@@ -357,6 +362,7 @@ void APlayerCharacter::EndAiming(const FInputActionValue& InValue)
 
 void APlayerCharacter::FireBullet()
 {
+
 	if (GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
 	{
 		return;
@@ -387,7 +393,7 @@ void APlayerCharacter::FireBullet()
 	bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_GameTraceChannel3, QueryParams);
 
 	if (bIsHit) {
-		DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);	
+		//DrawDebugLine(GetWorld(), CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);	
 
 		AZombieCharacter* HitZombie = Cast<AZombieCharacter>(HitResult.GetActor());
 		
@@ -406,7 +412,7 @@ void APlayerCharacter::FireBullet()
 			FString BoneNameString = HitResult.BoneName.ToString();		
 			FDamageEvent DamageEvent;
 
-			DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);
+			/*DrawDebugSphere(GetWorld(), HitResult.Location, 3.f, 16, FColor(255, 0, 0, 255), true, 20.f, 0U, 5.f);*/
 
 			if (BoneNameString.Equals(FString(TEXT("head")), ESearchCase::IgnoreCase)){
 				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 100.f, DamageEvent, GetController(), this);
@@ -426,7 +432,7 @@ void APlayerCharacter::FireBullet()
 	}
 	else {
 		FDamageEvent DamageEvent;
-		DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
+		//DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Cyan, false, 0.1f, 0U, 0.5f);
 	}
 
 	if (GetOwner() == UGameplayStatics::GetPlayerController(this, 0))
@@ -746,8 +752,6 @@ void APlayerCharacter::FoundInteractable(AActor* NewInteractable)
 	FindTargetInteractableInfo();
 
 	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("TargetInteractable: %s"), *TargetInteractable->InteractableData.Name.ToString()));
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("FindTargetWeaponData: %s"), *FindTargetWeaponData.Name.ToString()));
 	PlayerController->WeaponBuyShow(&FindTargetWeaponData);
 
 
@@ -837,6 +841,7 @@ void APlayerCharacter::FindTargetInteractableInfo()
 				FindTargetWeaponData.TotalAmmo = ItemData->TotalAmmo;
 				FindTargetWeaponData.ReloadMaxAmmo = ItemData->ReloadMaxAmmo;
 				FindTargetWeaponData.Price = ItemData->Price;
+				FindTargetWeaponData.Mesh = ItemData->Mesh;
 			}
 		break;
 		}	
@@ -854,7 +859,7 @@ void APlayerCharacter::WeaponBuyInteract()
 			interactableWeapon = Cast<AWeapon>(InteractionData.CurrentInteractable);
 			int32 CalCulatedMoney = GetCharacterComponent()->GetMoney() - FindTargetWeaponData.Price;
 			GetCharacterComponent()->SetMoney(CalCulatedMoney);
-
+			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyInteract")));
 			PlayWeaponChangeMontage_Server();
 		 }
 
@@ -866,9 +871,9 @@ void APlayerCharacter::WeaponBuyInteract()
 void APlayerCharacter::ChangeWeapon()
 {
 	if (IsLocallyControlled() && GetCharacterComponent()) {
-		GetCharacterComponent()->EquipWeapon(interactableWeapon);
 		GetCharacterComponent()->SetCurrentAndTotalAmmo(FindTargetWeaponData.CurrentAmmo, FindTargetWeaponData.TotalAmmo);
 		GetCharacterComponent()->SetReloadMaxAmmo(FindTargetWeaponData.ReloadMaxAmmo);
+		Weapon->SetWeaponMesh(FindTargetWeaponData.Mesh);
 	}
 }
 
@@ -923,9 +928,7 @@ void APlayerCharacter::PlayAttackMontage_Server_Implementation()
 
 void APlayerCharacter::PlayAttackMontage_NetMulticast_Implementation()
 {
-	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
-		FireAnimationPlay();
-	}
+	FireAnimationPlay();
 }
 
 void APlayerCharacter::PlayWeaponChangeMontage_Server_Implementation()
@@ -936,7 +939,6 @@ void APlayerCharacter::PlayWeaponChangeMontage_Server_Implementation()
 
 void APlayerCharacter::PlayWeaponChangeMontage_NetMulticast_Implementation()
 {
-	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
-		WeaponChangeAnimationPlay();
-	}
+	WeaponChangeAnimationPlay();
+	
 }

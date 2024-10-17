@@ -76,12 +76,14 @@ private:
 	void SetLevelStateFromLevelName();
 
 	void SetLevelStateFromString(const FString& _LevelState);
+
 public:
 	
-
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		TArray<TObjectPtr<class APlayerCharacterController>> PlayerCharacterControllers;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		TArray<TObjectPtr<class APlayerCharacterController>> AlivePlayerCharacterControllers;
 
 private:
 	TObjectPtr<class AFGameState> FGameState;

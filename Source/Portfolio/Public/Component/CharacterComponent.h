@@ -180,7 +180,7 @@ private:
 	class APlayerCharacter* PlayerCharacter;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	AWeapon* EquippedWeapon;
+		AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		float CurrentHp;

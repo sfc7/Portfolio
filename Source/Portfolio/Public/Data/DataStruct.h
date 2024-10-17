@@ -52,7 +52,9 @@ public:
 		CurrentAmmo(0),
 		TotalAmmo(0),
 		ReloadMaxAmmo(0),
-		Price(0) {};
+		Price(0),
+		Mesh(nullptr)
+	{};
 
 public:
 	UPROPERTY(EditAnywhere)
@@ -72,4 +74,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		int32 Price;
+
+	UPROPERTY(EditAnywhere)
+		USkeletalMesh* Mesh;
 };

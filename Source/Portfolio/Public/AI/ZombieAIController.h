@@ -35,6 +35,8 @@ public:
 
 	static const FName TargetActorKey;
 
+	void SetTargetActorKeyInBlackboard(AActor* Target);
+
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UBlackboardData> BlackboardDataAsset;
@@ -43,4 +45,10 @@ private:
 		TObjectPtr<class UBehaviorTree> BehaviorTree;
 
 	TObjectPtr<class UAISenseConfig_Sight> SightConfig;
+
+	TObjectPtr<class APlayerCharacter> CurrentTarget;
+
+	float ClosestDistnace;
+
+	AActor* FindPlayer;
 };

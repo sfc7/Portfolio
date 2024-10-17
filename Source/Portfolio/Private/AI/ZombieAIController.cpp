@@ -11,6 +11,9 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "Character/PlayerCharacter.h"
+#include "Character/ZombieCharacter.h"
+#include "Game/MainGameMode.h"
+#include "Controller/PlayerCharacterController.h"
 
 const float AZombieAIController::PatrolRadius(100.f);
 const FName AZombieAIController::StartPatrolPositionKey(TEXT("StartPatrolPosition"));
@@ -25,8 +28,8 @@ AZombieAIController::AZombieAIController()
 	SetPerceptionComponent(*CreateOptionalDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerception")));
 
 	SightConfig = CreateOptionalDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-	SightConfig->SightRadius = 500.f;
-	SightConfig->LoseSightRadius = 500.f;
+	SightConfig->SightRadius = 50000.f;
+	SightConfig->LoseSightRadius = 50000.f;
 	SightConfig->PeripheralVisionAngleDegrees = 360.f;
 	SightConfig->AutoSuccessRangeFromLastSeenLocation = -1.f;
 	SightConfig->PointOfViewBackwardOffset = 0.0f;
@@ -34,18 +37,19 @@ AZombieAIController::AZombieAIController()
 	SightConfig->SetMaxAge(0.0f);
 	SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
+
+	ClosestDistnace = FLT_MAX;
 
 	GetPerceptionComponent()->SetDominantSense(*SightConfig->GetSenseImplementation());
 	GetPerceptionComponent()->ConfigureSense(*SightConfig);
-	GetPerceptionComponent()->OnTargetPerceptionUpdated.AddDynamic(this, &AZombieAIController::SetTargetKeybySightSense);
 }
 
 void AZombieAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	APawn* OwnerPawn = GetPawn();
+	AZombieCharacter* OwnerPawn = Cast<AZombieCharacter>(GetPawn());
 	if (IsValid(OwnerPawn)) {
 		BeginAIController(OwnerPawn);
 	}
@@ -64,8 +68,15 @@ void AZombieAIController::BeginAIController(APawn* InPawn)
 	if (IsValid(BlackboardComponent)) {
 		if (UseBlackboard(BlackboardDataAsset, BlackboardComponent)) {
 			RunBehaviorTree(BehaviorTree);
-			BlackboardComponent->SetValueAsVector(StartPatrolPositionKey, InPawn->GetActorLocation());
+			BlackboardComponent->SetValueAsVector(AZombieAIController::StartPatrolPositionKey, InPawn->GetActorLocation());
 		}
+	}
+}
+
+void AZombieAIController::SetTargetActorKeyInBlackboard(AActor* Target)
+{
+	if (IsValid(Blackboard)) {
+		Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, Target);
 	}
 }
 
@@ -80,9 +91,21 @@ void AZombieAIController::EndAIController()
 void AZombieAIController::SetTargetKeybySightSense(AActor* actor, FAIStimulus const Stimulus)
 {
 	if (Stimulus.Type == UAISense::GetSenseID(UAISense_Sight::StaticClass())) {
-		if (Cast<APlayerCharacter>(actor)) {
+		if (APlayerCharacter* UpdateTarget = Cast<APlayerCharacter>(actor)) {
 			if (Stimulus.WasSuccessfullySensed()) {
-				Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, actor);
+				if (!IsValid(CurrentTarget)) {
+					CurrentTarget = UpdateTarget;
+
+					Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, actor);
+				}
+				else {
+					if (CurrentTarget != UpdateTarget) {
+						if (CurrentTarget->GetDistanceTo(GetPawn()) > UpdateTarget->GetDistanceTo(GetPawn())) {
+							CurrentTarget = UpdateTarget;
+							Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, actor);
+						}
+					}
+				}
 			}
 		}
 	}

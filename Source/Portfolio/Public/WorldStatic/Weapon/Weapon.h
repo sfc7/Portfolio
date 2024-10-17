@@ -34,6 +34,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void SpawnMuzzleFlash_NetMulticast();
 
+	void SetWeaponMesh(USkeletalMesh* _Mesh);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

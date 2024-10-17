@@ -101,6 +101,8 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 				CharacterComponent->SetCurrentEXP(CharacterComponent->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
 			}
 		}
+
+		
 		
 	}
 	else {
@@ -205,7 +207,7 @@ void AZombieCharacter::Attack_BasicHit()
 		DrawColor = FColor::Red;
 	}
 
-	DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);
+	/*DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);*/
 }
 
 void AZombieCharacter::AttackMontageEnd()

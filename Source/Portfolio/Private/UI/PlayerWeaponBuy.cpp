@@ -21,7 +21,7 @@ void UPlayerWeaponBuy::NativeConstruct()
 void UPlayerWeaponBuy::UpdateWidget(FPurchasableWeaponData* PurchasableWeaponData)
 {	
 	WeaponName->SetText(PurchasableWeaponData->Name);
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("%s"), *PurchasableWeaponData->Name.ToString()));
 	FString ConvertString = FString::Printf(TEXT("[$:%d]"), PurchasableWeaponData->Price);
 	WeaponPrice->SetText(FText::FromString(ConvertString));
 }
+

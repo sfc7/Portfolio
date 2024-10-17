@@ -83,3 +83,7 @@ void AWeapon::SpawnMuzzleFlash_NetMulticast_Implementation()
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
 }
 
+void AWeapon::SetWeaponMesh(USkeletalMesh* _Mesh)
+{
+	WeaponMesh->SetSkeletalMesh(_Mesh);
+}

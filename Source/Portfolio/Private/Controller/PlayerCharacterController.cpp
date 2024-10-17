@@ -201,14 +201,12 @@ void APlayerCharacterController::OnHeadShotUI()
 {
 	if (IsValid(HeadShotUI)) {
 		if (HeadShotUI->GetVisibility() == ESlateVisibility::Collapsed) {
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnHeadShotUI")));
 			HeadShotUI->SetVisibility(ESlateVisibility::Visible);
 			GetWorld()->GetTimerManager().SetTimer(HeadShotHanldle, FTimerDelegate::CreateLambda([this]() {
 				HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
 		}), 2.0f, false);
 		}
 		else {
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("OnHeadShotUI2")));
 			HeadShotUI->SetVisibility(ESlateVisibility::Collapsed);
 			HeadShotUI->SetVisibility(ESlateVisibility::Visible);
 			GetWorld()->GetTimerManager().SetTimer(HeadShotHanldle, FTimerDelegate::CreateLambda([this]() {

@@ -5,6 +5,7 @@
 #include "AI/ZombieAIController.h"
 #include "Character/ZombieCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UBTTask_SetMovementSpeed::UBTTask_SetMovementSpeed()
 {

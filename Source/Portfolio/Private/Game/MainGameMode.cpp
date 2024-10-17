@@ -59,7 +59,8 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 	FGameInstance = Cast<UFGameInstance>(GetGameInstance());
 
 	APlayerCharacterController* PlayerCharacterController = Cast<APlayerCharacterController>(NewPlayer);
-	if (IsValid(PlayerCharacterController) && HasAuthority()) {
+	if (IsValid(PlayerCharacterController)) {
+		AlivePlayerCharacterControllers.Add(PlayerCharacterController);
 		PlayerCharacterControllers.Add(PlayerCharacterController);
 	}
 
@@ -75,16 +76,28 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 			}
 		}
 	}
+
 }
 
 void AMainGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
+
+	for (APlayerCharacterController* PlayerCharacterController : PlayerCharacterControllers) {
+		if (IsValid(PlayerCharacterController)) {
+			PlayerCharacterControllers.Remove(PlayerCharacterController);
+		}
+	}
+
+	for (APlayerCharacterController* PlayerCharacterController : AlivePlayerCharacterControllers) {
+		if (IsValid(PlayerCharacterController)) {
+			AlivePlayerCharacterControllers.Remove(PlayerCharacterController);
+		}
+	}
 }
 
 void AMainGameMode::SpawnZombie()
 {
-
 	if (HasAuthority()) {
 		int RandomIndex = FMath::RandRange(0, ZombieSpawnPointArray.Num() - 1);
 
@@ -128,35 +141,30 @@ void AMainGameMode::OnMainTimerElapsed()
 		break;
 	case ELevelState::Room:
 		InRoom();
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("LevelState : InRoom")));
 		break;
 	case ELevelState::WaitingStage:
 		InWaitingStage();
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("LevelState : WaitingStage")));
 		break;
 	case ELevelState::Stage:
 		InStage();
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("LevelState : InStage")));
 		break;
 	case ELevelState::End:
 		break;
 	default:
 		break;
 	}
-
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("GetTotalZombiesInRound : %d"), FGameState->GetTotalZombiesInRound()));
 }
 
 void AMainGameMode::ChangeNotificationText(const FString& _NotificationString)
 {
-	for (APlayerCharacterController* AlivePlayerCharacterController : PlayerCharacterControllers) {
+	for (APlayerCharacterController* AlivePlayerCharacterController : AlivePlayerCharacterControllers) {
 		AlivePlayerCharacterController->UserNotificationText = FText::FromString(_NotificationString);
 	}
 }
 
 void AMainGameMode::ChangeWaveText(const FString& _WaveString)
 {
-	for (APlayerCharacterController* AlivePlayerCharacterController : PlayerCharacterControllers) {
+	for (APlayerCharacterController* AlivePlayerCharacterController : AlivePlayerCharacterControllers) {
 		AlivePlayerCharacterController->WaveText = FText::FromString(_WaveString);
 	}
 }
@@ -254,8 +262,6 @@ void AMainGameMode::InWaitingStage()
 		RemaningWaitTime--;
 	}
 
-
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("TotalZombiesInRound : %d"), FGameState->GetTotalZombiesInRound()));
 	ChangeWaveText(WaveString);
 	ChangeNotificationText(NotificationString);
 }

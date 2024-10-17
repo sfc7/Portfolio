@@ -76,7 +76,6 @@ void UMonsterComponent::SetIsDead(uint8 _bIsDead)
 	AMainGameMode* MainGamemode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
 	if (IsValid(MainGamemode)) {
 		MainGamemode->ZombieDie();
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("SetIsDead")));
 	}
 }
 
