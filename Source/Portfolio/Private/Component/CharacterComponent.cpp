@@ -18,6 +18,7 @@
 #include "WorldStatic/Weapon/Weapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Game/MainGameMode.h"
 
 UCharacterComponent::UCharacterComponent()
 {
@@ -137,7 +138,17 @@ void UCharacterComponent::SetMoney(int32 _Money)
 	OnMoneyChangeDelegate.Broadcast(_Money);
 }
 
-void UCharacterComponent::SetCurrentHp(float _CurrentHp)
+void UCharacterComponent::SetIsDead(uint8 _bIsDead)
+{
+	bIsDead = _bIsDead;
+
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	if (IsValid(MainGameMode)) {
+		MainGameMode->AlivePlayerCharacterControllers.Remove(Cast<APlayerCharacterController>(GetWorld()->GetAuthGameMode()));
+	}
+}
+
+void UCharacterComponent::SetCurrentHp(int _CurrentHp)
 {
 	if (OnCurrnetHpChangeDelegate.IsBound()) {
 		OnCurrnetHpChangeDelegate.Broadcast(CurrentHp, _CurrentHp);
@@ -153,14 +164,14 @@ void UCharacterComponent::SetCurrentHp(float _CurrentHp)
 	OnCurrentHPChanged_NetMulticast(CurrentHp, CurrentHp);	
 }
 
-void UCharacterComponent::OnCurrentHPChanged_NetMulticast_Implementation(float _CurrentHp, float NewCurrntHp)
+void UCharacterComponent::OnCurrentHPChanged_NetMulticast_Implementation(int _CurrentHp, int NewCurrntHp)
 {
 	if (OnCurrnetHpChangeDelegate.IsBound()) {
 		OnCurrnetHpChangeDelegate.Broadcast(_CurrentHp, NewCurrntHp);	
 	}
 }
 
-void UCharacterComponent::SetMaxHp(float _MaxHp)
+void UCharacterComponent::SetMaxHp(int _MaxHp)
 {
 	if (OnMaxHpChangeDelegate.IsBound()) {
 		OnMaxHpChangeDelegate.Broadcast(MaxHp, _MaxHp);

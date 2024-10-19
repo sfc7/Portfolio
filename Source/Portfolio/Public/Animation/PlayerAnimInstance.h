@@ -36,6 +36,8 @@ public:
 
 	void PlayChangeWeaponAnimMontage();
 
+	void PlayHitAnimMontage();
+
 	UFUNCTION()
 		void AnimNotify_FireMontage();
 
@@ -103,4 +105,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UAnimMontage> ChangeWeaponAnimMontage;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = true))
+		TObjectPtr<class UAnimMontage> HitAnimMontage;
 };	

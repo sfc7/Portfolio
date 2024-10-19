@@ -35,7 +35,11 @@ public:
 
 	static const FName TargetActorKey;
 
+	static const FName IsAttackingKey;
+
 	void SetTargetActorKeyInBlackboard(AActor* Target);
+
+	void SetIsAttackingInBlackboard(bool _IsAttacking);
 
 private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

@@ -34,13 +34,17 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void SpawnMuzzleFlash_NetMulticast();
 
-	void SetWeaponMesh(USkeletalMesh* _Mesh);
+	UFUNCTION(Server, Reliable)
+		void SetWeaponMesh_Server(USkeletalMesh* _Mesh);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION()
+		void OnRep_WeaponMesh();
 
 public:
 	UPROPERTY(EditAnywhere, Category = CrossHair)
@@ -64,6 +68,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 		USkeletalMeshComponent* WeaponMesh;
 
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponMesh)
+		USkeletalMesh* ReplicateMesh;
+
 	UPROPERTY(EditAnywhere)
 		int32 TotalAmmo;
 
@@ -77,6 +84,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* MuzzleFlash;
+
+	
 
 
 

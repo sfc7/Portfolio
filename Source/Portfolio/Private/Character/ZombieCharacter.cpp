@@ -16,6 +16,7 @@
 #include "Game/FPlayerState.h"
 #include "Game/FGameState.h"
 #include "Portfolio/Portfolio.h"
+#include "Net/UnrealNetwork.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -40,7 +41,6 @@ void AZombieCharacter::BeginPlay()
 	int32 RandIndex = FMath::RandRange(0, CDO->ZombieCharacterMeshPaths.Num() - 1);
 	CurrentZombieCharacterMeshPath = CDO->ZombieCharacterMeshPaths[RandIndex];
 
-	// CharacterComponent의 gameinstance 이용
 	if (HasAuthority()) {
 		UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetGameInstance());
 		if (IsValid(FGameInstance)) {
@@ -50,32 +50,24 @@ void AZombieCharacter::BeginPlay()
 			);
 		}
 	}
-
 }
 
 void AZombieCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsRagdoll) {
-		CurrentRagDollPercent = FMath::FInterpTo(CurrentRagDollPercent, TargetRagDollPercent, DeltaTime, 10.f);
-
-		FName PivotBoneName = FName(TEXT("spine1"));
-		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollPercent);
-
-		if (CurrentRagDollPercent - TargetRagDollPercent < KINDA_SMALL_NUMBER) {
-			GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
-			bIsRagdoll = false;
-		}
-
-		if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
-			GetMesh()->SetSimulatePhysics(true);
-			GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
-
-
-			bIsRagdoll = false;
-		}
+	if (GetMonsterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
+		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(*CurrentBoneName), 1.f);
 	}
+}
+
+void AZombieCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, ReplicateMesh)
 }
 
 float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -101,14 +93,7 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 				CharacterComponent->SetCurrentEXP(CharacterComponent->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
 			}
 		}
-
-		
-		
 	}
-	else {
-		PlayRagdoll_NetMulticast();
-	}
-
 
 	return ActualDamage;
 }
@@ -136,12 +121,13 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 		UCharacterComponent* CharacterComponent = Player->GetCharacterComponent();
 
 		if (IsValid(CharacterComponent)) {
-			FString BoneName = _HitResult.BoneName.ToString();
-			if (BoneName == FString("None")) {
+			CurrentBoneName = _HitResult.BoneName.ToString();
+
+			if (CurrentBoneName == FString("None")) {
 				return;
 			}
 			else {
-				if (uint8 HitPart = GetHitPart(BoneName))
+				if (uint8 HitPart = GetNumberFromHitPart(CurrentBoneName))
 				{
 					if (uint8 RecentGetMoney = GetMoneyFromHitPart(HitPart)) {
 						CharacterComponent->SetMoney(CharacterComponent->GetMoney() + RecentGetMoney);
@@ -152,35 +138,49 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 	}
 }
 
-void AZombieCharacter::SetMesh_NetMulticast_Implementation(USkeletalMesh* NewMesh)
-{
-	if (NewMesh) {
-		GetMesh()->SetSkeletalMesh(NewMesh);
-	}
-}
-
 void AZombieCharacter::MeshAssetLoad()
 {
 	AssetStreamableHandle->ReleaseHandle();
 	TSoftObjectPtr<USkeletalMesh> LoadedAsset(CurrentZombieCharacterMeshPath);
 	if (LoadedAsset.IsValid()) {
-		GetMesh()->SetSkeletalMesh(LoadedAsset.Get());
-		SetMesh_NetMulticast(LoadedAsset.Get());
+		ReplicateMesh = LoadedAsset.Get();
+		GetMesh()->SetSkeletalMesh(ReplicateMesh);
 	}
 }
 
 void AZombieCharacter::Attack()
 {
-	if (ZombieAnimInstance) {
-		GetMonsterComponent()->SetIsAttacking(true);
-		ZombieAnimInstance->PlayAttackMontage();
+	if (IsValid(ZombieAnimInstance)) {
+		int16 RandValue = FMath::RandRange(0, ZombieAnimInstance->AttackMontageArrayNum - 1); //AnimInstance는 Uobject이기 때문에 설정없이 relicate가 불가능하고 transient하기 때문에 값을 캐릭터에서 구해서 RPC로 구현
+
+		if (MonsterComponent) {
+			AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
+
+			if (IsValid(AIController)) {
+				ZombieAnimInstance->PlayAttackMontage(RandValue);
+				GetMonsterComponent()->SetIsAttacking(true);
+				AIController->SetIsAttackingInBlackboard(true);
+			}
+		}
+
+		Attack_NetMulticast(RandValue);
+	}
+}
+
+void AZombieCharacter::Attack_NetMulticast_Implementation(int16 _MontageArrayNum)
+{
+	if (IsValid(ZombieAnimInstance)) {
+		ZombieAnimInstance->PlayAttackMontage(_MontageArrayNum);
 	}
 }
 
 void AZombieCharacter::Attack_BasicHit()
 {
 	FHitResult HitResult;
-	FCollisionQueryParams Params(NAME_None, false, this);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.bTraceComplex = true;
+
 	FVector RangeVector = GetActorForwardVector() * AttackRange;
 	FVector Center = GetActorLocation() + RangeVector * 0.5f;
 	FQuat ZRotation = FRotationMatrix::MakeFromZ(RangeVector).ToQuat();
@@ -207,12 +207,16 @@ void AZombieCharacter::Attack_BasicHit()
 		DrawColor = FColor::Red;
 	}
 
-	/*DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);*/
+	DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);
 }
 
 void AZombieCharacter::AttackMontageEnd()
 {
 	GetMonsterComponent()->SetIsAttacking(false);
+	AZombieAIController* AIController = Cast<AZombieAIController>(GetController());
+	if (IsValid(AIController)) {
+		AIController->SetIsAttackingInBlackboard(false);
+	}
 }
 
 void AZombieCharacter::DestroyActor()
@@ -220,25 +224,14 @@ void AZombieCharacter::DestroyActor()
 	Destroy();
 }
 
-uint16 AZombieCharacter::GetMoneyFromHitPart(FString BoneName)
+void AZombieCharacter::OnRep_Mesh()
 {
-	if (BoneName.Contains(FString("Spine"))) {
-		return 50;
+	if (IsValid(ReplicateMesh)) {
+		GetMesh()->SetSkeletalMesh(ReplicateMesh);
 	}
-
-	return 0;
 }
 
-void AZombieCharacter::OnHittedRagdollRestoreTimerElapsed()
-{
-	FName PivotBoneName = FName(TEXT("spine1"));
-	TargetRagDollPercent = 0.f;
-	CurrentRagDollPercent = 1.f;
-	bIsRagdoll = true;
-
-}
-
-uint8 AZombieCharacter::GetHitPart(FString BoneName)
+uint8 AZombieCharacter::GetNumberFromHitPart(FString BoneName)
 {
 	if (BoneName.Contains(FString("Left")) || BoneName.Contains(FString("Right")))
 	{
@@ -252,7 +245,6 @@ uint8 AZombieCharacter::GetHitPart(FString BoneName)
 	{
 		return 3;
 	}
-
 
 	return 0;
 }
@@ -274,16 +266,6 @@ uint8 AZombieCharacter::GetMoneyFromHitPart(uint8 HitPart)
 	}
 
 	return 0;
-}
-
-void AZombieCharacter::PlayRagdoll_NetMulticast_Implementation()
-{
-	FName PivotBoneName = FName(TEXT("spine1"));
-	GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
-	TargetRagDollPercent = 1.f;
-
-	HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
-	GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
 }
 
 void AZombieCharacter::IsDead_NetMulticast_Implementation()

@@ -114,28 +114,12 @@ void AFCharacter::SetSkeletalMeshInPlayerStateSave(USkeletalMesh* _PlayerMesh)
 void AFCharacter::SetPlayerMesh_Server_Implementation(USkeletalMesh* _PlayerMesh)
 {
 	ReplicateMesh = _PlayerMesh; 
-	SetPlayerMesh_Multicast(ReplicateMesh); // 클라의 캐릭터 모두에게 동기화
-}
-
-void AFCharacter::SetPlayerMesh_Multicast_Implementation(USkeletalMesh* _PlayerMesh)
-{
-	GetMesh()->SetSkeletalMesh(_PlayerMesh);
-}
-
-void AFCharacter::SetPlayerMesh_Client_Implementation(USkeletalMesh* _PlayerMesh)
-{
-	GetMesh()->SetSkeletalMesh(_PlayerMesh);
+	GetMesh()->SetSkeletalMesh(ReplicateMesh);
 }
 
 void AFCharacter::OnRep_Mesh()
 {
-	if (!HasAuthority())
-	{
-		SetPlayerMesh_Client(ReplicateMesh); // 클라에서 서버클라의 캐릭터 동기화
-	}
-	else {
-		GetMesh()->SetSkeletalMesh(ReplicateMesh); // 서버의 캐릭터 setskeletalmsh
-	}
+	GetMesh()->SetSkeletalMesh(ReplicateMesh);
 }
 
 void AFCharacter::EquipWeapon()

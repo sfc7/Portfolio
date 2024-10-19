@@ -84,13 +84,13 @@ void AMainGameMode::Logout(AController* Exiting)
 	Super::Logout(Exiting);
 
 	for (APlayerCharacterController* PlayerCharacterController : PlayerCharacterControllers) {
-		if (IsValid(PlayerCharacterController)) {
+		if (IsValid(PlayerCharacterController) && PlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
 			PlayerCharacterControllers.Remove(PlayerCharacterController);
 		}
 	}
 
 	for (APlayerCharacterController* PlayerCharacterController : AlivePlayerCharacterControllers) {
-		if (IsValid(PlayerCharacterController)) {
+		if (IsValid(PlayerCharacterController) && AlivePlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
 			AlivePlayerCharacterControllers.Remove(PlayerCharacterController);
 		}
 	}
@@ -280,9 +280,9 @@ void AMainGameMode::InStage()
 	}
 	else if (ZombieSpawnRemaning > 0) {
 		SpawnZombie();
-	}
+	}/*
 
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ZombieSpawnRemaning : %d"), ZombieSpawnRemaning));
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ZombieSpawnRemaning : %d"), ZombieSpawnRemaning));*/
 
 }
 

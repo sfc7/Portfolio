@@ -43,6 +43,8 @@ void AWeapon::Tick(float DeltaTime)
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, ReplicateMesh);
 }
 
 void AWeapon::BeginFocus()
@@ -83,7 +85,13 @@ void AWeapon::SpawnMuzzleFlash_NetMulticast_Implementation()
 	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
 }
 
-void AWeapon::SetWeaponMesh(USkeletalMesh* _Mesh)
+void AWeapon::SetWeaponMesh_Server_Implementation(USkeletalMesh* _Mesh)
 {
-	WeaponMesh->SetSkeletalMesh(_Mesh);
+	ReplicateMesh = _Mesh;
+	WeaponMesh->SetSkeletalMesh(ReplicateMesh);
+}
+
+void AWeapon::OnRep_WeaponMesh()
+{
+	WeaponMesh->SetSkeletalMesh(ReplicateMesh);
 }

@@ -9,8 +9,8 @@
 
 // 각 게임의 세션 안에서만 유효한 값들
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, float, _CurrentHp, float, NewCurrentHp);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, float, _MaxHp, float, NewMaxHp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, int, _CurrentHp, int, NewCurrentHp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, int, _MaxHp, int, NewMaxHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int32, NewCurrentLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
@@ -37,13 +37,13 @@ public:
 
 	friend class APlayerCharacter;
 
-	float GetCurrentHp() const { return CurrentHp; }
+	int32 GetCurrentHp() const { return CurrentHp; }
 
-	float GetMaxHp() const { return MaxHp; }
+	int32 GetMaxHp() const { return MaxHp; }
 
-	void SetCurrentHp(float _CurrentHp);
+	void SetCurrentHp(int32 _CurrentHp);
 
-	void SetMaxHp(float _MaxHp);
+	void SetMaxHp(int32 _MaxHp);
 
 	void EquipWeapon(class AWeapon* _Weapon);
 
@@ -85,6 +85,10 @@ public:
 	
 	void SetMoney(int32 _Money);
 
+	uint8 GetIsDead() const { return bIsDead; }
+
+	void SetIsDead(uint8 _bIsDead);
+
 	UFUNCTION(Server, Reliable)
 		void SendGameInstanceWeaponVariable_Server(int32 _TotalAmmo, int32 _CurrentAmmo, int32 _ReloadMaxAmmo, TSubclassOf<AWeapon> _CurrentWeaponType);
 
@@ -115,7 +119,7 @@ protected:
 
 private:
 	UFUNCTION(NetMulticast, Reliable)
-		void OnCurrentHPChanged_NetMulticast(float _CurrentHp, float NewCurrntHp);
+		void OnCurrentHPChanged_NetMulticast(int32 _CurrentHp, int32 NewCurrntHp);
 
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);
@@ -183,10 +187,10 @@ private:
 		AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		float CurrentHp;
+		int32 CurrentHp;
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		float MaxHp;
+		int32 MaxHp;
 
 
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))

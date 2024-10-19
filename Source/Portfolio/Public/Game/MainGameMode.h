@@ -110,7 +110,7 @@ private:
 		int32 RoomTime = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RemaningWaitTime = 100;
+		int32 RemaningWaitTime = 5;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 

@@ -16,6 +16,7 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 	{
 		CharacterComponent = _CharacterComponent;
 		CharacterComponent->OnCurrnetHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnCurrentHpChange);
+		CharacterComponent->OnCurrnetHpChangeDelegate.AddDynamic(this, &ThisClass::CurrntHpTextChange);
 		CharacterComponent->OnMaxHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnMaxHpChange);
 		CharacterComponent->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 		CharacterComponent->OnCurrentEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnCurrentEXPChange);
@@ -26,7 +27,7 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 		UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 		if (IsValid(GameInstance)) {
 			if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
-				float MaxHp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxHp;
+				int MaxHp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxHp;
 				Hp_Bar->SetMaxHp(MaxHp);
 				Hp_Bar->InitalizeHPBarWidget(CharacterComponent.Get());
 			}
@@ -49,26 +50,6 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 
 void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
 {
-	//if (IsValid(_PlayerState)) {
-	//	UKismetSystemLibrary::PrintString(GetWorld(), TEXT("----BindPlayerState----"));
-	//	PlayerState = _PlayerState;
-	//	PlayerState->OnCurrentEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnCurrentEXPChange);
-	//	PlayerState->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
-	//	PlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
-	//	PlayerState->OnMoneyChangeDelegate.AddDynamic(this, &ThisClass::MoneyChange);
-	//}
-	//UFGameInstance* GameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
-	//if (IsValid(GameInstance)) {
-	//	if (nullptr != GameInstance->GetCharacterTable() || nullptr != GameInstance->GetCharacterTableRowFromLevel(1)) {
-	//		float TableMaxExp = GameInstance->GetCharacterTableRowFromLevel(1)->MaxEXP;
-	//		Exp_Bar->SetMaxExp(TableMaxExp);
-	//		Exp_Bar->InitalizeEXPBarWidget(PlayerState.Get());
-	//		LevelTextChange(PlayerState->GetCurrentLevel());
-	//		FString Message = FString::Printf(TEXT("BindPlayerState LevelTextChange %d"), PlayerState->GetCurrentLevel());
-	//		UKismetSystemLibrary::PrintString(GetWorld(), Message);
-
-	//	}
-	//}
 }
 
 void UPlayerHUD::LevelTextChange(int32 NewLevel)
@@ -83,6 +64,15 @@ void UPlayerHUD::MoneyChange(int32 _Money)
 	FString ConvertString = FString::Printf(TEXT("%d"), _Money);
 
 	Money->SetText(FText::FromString(ConvertString));
+}
+
+void UPlayerHUD::CurrntHpTextChange(int32 _Hp, int32 NewHp)
+{
+	FString ConvertString = FString::Printf(TEXT("%d"), NewHp);
+
+	CurrntHpText->SetText(FText::FromString(ConvertString));
+
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("CurrntHpTextChange : %s"), *ConvertString)); 
 }
 
 void UPlayerHUD::CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo)
@@ -101,4 +91,7 @@ void UPlayerHUD::BindRenewal(UCharacterComponent* _CharacterComponent)
 	Exp_Bar->OnMaxEXPChange(CharacterComponent->GetMaxEXP());
 	LevelTextChange(CharacterComponent->GetCurrentLevel());
 	MoneyChange(CharacterComponent->GetMoney());
+	CurrntHpTextChange(CharacterComponent->GetCurrentHp(), CharacterComponent->GetCurrentHp());
+
+	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BindRenewal : %d"), CharacterComponent->GetCurrentHp()));
 }

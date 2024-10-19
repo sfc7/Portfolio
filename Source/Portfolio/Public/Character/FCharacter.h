@@ -22,12 +22,6 @@ public:
 	UFUNCTION(Server, Reliable)
 		void SetPlayerMesh_Server(USkeletalMesh* _PlayerMesh);
 
-	UFUNCTION(NetMulticast, Reliable)
-		void SetPlayerMesh_Multicast(USkeletalMesh* _PlayerMesh);
-
-	UFUNCTION(Client, Reliable)
-		void SetPlayerMesh_Client(USkeletalMesh* _PlayerMesh);
-
 	class UCharacterComponent* GetCharacterComponent() { return CharacterComponent; }
 
 	TObjectPtr<class AFPlayerState> GetFPlayerState() const { return FPlayerState.Get(); }

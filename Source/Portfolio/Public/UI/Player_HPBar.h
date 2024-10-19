@@ -14,15 +14,15 @@ class PORTFOLIO_API UPlayer_HPBar : public UPlayer_Bar
 {
 	GENERATED_BODY()
 public:
-	void SetMaxHp(float _MaxHp);
+	void SetMaxHp(int _MaxHp);
 
 	void InitalizeHPBarWidget(class UCharacterComponent* NewComponent);
 
 	UFUNCTION()
-		void OnMaxHpChange(float _MaxHp, float NewMaxHp);
+		void OnMaxHpChange(int _MaxHp, int NewMaxHp);
 
 	UFUNCTION()
-		void OnCurrentHpChange(float _Hp, float NewHp);
+		void OnCurrentHpChange(int _Hp, int NewHp);
 
 protected:
 	virtual void NativeConstruct() override;

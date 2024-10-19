@@ -31,36 +31,38 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
-private:
-	UFUNCTION(NetMulticast, Reliable)
-		void SetMesh_NetMulticast(USkeletalMesh* NewMesh);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+private:
+	// MeshLoad
+	UFUNCTION()
+		void OnRep_Mesh();
 	UFUNCTION()
 		void MeshAssetLoad();
-
+	//
+	
+	//Attack
 	void Attack();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Attack_NetMulticast(int16 _MontageArrayNum);
 
 	void Attack_BasicHit();
 
 	void AttackMontageEnd();
+	//
 
+	//Hit
 	void DestroyActor();
-
-	uint16 GetMoneyFromHitPart(FString BoneName);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void IsDead_NetMulticast();
 
-	UFUNCTION()
-		void OnHittedRagdollRestoreTimerElapsed();
-
-	UFUNCTION(NetMulticast, Unreliable)
-		void PlayRagdoll_NetMulticast();
-
-	uint8 GetHitPart(FString BoneName);
+	uint8 GetNumberFromHitPart(FString BoneName);
 
 	uint8 GetMoneyFromHitPart(uint8 HitPart);
-	
+	//
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UMonsterComponent> MonsterComponent;
@@ -72,6 +74,9 @@ private:
 	UPROPERTY()
 		TObjectPtr<class UZombieAnimInstance> ZombieAnimInstance;
 
+	UPROPERTY(ReplicatedUsing = OnRep_Mesh)
+	USkeletalMesh* ReplicateMesh;
+
 	//Attack
 	float AttackDamage = 10.f;
 	
@@ -80,14 +85,9 @@ private:
 	float AttackRadius = 50.f;
 	//
 
-	FTimerHandle HittedRagdollRestoreTimer;
 
-	FTimerDelegate HittedRagdollRestoreTimerDelegate;
-
-	float TargetRagDollPercent = 0.f;
-
-	float CurrentRagDollPercent = 0.f;
-
-	bool bIsRagdoll = false;
-
+	//Ragdoll
+	
+	FString CurrentBoneName;
+	//
 };

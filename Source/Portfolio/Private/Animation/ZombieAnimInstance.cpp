@@ -5,10 +5,10 @@
 #include "Character/ZombieCharacter.h"
 #include "Component/CharacterComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 UZombieAnimInstance::UZombieAnimInstance()
 {
-	
 }
 
 void UZombieAnimInstance::NativeInitializeAnimation()
@@ -20,6 +20,10 @@ void UZombieAnimInstance::NativeInitializeAnimation()
 	if (IsValid(OwnerCharacter)) {
 		MovementComponent = OwnerCharacter->GetCharacterMovement();
 	}
+
+	AttackMontageArray = { AttackMontage1, AttackMontage2, AttackMontage3 };
+
+	AttackMontageArrayNum = AttackMontageArray.Num();
 }
 
 void UZombieAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -46,15 +50,6 @@ void UZombieAnimInstance::AnimNotify_DeathMontageEnd()
 	DeathMontageEnd.Broadcast();
 }
 
-void UZombieAnimInstance::PlayAttackMontage()
-{
-	if (IsValid(AttackMontage)) {
-		if (!Montage_IsPlaying(AttackMontage)) {
-			Montage_Play(AttackMontage);
-		}
-	}
-}
-
 void UZombieAnimInstance::PlayDeathMontage()
 {
 	if (IsValid(DeathMontage)) {
@@ -63,4 +58,15 @@ void UZombieAnimInstance::PlayDeathMontage()
 			Montage_Play(DeathMontage);
 		}
 	}
+}
+
+void UZombieAnimInstance::PlayAttackMontage(int16 _MontageArrayNum)
+{
+	if (IsValid(AttackMontageArray[_MontageArrayNum]))
+	{
+		if (!Montage_IsPlaying(AttackMontageArray[_MontageArrayNum])) {
+			Montage_Play(AttackMontageArray[_MontageArrayNum]);
+		}
+	}
+
 }

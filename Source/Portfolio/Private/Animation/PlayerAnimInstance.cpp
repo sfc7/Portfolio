@@ -81,8 +81,17 @@ void UPlayerAnimInstance::PlayRifleIronSightReloadAnimMontage()
 void UPlayerAnimInstance::PlayChangeWeaponAnimMontage()
 {
 	if (!Montage_IsPlaying(ChangeWeaponAnimMontage)) {
-		UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ChangeWeaponAnimMontage")));
 		Montage_Play(ChangeWeaponAnimMontage);
+	}
+}
+
+void UPlayerAnimInstance::PlayHitAnimMontage()
+{
+	if (IsValid(HitAnimMontage)) {
+		StopAllMontages(0.0f);
+		if (!Montage_IsPlaying(HitAnimMontage)) {
+			Montage_Play(HitAnimMontage);
+		}
 	}
 }
 

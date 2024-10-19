@@ -19,6 +19,7 @@ const float AZombieAIController::PatrolRadius(100.f);
 const FName AZombieAIController::StartPatrolPositionKey(TEXT("StartPatrolPosition"));
 const FName AZombieAIController::EndPatrolPositionKey(TEXT("EndPatrolPosition"));
 const FName AZombieAIController::TargetActorKey(TEXT("TargetActor"));
+const FName AZombieAIController::IsAttackingKey(TEXT("IsAttacking"));
 
 AZombieAIController::AZombieAIController()
 {
@@ -77,6 +78,13 @@ void AZombieAIController::SetTargetActorKeyInBlackboard(AActor* Target)
 {
 	if (IsValid(Blackboard)) {
 		Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, Target);
+	}
+}
+
+void AZombieAIController::SetIsAttackingInBlackboard(bool _IsAttacking)
+{
+	if (IsValid(Blackboard)) {
+		Blackboard->SetValueAsBool(AZombieAIController::IsAttackingKey, _IsAttacking);
 	}
 }
 

@@ -25,6 +25,9 @@ protected:
 	UFUNCTION()
 		virtual void MoneyChange(int32 _Money);
 
+	UFUNCTION()
+		virtual void CurrntHpTextChange(int _Hp, int NewHp);
+
 
 	UFUNCTION()
 		virtual void CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo);
@@ -39,6 +42,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UTextBlock> LevelText;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
+		TObjectPtr<class UTextBlock> CurrntHpText;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (BindWidget))
 		TObjectPtr<class UTextBlock> Money;

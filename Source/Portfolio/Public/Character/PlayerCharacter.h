@@ -132,6 +132,14 @@ private:
 	void FireAnimationPlay();
 	//
 
+	UFUNCTION(Server, Unreliable)
+		void PlayHitMontage_Server();
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayHitMontage_NetMulticast();
+
+	void HitAnimationPlay();
+
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
 
@@ -139,12 +147,6 @@ private:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void SpawnLandMine_Server();
-
-	UFUNCTION()
-		void OnHittedRagdollRestoreTimerElapsed();
-
-	UFUNCTION(NetMulticast, Unreliable)
-		void PlayRagdoll_NetMulticast();
 
 	UFUNCTION(Server, Unreliable)
 		void UpdateInputValue_Server(const float& _ForwardInputValue, const float& _RightInputValue);
@@ -231,18 +233,6 @@ private:
 	bool bIsBurstTrigger = false;
 	//
 
-	// Ragdoll
-	FTimerHandle HittedRagdollRestoreTimer;
-
-	FTimerDelegate HittedRagdollRestoreTimerDelegate;
-
-	float TargetRagDollBlendWeight = 0.f;
-	float CurrentRagDollBlendWeight = 0.f;
-	bool bIsNowRagdollBlending = false;
-	//
-
-
-
 	//Death
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Meta = (AllowPrivateAccess))
 		uint8 bIsDead : 1;
@@ -296,7 +286,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		UParticleSystem* BloodEffect;
 
-	//
+	//Reload
 
 	UFUNCTION(Server, Unreliable)
 		void PlayWeaponChangeMontage_Server();
@@ -305,4 +295,8 @@ private:
 		void PlayWeaponChangeMontage_NetMulticast();
 
 	void WeaponChangeAnimationPlay();
+
+	//
+
+
 };	

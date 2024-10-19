@@ -117,23 +117,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		AimYaw = ControlRotation.Yaw;
 	}
 
-	if (bIsNowRagdollBlending) {
-		CurrentRagDollBlendWeight = FMath::FInterpTo(CurrentRagDollBlendWeight, TargetRagDollBlendWeight, DeltaTime, 10.f);
-
-		FName PivotBoneName = FName(TEXT("spine_01"));
-		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(PivotBoneName, CurrentRagDollBlendWeight);
-
-		if (CurrentRagDollBlendWeight - TargetRagDollBlendWeight < KINDA_SMALL_NUMBER) {
-			GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, false);
-			bIsNowRagdollBlending = false;
-		}
-
-		if (IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
-			GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("root")), 1.f);
-			bIsNowRagdollBlending = false;
-		}
-	}
-
 	if (IsValid(GetController())) {
 		PreviousAimPitch = AimPitch;
 		PreviousAimYaw = AimYaw;
@@ -207,35 +190,37 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (GetCharacterComponent()->GetIsDead())
+	{
+		return 0.f;
+	}
+
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
 	GetCharacterComponent()->SetCurrentHp(GetCharacterComponent()->GetCurrentHp() - ActualDamage);
 
-	if (!IsValid(GetCharacterComponent())) {
-		return ActualDamage;
-	}
 
-	if (IsDead()) {
+
+	
+	if (GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
+		GetCharacterComponent()->SetIsDead(true);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None);
-	}
 
-	if (GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
-		GetMesh()->SetSimulatePhysics(true);
+
+		APlayerCharacterController* PlayerCharacterController = Cast<APlayerCharacterController>(GetController());
+		if (PlayerCharacterController) {
+			PlayerCharacterController->Destroy();
+		}
+
+		AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+		if (IsValid(MainGameMode) && MainGameMode->AlivePlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
+			MainGameMode->AlivePlayerCharacterControllers.Remove(PlayerCharacterController);
+		}
 	}
 	else {
-		FName PivotBoneName = FName(TEXT("spine_01"));
-		GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
-		HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
-		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
+		PlayHitMontage_Server();
 	}
-
-	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
-	if (IsValid(MainGameMode)) {
-		MainGameMode->AlivePlayerCharacterControllers.Remove(Cast<APlayerCharacterController>(GetController()));
-	}
-
-	PlayRagdoll_NetMulticast();
 
 	return ActualDamage;
 }
@@ -520,6 +505,15 @@ void APlayerCharacter::ReverseRecoil()
 	RecoilTimeline.ReverseFromEnd();
 }
 
+void APlayerCharacter::HitAnimationPlay()
+{
+	if (!IsValid(AnimInstance)) {
+		return;
+	}
+
+	AnimInstance->PlayHitAnimMontage();
+}
+
 void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
 {
 	/*ParticleSystemComponent->Activate(true);*/
@@ -594,32 +588,6 @@ void APlayerCharacter::SpawnLandMine_Server_Implementation()
 	}
 }
 
-void APlayerCharacter::OnHittedRagdollRestoreTimerElapsed()
-{
-	FName PivotBoneName = FName(TEXT("spine_01"));
-	TargetRagDollBlendWeight = 0.f;
-	CurrentRagDollBlendWeight = 1.f;
-	bIsNowRagdollBlending = true;
-}
-
-void APlayerCharacter::PlayRagdoll_NetMulticast_Implementation()
-{
-	if (!IsValid(GetCharacterComponent())) {
-		return;
-	}
-
-	if (GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
-		GetMesh()->SetSimulatePhysics(true);
-	}
-	else {
-		FName PivotBoneName = FName(TEXT("spine_01"));
-		GetMesh()->SetAllBodiesBelowSimulatePhysics(PivotBoneName, true);
-		TargetRagDollBlendWeight = 1.f;
-		HittedRagdollRestoreTimerDelegate.BindUObject(this, &ThisClass::OnHittedRagdollRestoreTimerElapsed);
-		GetWorld()->GetTimerManager().SetTimer(HittedRagdollRestoreTimer, HittedRagdollRestoreTimerDelegate, 1.f, false);
-	}
-}
-
 void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (IsValid(HitCharacter)) {
@@ -641,7 +609,7 @@ bool APlayerCharacter::IsAiming()
 
 bool APlayerCharacter::IsDead()
 {
-	return (GetCharacterComponent() && GetCharacterComponent()->bIsDead);
+	return (GetCharacterComponent() && GetCharacterComponent()->GetIsDead());
 }
 
 ECurrentState APlayerCharacter::IsCurrentState()
@@ -859,7 +827,6 @@ void APlayerCharacter::WeaponBuyInteract()
 			interactableWeapon = Cast<AWeapon>(InteractionData.CurrentInteractable);
 			int32 CalCulatedMoney = GetCharacterComponent()->GetMoney() - FindTargetWeaponData.Price;
 			GetCharacterComponent()->SetMoney(CalCulatedMoney);
-			UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("WeaponBuyInteract")));
 			PlayWeaponChangeMontage_Server();
 		 }
 
@@ -873,7 +840,7 @@ void APlayerCharacter::ChangeWeapon()
 	if (IsLocallyControlled() && GetCharacterComponent()) {
 		GetCharacterComponent()->SetCurrentAndTotalAmmo(FindTargetWeaponData.CurrentAmmo, FindTargetWeaponData.TotalAmmo);
 		GetCharacterComponent()->SetReloadMaxAmmo(FindTargetWeaponData.ReloadMaxAmmo);
-		Weapon->SetWeaponMesh(FindTargetWeaponData.Mesh);
+		Weapon->SetWeaponMesh_Server(FindTargetWeaponData.Mesh);
 	}
 }
 
@@ -941,4 +908,15 @@ void APlayerCharacter::PlayWeaponChangeMontage_NetMulticast_Implementation()
 {
 	WeaponChangeAnimationPlay();
 	
+}
+
+void APlayerCharacter::PlayHitMontage_Server_Implementation()
+{
+	HitAnimationPlay();
+	PlayHitMontage_NetMulticast();
+}
+
+void APlayerCharacter::PlayHitMontage_NetMulticast_Implementation()
+{
+	HitAnimationPlay();
 }

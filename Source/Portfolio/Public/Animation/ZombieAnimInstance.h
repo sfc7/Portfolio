@@ -19,10 +19,6 @@ class PORTFOLIO_API UZombieAnimInstance : public UMonsterAnimInstance
 public:
 	UZombieAnimInstance();
 
-	virtual void NativeInitializeAnimation() override;
-
-	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
-
 	UFUNCTION()
 		void AnimNotify_AttackHit();
 
@@ -32,14 +28,24 @@ public:
 	UFUNCTION()
 		void AnimNotify_DeathMontageEnd();
 
-	void PlayAttackMontage();
-
 	void PlayDeathMontage();
+
+	void PlayAttackMontage(int16 _MontageArrayNum);
+		
+
+protected:
+
+	virtual void NativeInitializeAnimation() override;
+
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
 
 public:
 	FAttackHit AttackHit;
 	FAttackMontageEnd AttackMontageEnd;
 	FDeathMontageEnd DeathMontageEnd;
+
+	int16 AttackMontageArrayNum;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -52,10 +58,17 @@ private:
 		float GroundSpeed;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
-		UAnimMontage* AttackMontage;
+		UAnimMontage* AttackMontage1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* AttackMontage2;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* AttackMontage3;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
 		UAnimMontage* DeathMontage;
 
+	TArray<UAnimMontage*> AttackMontageArray;
 
 };
