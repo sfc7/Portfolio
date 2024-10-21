@@ -27,3 +27,24 @@ Z (단발/연사 전환)
 ## 구조 다이어그램
 ![DiaGram](https://github.com/user-attachments/assets/d40dbd5d-74dd-422a-92e4-1cd39287f219)
 
+## 멀티플레이
+### 맵이동
+
+~~~cpp
+void ALoadingController::BeginPlay()
+{
+...
+FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel"))) + "?listen";
+
+UGameplayStatics::OpenLevel(GM, *NextLevel, false);
+...
+}
+
+void AUIController::JoinServer(const FString& IPAddress)
+{
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("Loading"), true, FString::Printf(TEXT("NextLevel=%s?Saved=false"), *IPAddress));
+}
+~~~
+
+멀티플레이 환경을 언리얼 PIE모드에서 listen server로 실행했기 때문에 완벽한 seamless travel이 불가능했다. 
+그래서 단순한 level 이동의 경우에는 LoadingController에서 목적지를 ParseOption을 받아 Loading 화면을 보여주고 넘어가는 방식으로 하였고 
