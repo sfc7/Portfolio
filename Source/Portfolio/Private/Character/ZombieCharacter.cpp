@@ -206,8 +206,6 @@ void AZombieCharacter::Attack_BasicHit()
 	else {
 		DrawColor = FColor::Red;
 	}
-
-	DrawDebugCapsule(GetWorld(), Center, HalfHeight, AttackRadius, ZRotation, DrawColor, false, 5.f);
 }
 
 void AZombieCharacter::AttackMontageEnd()
@@ -253,10 +251,10 @@ uint8 AZombieCharacter::GetMoneyFromHitPart(uint8 HitPart)
 {
 	switch (HitPart) {
 		case 1:
-			return 30;
+			return 20;
 			break;
 		case 2:
-			return 50;
+			return 30;
 			break;
 		case 3:
 			return 100;

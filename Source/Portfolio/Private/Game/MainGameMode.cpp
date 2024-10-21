@@ -75,6 +75,8 @@ void AMainGameMode::PostLogin(APlayerController* NewPlayer)
 				ZombieSpawnPointArray.Add(SpawnPoint);
 			}
 		}
+
+		ZombieArrayTotalCount = ZombieSpawnPointArray.Num();
 	}
 
 }
@@ -99,9 +101,10 @@ void AMainGameMode::Logout(AController* Exiting)
 void AMainGameMode::SpawnZombie()
 {
 	if (HasAuthority()) {
-		int RandomIndex = FMath::RandRange(0, ZombieSpawnPointArray.Num() - 1);
+		int ArrayCount = ZombieArrayCurrntCount % ZombieArrayTotalCount;
+		ZombieArrayCurrntCount++;
 
-		if (AZombieSpawnPoint* SpawnPoint = ZombieSpawnPointArray[RandomIndex]) {
+		if (AZombieSpawnPoint* SpawnPoint = ZombieSpawnPointArray[ArrayCount]) {
 			FVector Loc = SpawnPoint->GetActorLocation();
 			FRotator Rot = SpawnPoint->GetActorRotation();
 
@@ -213,8 +216,8 @@ void AMainGameMode::SetZombieRemaning()
 
 void AMainGameMode::InRoom()
 {
-	if (RemaningWaitTime <= 0) {
-		RemaningWaitTime = RoomTime;
+	if (RemaningRoomTime <= 0) {
+		RemaningRoomTime = RoomTime;
 
 		NotificationString = FString::Printf(TEXT(""));
 
@@ -223,9 +226,9 @@ void AMainGameMode::InRoom()
 		GetWorld()->ServerTravel("/Game/Level/Stage?listen");
 	}
 	else {
-		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningWaitTime);
+		NotificationString = FString::Printf(TEXT("%d sec Remaning..."), RemaningRoomTime);
 
-		RemaningWaitTime--;
+		RemaningRoomTime--;
 	}
 
 	ChangeNotificationText(NotificationString);
@@ -249,7 +252,7 @@ void AMainGameMode::InWaitingStage()
 		GetWorld()->ServerTravel("/Game/Level/Room?listen");
 	}
 	else if (RemaningWaitTime <= 0) {
-		RemaningWaitTime = RoomTime;
+		RemaningWaitTime = WaitTime;
 		NotificationString = FString::Printf(TEXT(""));
 		SetZombieRemaning();
 
@@ -272,6 +275,13 @@ void AMainGameMode::InStage()
 	if (FGameState->GetTotalZombiesInRound() <= 0) {
 		SetLevelStateFromString("WaitingStage");
 
+		for (APlayerCharacterController* AlivePlayerCharacterController : AlivePlayerCharacterControllers) {
+			APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(AlivePlayerCharacterController->GetPawn());
+			if(IsValid(PlayerCharacter)) {
+				PlayerCharacter->GetCharacterComponent()->SetCurrentHp(100.f);
+			}
+		}
+
 		FGameState->IncrementCurrentRoundNumber();
 		FGameInstance->IncrementTotalRoundNumber();
 	}
@@ -280,10 +290,7 @@ void AMainGameMode::InStage()
 	}
 	else if (ZombieSpawnRemaning > 0) {
 		SpawnZombie();
-	}/*
-
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("ZombieSpawnRemaning : %d"), ZombieSpawnRemaning));*/
-
+	}
 }
 
 

@@ -14,7 +14,6 @@
 #include "Controller/PlayerCharacterController.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/DamageEvents.h"
-#include "WorldStatic/LandMine.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
@@ -109,7 +108,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 35.f);
+	CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 10.f);
 	CameraComponent->SetFieldOfView(CurrentFOV);
 	if (IsValid(GetController())) {
 		FRotator ControlRotation = GetController()->GetControlRotation();
@@ -181,7 +180,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->BurstTriggerAction, ETriggerEvent::Started, this, &ThisClass::ToggleBurstTrigger);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Started, this, &ThisClass::AttackOnBurstTrigger);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->AttackAction, ETriggerEvent::Completed, this, &ThisClass::StopFire);
-		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->LandMineAction, ETriggerEvent::Started, this, &ThisClass::SpawnLandMine);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->MenuAction, ETriggerEvent::Started, this, &ThisClass::OnMenu);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->ReloadAction, ETriggerEvent::Started, this, &ThisClass::Reload);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->E_InteractionAction, ETriggerEvent::Started, this, &ThisClass::WeaponBuyInteract);
@@ -199,9 +197,6 @@ float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 
 	GetCharacterComponent()->SetCurrentHp(GetCharacterComponent()->GetCurrentHp() - ActualDamage);
 
-
-
-	
 	if (GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		GetCharacterComponent()->SetIsDead(true);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -211,6 +206,10 @@ float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 		APlayerCharacterController* PlayerCharacterController = Cast<APlayerCharacterController>(GetController());
 		if (PlayerCharacterController) {
 			PlayerCharacterController->Destroy();
+		}
+
+		if (IsValid(Weapon)) {
+			Weapon->Destroy();
 		}
 
 		AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
@@ -411,7 +410,7 @@ void APlayerCharacter::FireBullet()
 				}
 			}
 			else {
-				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 10.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 40.f, DamageEvent, GetController(), this);
 			}
 		}
 	}
@@ -567,25 +566,6 @@ void APlayerCharacter::OnMenu(const FInputActionValue& InValue)
 void APlayerCharacter::UpdateDestroyedActor_Client_Implementation()
 {
 	UpdateDestroyedActor();
-}
-
-void APlayerCharacter::SpawnLandMine(const FInputActionValue& InValue)
-{
-	SpawnLandMine_Server();
-}
-
-bool APlayerCharacter::SpawnLandMine_Server_Validate()
-{
-	return true;
-}
-
-void APlayerCharacter::SpawnLandMine_Server_Implementation()
-{
-	if (IsValid(LandMineClass)) {
-		FVector SpawnLocation = (GetActorLocation() + GetActorForwardVector() * 300.f) - FVector(0.f, 0.f, 90.f);
-		ALandMine* LandMine = GetWorld()->SpawnActor<ALandMine>(LandMineClass, SpawnLocation, FRotator::ZeroRotator);
-		LandMine->SetOwner(GetController());
-	}
 }
 
 void APlayerCharacter::ApplyDamageAndDrawLine_Server_Implementation(ACharacter* HitCharacter, const FHitResult& HitResult, float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

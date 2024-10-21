@@ -143,11 +143,6 @@ private:
 	UFUNCTION()
 		void OnCurrentLevelChanged(int32 NewCurrentLevel);	
 
-	void SpawnLandMine(const FInputActionValue& InValue);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void SpawnLandMine_Server();
-
 	UFUNCTION(Server, Unreliable)
 		void UpdateInputValue_Server(const float& _ForwardInputValue, const float& _RightInputValue);
 
@@ -199,9 +194,6 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UCameraShakeBase> FireShake;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		TSubclassOf<class AActor> LandMineClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UPlayerAnimInstance> AnimInstance;

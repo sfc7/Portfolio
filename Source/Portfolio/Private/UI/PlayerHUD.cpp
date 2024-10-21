@@ -71,8 +71,6 @@ void UPlayerHUD::CurrntHpTextChange(int32 _Hp, int32 NewHp)
 	FString ConvertString = FString::Printf(TEXT("%d"), NewHp);
 
 	CurrntHpText->SetText(FText::FromString(ConvertString));
-
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("CurrntHpTextChange : %s"), *ConvertString)); 
 }
 
 void UPlayerHUD::CurrentAmmoAndTotalAmmoChange(int32 _CurrentAmmo, int32 _TotalAmmo)
@@ -92,6 +90,4 @@ void UPlayerHUD::BindRenewal(UCharacterComponent* _CharacterComponent)
 	LevelTextChange(CharacterComponent->GetCurrentLevel());
 	MoneyChange(CharacterComponent->GetMoney());
 	CurrntHpTextChange(CharacterComponent->GetCurrentHp(), CharacterComponent->GetCurrentHp());
-
-	UKismetSystemLibrary::PrintString(this, FString::Printf(TEXT("BindRenewal : %d"), CharacterComponent->GetCurrentHp()));
 }

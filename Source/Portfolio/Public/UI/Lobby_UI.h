@@ -28,7 +28,6 @@ private:
         void OnPreviousButtonClicked();
 
 
-
     void SaveInitializedSaveData();
 
 protected:

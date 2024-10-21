@@ -40,8 +40,6 @@ AZombieAIController::AZombieAIController()
 	SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
 	SightConfig->DetectionByAffiliation.bDetectFriendlies = false;
 
-	ClosestDistnace = FLT_MAX;
-
 	GetPerceptionComponent()->SetDominantSense(*SightConfig->GetSenseImplementation());
 	GetPerceptionComponent()->ConfigureSense(*SightConfig);
 }
@@ -70,6 +68,24 @@ void AZombieAIController::BeginAIController(APawn* InPawn)
 		if (UseBlackboard(BlackboardDataAsset, BlackboardComponent)) {
 			RunBehaviorTree(BehaviorTree);
 			BlackboardComponent->SetValueAsVector(AZombieAIController::StartPatrolPositionKey, InPawn->GetActorLocation());
+		}
+	}
+
+	AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	if (IsValid(MainGameMode)) {
+		float ClosestDistance = FLT_MAX;
+		AActor* ClosestActor = nullptr;
+
+		for (APlayerCharacterController* PlayerCharacterController : MainGameMode->AlivePlayerCharacterControllers) {
+			float Distance = PlayerCharacterController->GetPawn()->GetDistanceTo(GetPawn());
+			if (ClosestDistance > Distance) {
+				ClosestDistance = Distance;
+				ClosestActor = PlayerCharacterController->GetPawn();
+			}
+		}
+
+		if (IsValid(ClosestActor)) {
+			Blackboard->SetValueAsObject(ThisClass::TargetActorKey, ClosestActor);
 		}
 	}
 }
@@ -103,7 +119,6 @@ void AZombieAIController::SetTargetKeybySightSense(AActor* actor, FAIStimulus co
 			if (Stimulus.WasSuccessfullySensed()) {
 				if (!IsValid(CurrentTarget)) {
 					CurrentTarget = UpdateTarget;
-
 					Blackboard->SetValueAsObject(AZombieAIController::TargetActorKey, actor);
 				}
 				else {

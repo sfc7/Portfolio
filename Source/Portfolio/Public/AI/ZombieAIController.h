@@ -51,8 +51,4 @@ private:
 	TObjectPtr<class UAISenseConfig_Sight> SightConfig;
 
 	TObjectPtr<class APlayerCharacter> CurrentTarget;
-
-	float ClosestDistnace;
-
-	AActor* FindPlayer;
 };

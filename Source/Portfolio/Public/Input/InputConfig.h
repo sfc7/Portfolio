@@ -27,8 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> BurstTriggerAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TObjectPtr<class UInputAction> LandMineAction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> MenuAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> Q_InteractionAction;

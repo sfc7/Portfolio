@@ -85,8 +85,7 @@ void UCharacterComponent::BeginPlay()
 					CurrentLevel = FGameInstance->CurrentLevel;
 					CurrentEXP = FGameInstance->CurrentEXP;
 					MaxEXP = FGameInstance->GetCharacterTableRowFromLevel(CurrentLevel)->MaxEXP;
-					/*PlayerMoney = FGameInstance->PlayerMoney;*/
-					PlayerMoney = 300000;
+					PlayerMoney = FGameInstance->PlayerMoney;
 				}
 
 				SendGameInstanceXPVariable_Server(CurrentLevel, CurrentEXP, PlayerMoney);

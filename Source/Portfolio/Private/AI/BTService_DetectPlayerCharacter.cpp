@@ -10,13 +10,12 @@
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Perception/AIPerceptionComponent.h"
-#include "Perception/AISenseConfig_Sight.h"
+#include "Kismet/GameplayStatics.h"
 
 UBTService_DetectPlayerCharacter::UBTService_DetectPlayerCharacter()
 {
 	NodeName = TEXT("DetectPlayerCharacter");
-	Interval = 1.f;
+	Interval = 2.f;
 }
 
 void UBTService_DetectPlayerCharacter::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -26,36 +25,57 @@ void UBTService_DetectPlayerCharacter::TickNode(UBehaviorTreeComponent& OwnerCom
 
 	AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
 	if (IsValid(AIController)) {
-		UAIPerceptionComponent* PerceptionComponent = AIController->FindComponentByClass<UAIPerceptionComponent>();
+		AMainGameMode* MainGameMode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+		float ClosestDistance = FLT_MAX;
+		AActor* ClosestActor = nullptr;
 
-		TArray<AActor*> PerceivedActorArray;
-		PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActorArray);
+		TArray<AActor*> PlayerCharacters;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), PlayerCharacters);
 
-		if (PerceivedActorArray.Num() > 0)
-		{
-			UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-			if (IsValid(BlackboardComponent))
-			{
-				AActor* ClosestActor = nullptr;
-				float ClosestDistance = FLT_MAX;
-
-				for (AActor* Actor : PerceivedActorArray)
-				{
-					APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Actor);
-					if (IsValid(PlayerCharacter))
-					{
-						float Distance = AIController->GetPawn()->GetDistanceTo(PlayerCharacter);
-						if (ClosestDistance > Distance)
-						{
-							ClosestDistance = Distance;
-							ClosestActor = PlayerCharacter;
-						}
-					}
-				}
-
-				BlackboardComponent->SetValueAsObject(AZombieAIController::TargetActorKey, ClosestActor);
+		for (AActor* PlayerCharacter : PlayerCharacters) {
+			float Distance = PlayerCharacter->GetDistanceTo(OwnerComp.GetOwner());
+			if (ClosestDistance > Distance) {
+				ClosestDistance = Distance;
+				ClosestActor = PlayerCharacter;
 			}
 		}
+
+
+		UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+		BlackboardComponent->SetValueAsObject(AZombieAIController::TargetActorKey, ClosestActor);
 	}
-	
 }
+
+//AZombieAIController* AIController = Cast<AZombieAIController>(OwnerComp.GetAIOwner());
+//if (IsValid(AIController)) {
+//	UAIPerceptionComponent* PerceptionComponent = AIController->FindComponentByClass<UAIPerceptionComponent>();
+
+//	TArray<AActor*> PerceivedActorArray;
+//	PerceptionComponent->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), PerceivedActorArray);
+
+//	if (PerceivedActorArray.Num() > 0)
+//	{
+//		UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+//		if (IsValid(BlackboardComponent))
+//		{
+//			AActor* ClosestActor = nullptr;
+//			float ClosestDistance = FLT_MAX;
+
+//			for (AActor* Actor : PerceivedActorArray)
+//			{
+//				APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(Actor);
+//				if (IsValid(PlayerCharacter))
+//				{
+//					float Distance = AIController->GetPawn()->GetDistanceTo(PlayerCharacter);
+//					if (ClosestDistance > Distance)
+//					{
+//						ClosestDistance = Distance;
+//						ClosestActor = PlayerCharacter;
+//					}
+//				}
+//			}
+
+//			BlackboardComponent->SetValueAsObject(AZombieAIController::TargetActorKey, ClosestActor);
+//		}
+//	}
+//}

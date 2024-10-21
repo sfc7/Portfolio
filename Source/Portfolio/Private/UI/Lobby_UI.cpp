@@ -30,7 +30,7 @@ void ULobby_UI::OnSubmitButtonClicked()
 {   
     //SaveInitializedSaveData();
 
-    //AUIController* PlayerUIController = GetOwningPlayer<AUIController>();
+    //AUIController* PlayerUIController = GetOwningPlayer<AUIController>(); 
     //if (IsValid(PlayerUIController))
     //{
     //    PlayerUIController->JoinServer(FString(TEXT("127.0.0.1:17777")));

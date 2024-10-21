@@ -102,15 +102,25 @@ private:
 
 	int16 ZombieSpawnRemaning = 0;
 
+	int16 ZombieArrayCurrntCount = 0;
+
+	int16 ZombieArrayTotalCount = 0;
+
 	FTimerHandle MainTimerHandle;
 
 	ELevelState LevelState = ELevelState::Room;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RoomTime = 100;
+		int32 RoomTime = 40;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RemaningWaitTime = 5;
+		int32 WaitTime = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 RemaningWaitTime = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 RemaningRoomTime = 40;
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 

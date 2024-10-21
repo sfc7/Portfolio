@@ -27,7 +27,7 @@ void UPlayer_HPBar::OnCurrentHpChange(int _Hp, int NewHp)
 {
 	if (IsValid(Bar)) {
 		if (MaxFigure > KINDA_SMALL_NUMBER) {
-			Bar->SetPercent(NewHp / MaxFigure);
+			Bar->SetPercent((float)NewHp / (float)MaxFigure);
 		}
 		else {
 			Bar->SetPercent(0.f);
