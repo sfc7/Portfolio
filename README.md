@@ -60,3 +60,9 @@ GetWorld()->ServerTravel("/Game/Level/Stage?listen");
 
 서버와 클라이언들이 만나는 방법은 LAN을 이용해 Session으로 만나는 방법을 이용했는데 Create/Find Session은 블루프린트 함수이다보니
 C++로 구현할 경우 가져올 변수와 설정할 함수들이 많아서 Widget에서 블루프린트로 구현했다. 
+
+### 데이터 관리
+총기나 Zombie와 Character의 스탯, 라운드별 좀비의 Spawn 같은 것들은 DataTable을 통하여 관리하였고
+
+좀비의 Mesh를 Random값으로 불러오기 위한 경로는 PortfolioSettings라는 새로운 모듈을 만들어 Target파일에 ExtraModuleNames.Add("PortfolioSettings"); 해준 뒤
+UZombieCharacterSettings에 UCLASS(config = ZombieCharacterMeshPaths) 속성을 주어 메모장으로 값을 불러오게 해보았다. 
