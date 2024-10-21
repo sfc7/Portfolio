@@ -115,49 +115,53 @@ AI가 Character을 탐지하는 경우 게임의 속도감이나 진행을 위�
 
 
 
-## Interact
+## 반동
+
+
+![image5](https://github.com/user-attachments/assets/c45a50e2-b725-4b96-95e8-01cdc21827df)
+
+총기에 반동에 대한 구현은 다음과 같은 주기를 무한 반복하는 Curve의 Vertical과 Horizontal 차트를 만들고 
+
 ~~~
-UENUM()
-enum class EInteractableType : uint8
+void APlayerCharacter::BeginPlay()
 {
-	Active UMETA(DisplayName = "Active"),
-	Hold UMETA(DisplayName = "Hold") ,
-	Trade UMETA(DisplayName = "Trade"),
-	Toggle UMETA(DisplayName = "Toggle"),
-};
+	FOnTimelineFloat RecoilCurve_X;
+	FOnTimelineFloat RecoilCurve_Y;
 
-USTRUCT()
-struct FInteractableData
-{
-	...
-	UPROPERTY(EditAnywhere)
-		EInteractableType InteractableType;
+	RecoilCurve_X.BindUFunction(this, FName("StartHorizontalRecoil"));
+	RecoilCurve_Y.BindUFunction(this, FName("StartVerticalRecoil"));
 
-	UPROPERTY(EditAnywhere)
-		FText Name;
+	RecoilTimeline.AddInterpFloat(HorizontalCurve, RecoilCurve_X);
+	RecoilTimeline.AddInterpFloat(VerticalCurve, RecoilCurve_Y);
 
-	UPROPERTY(VisibleAnywhere)
-		float InteractionDuration;
-};
-
-UINTERFACE(MinimalAPI)
-class UInteractionInterface : public UInterface
-{
-	GENERATED_BODY()
-};
-
-class PORTFOLIO_API IInteractionInterface
-{
-	GENERATED_BODY()
-
-public:
-	virtual void BeginFocus();
-	virtual void EndFoucs();
-	virtual void BeginInteract();
-	virtual void EndInteract();
-	virtual void Interact(class AFCharacter* FCharacter);
-public:
-	FInteractableData InteractableData;
-};
+}
 ~~~
 
+FTimeLine에 Curve 보간값을 묶어준뒤 
+
+~~~
+void APlayerCharacter::StartHorizontalRecoil(float Value)
+{
+	if (RecoilTimeline.IsReversing()) return;
+	AddControllerYawInput(Value);
+}
+
+void APlayerCharacter::StartVerticalRecoil(float Value)
+{
+	if (RecoilTimeline.IsReversing()) return;
+	AddControllerPitchInput(Value);
+}
+~~~
+
+
+연사기능의 시작과 끝에 Timeline을 Start하고 Reverse하게한뒤 Tick에서 TimeLine의 흐름 따라 Contrller에 Pitfch,Yaw 값을 넣어주어 구현하였고
+
+~~~
+	FVector CameraStartLocation = CameraComponent->GetComponentLocation();
+	FVector CameraEndLocation = CameraStartLocation + CameraComponent->GetForwardVector() * GunRange;
+
+	CameraEndLocation.Y += CameraEndLocation.Y * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
+	CameraEndLocation.Z += CameraEndLocation.Z * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
+~~~
+
+랜덤스프레드에 경우 단순히 총알이 닿는 곳의 끝값에 RandRange값을 주어 튀는 방식으로 구현하였다. 
