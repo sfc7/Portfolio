@@ -34,9 +34,9 @@ Z (단발/연사 전환)
 void ALoadingController::BeginPlay()
 {
 ...
-FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel"))) + "?listen";
+	FString NextLevel = UGameplayStatics::ParseOption(GM->OptionsString, FString(TEXT("NextLevel"))) + "?listen";
 
-UGameplayStatics::OpenLevel(GM, *NextLevel, false);
+	UGameplayStatics::OpenLevel(GM, *NextLevel, false);
 ...
 }
 
@@ -46,5 +46,17 @@ void AUIController::JoinServer(const FString& IPAddress)
 }
 ~~~
 
+
 멀티플레이 환경을 언리얼 PIE모드에서 listen server로 실행했기 때문에 완벽한 seamless travel이 불가능했다. 
 그래서 단순한 level 이동의 경우에는 LoadingController에서 목적지를 ParseOption을 받아 Loading 화면을 보여주고 넘어가는 방식으로 하였고 
+
+
+~~~cpp
+GetWorld()->ServerTravel("/Game/Level/Stage?listen");
+~~~
+모든 클라이언트들이 함께 이동할 경우 서버에서만 호출 가능하고 클라이언트들이 뒤따라오는 ServerTravel을 주로 사용하였으며
+
+![image1](https://github.com/user-attachments/assets/d71aa11e-242e-4a6b-a097-7c5c0e2a051c)
+
+서버와 클라이언들이 만나는 방법은 LAN을 이용해 Session으로 만나는 방법을 이용했는데 Create/Find Session은 블루프린트 함수이다보니
+C++로 구현할 경우 가져올 변수와 설정할 함수들이 많아서 Widget에서 블루프린트로 구현했다. 
