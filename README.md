@@ -61,8 +61,51 @@ GetWorld()->ServerTravel("/Game/Level/Stage?listen");
 서버와 클라이언들이 만나는 방법은 LAN을 이용해 Session으로 만나는 방법을 이용했는데 Create/Find Session은 블루프린트 함수이다보니
 C++로 구현할 경우 가져올 변수와 설정할 함수들이 많아서 Widget에서 블루프린트로 구현했다. 
 
-### 데이터 관리
+
+
+
+
+
+## 데이터 관리
+
+![image2](https://github.com/user-attachments/assets/f658e80c-7e54-4658-914a-f793b7af92e1)
+
 총기나 Zombie와 Character의 스탯, 라운드별 좀비의 Spawn 같은 것들은 DataTable을 통하여 관리하였고
 
-좀비의 Mesh를 Random값으로 불러오기 위한 경로는 PortfolioSettings라는 새로운 모듈을 만들어 Target파일에 ExtraModuleNames.Add("PortfolioSettings"); 해준 뒤
+![image3](https://github.com/user-attachments/assets/633475df-3239-46bd-b950-bf4012c9a547)
+
+좀비의 Mesh는 PortfolioSettings라는 새로운 모듈을 만들어 Target파일에 ExtraModuleNames.Add("PortfolioSettings"); 해준 뒤
 UZombieCharacterSettings에 UCLASS(config = ZombieCharacterMeshPaths) 속성을 주어 메모장으로 값을 불러오게 해보았다. 
+
+
+
+
+
+
+## AI
+
+~~~
+	float ClosestDistance = FLT_MAX;
+	AActor* ClosestActor = nullptr;
+
+	TArray<AActor*> PlayerCharacters;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerCharacter::StaticClass(), PlayerCharacters);
+
+	for (AActor* PlayerCharacter : PlayerCharacters) {
+		float Distance = PlayerCharacter->GetDistanceTo(OwnerComp.GetOwner());
+		if (ClosestDistance > Distance) {
+			ClosestDistance = Distance;
+			ClosestActor = PlayerCharacter;
+		}
+	}
+
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+	BlackboardComponent->SetValueAsObject(AZombieAIController::TargetActorKey, ClosestActor);
+~~~
+AI가 Character을 탐지하는 경우 게임의 속도감이나 진행을 위해
+콜오브듀티나 월드워Z에서 보던 그것처럼 게임을 시작하자말자 실시간으로 가장 가까운 Character를 탐지하여 다가올 필요가 있었다.
+
+그래서 AI Perception 같은 기능으로 탐지하기 보다는 GetAllActorsOfClass를 통해 가장 가까운 거리를 계산하여 탐지하게 하였다.
+
+다만 캐릭터가 죽고나서는 지속적으로 자연스러움을 위해 GetNavigationSystem으로 좀비를 Patrol 시켰다.
+
