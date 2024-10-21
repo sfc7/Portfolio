@@ -9,3 +9,21 @@
   
 시연 영상:
 https://www.youtube.com/watch?v=R8HM7mRmQdQ
+
+# 조작
+W,A,S,D (이동)  
+  
+마우스 좌클릭 (공격)  
+  
+마우스 우클릭 (조준) 
+
+SPACE (점프)  
+
+R (재장전)
+  
+Z (단발/연사 전환)  
+
+# 기술 설명서
+## 구조 다이어그램
+![DiaGram](https://github.com/user-attachments/assets/d40dbd5d-74dd-422a-92e4-1cd39287f219)
+
