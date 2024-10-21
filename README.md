@@ -102,10 +102,62 @@ UZombieCharacterSettings에 UCLASS(config = ZombieCharacterMeshPaths) 속성을 
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	BlackboardComponent->SetValueAsObject(AZombieAIController::TargetActorKey, ClosestActor);
 ~~~
+
+![image4](https://github.com/user-attachments/assets/d2981f63-7ea3-4d98-ab74-bd4f297e783f)
+
 AI가 Character을 탐지하는 경우 게임의 속도감이나 진행을 위해
 콜오브듀티나 월드워Z에서 보던 그것처럼 게임을 시작하자말자 실시간으로 가장 가까운 Character를 탐지하여 다가올 필요가 있었다.
 
 그래서 AI Perception 같은 기능으로 탐지하기 보다는 GetAllActorsOfClass를 통해 가장 가까운 거리를 계산하여 탐지하게 하였다.
 
-다만 캐릭터가 죽고나서는 지속적으로 자연스러움을 위해 GetNavigationSystem으로 좀비를 Patrol 시켰다.
+다만 캐릭터가 죽고나서는 지속적으로 자연스러움을 위해 GetNavigationSystem으로 좀비를 Patrol 시켰다. 
+
+
+
+
+## Interact
+~~~
+UENUM()
+enum class EInteractableType : uint8
+{
+	Active UMETA(DisplayName = "Active"),
+	Hold UMETA(DisplayName = "Hold") ,
+	Trade UMETA(DisplayName = "Trade"),
+	Toggle UMETA(DisplayName = "Toggle"),
+};
+
+USTRUCT()
+struct FInteractableData
+{
+	...
+	UPROPERTY(EditAnywhere)
+		EInteractableType InteractableType;
+
+	UPROPERTY(EditAnywhere)
+		FText Name;
+
+	UPROPERTY(VisibleAnywhere)
+		float InteractionDuration;
+};
+
+UINTERFACE(MinimalAPI)
+class UInteractionInterface : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class PORTFOLIO_API IInteractionInterface
+{
+	GENERATED_BODY()
+
+public:
+	virtual void BeginFocus();
+	virtual void EndFoucs();
+	virtual void BeginInteract();
+	virtual void EndInteract();
+	virtual void Interact(class AFCharacter* FCharacter);
+public:
+	FInteractableData InteractableData;
+};
+~~~
 
