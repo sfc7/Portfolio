@@ -85,17 +85,17 @@ void AMainGameMode::Logout(AController* Exiting)
 {
 	Super::Logout(Exiting);
 
-	for (APlayerCharacterController* PlayerCharacterController : PlayerCharacterControllers) {
-		if (IsValid(PlayerCharacterController) && PlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
-			PlayerCharacterControllers.Remove(PlayerCharacterController);
-		}
-	}
+	//for (APlayerCharacterController* PlayerCharacterController : PlayerCharacterControllers) {
+	//	if (IsValid(PlayerCharacterController) && PlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
+	//		PlayerCharacterControllers.Remove(PlayerCharacterController);
+	//	}
+	//}
 
-	for (APlayerCharacterController* PlayerCharacterController : AlivePlayerCharacterControllers) {
-		if (IsValid(PlayerCharacterController) && AlivePlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
-			AlivePlayerCharacterControllers.Remove(PlayerCharacterController);
-		}
-	}
+	//for (APlayerCharacterController* PlayerCharacterController : AlivePlayerCharacterControllers) {
+	//	if (IsValid(PlayerCharacterController) && AlivePlayerCharacterControllers.Find(PlayerCharacterController) != INDEX_NONE) {
+	//		AlivePlayerCharacterControllers.Remove(PlayerCharacterController);
+	//	}
+	//}
 }
 
 void AMainGameMode::SpawnZombie()
