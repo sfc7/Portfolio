@@ -165,3 +165,6 @@ void APlayerCharacter::StartVerticalRecoil(float Value)
 ~~~
 
 랜덤스프레드에 경우 단순히 총알이 닿는 곳의 끝값에 RandRange값을 주어 튀는 방식으로 구현하였습니다.
+
+
+
