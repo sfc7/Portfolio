@@ -1,7 +1,7 @@
 # 시연 영상
 https://www.youtube.com/watch?v=R8HM7mRmQdQ
 <br/>
-# (멀티플레이) TPS 좀비 서바이벌
+# (멀티플레이) 좀비 서바이벌
  
 - 사용엔진 Unreal 5.1
   
