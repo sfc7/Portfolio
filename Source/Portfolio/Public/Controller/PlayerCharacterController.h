@@ -27,12 +27,10 @@ public:
 	UFUNCTION()
 		virtual void BindPlayerState(AFPlayerState* _PlayerState);
 
-	void EndMap();
-
 	UFUNCTION(Client, Reliable)
 		void EndMap_Client();
 
-	void WeaponBuyShow(struct FPurchasableWeaponData* PurchasableWeaponData);
+	void WeaponBuyShow(struct FWeaponData* PurchasableWeaponData);
 
 	void WeaponBuyHide();
 

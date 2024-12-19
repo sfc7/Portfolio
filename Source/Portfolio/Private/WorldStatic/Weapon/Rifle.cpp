@@ -5,8 +5,5 @@
 
 ARifle::ARifle()
 {
-	TotalAmmo = 270;
-	ReloadMaxAmmo = 30;
-
 	bReplicates = true;
 }	

@@ -95,6 +95,13 @@ void UPlayerAnimInstance::PlayHitAnimMontage()
 	}
 }
 
+void UPlayerAnimInstance::PlaySwapWeaponAmimMontage()
+{
+	if (!Montage_IsPlaying(SwapWeaponAnimMontage)) {
+		Montage_Play(SwapWeaponAnimMontage);
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_FireMontage()
 {
 	FireMontage.Broadcast();	
@@ -118,5 +125,10 @@ void UPlayerAnimInstance::AnimNotify_ReloadMontageEnd()
 void UPlayerAnimInstance::AnimNotify_ChangeWeaponMontage()
 {
 	ChangeWeaponMontage.Broadcast();
+}
+
+void UPlayerAnimInstance::AnimNotify_SwapWeaponMontage()
+{
+	SwapWeaponMontage.Broadcast();
 }
 

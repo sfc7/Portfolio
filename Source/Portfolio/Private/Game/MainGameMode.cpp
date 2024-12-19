@@ -49,6 +49,7 @@ void AMainGameMode::BeginPlay()
 
 	SetLevelStateFromLevelName();
 
+	
 	GetWorld()->GetTimerManager().SetTimer(MainTimerHandle, this, &ThisClass::OnMainTimerElapsed, 1.0f, true);
 }
 
@@ -210,7 +211,6 @@ void AMainGameMode::SetZombieRemaning()
 		int32 CurrentRound = FGameInstance->GetTotalRoundNumber();
 
 		ZombieSpawnRemaning = GetZombieRoundTableRowFromRound(CurrentRound)->Number;
-		UE_LOG(LogTemp, Log, TEXT("SetZombieRemaning ZombieSpawnRemaning %d"), ZombieSpawnRemaning);
 	}
 }
 
@@ -232,7 +232,6 @@ void AMainGameMode::InRoom()
 	}
 
 	ChangeNotificationText(NotificationString);
-
 }
 
 void AMainGameMode::InWaitingStage()

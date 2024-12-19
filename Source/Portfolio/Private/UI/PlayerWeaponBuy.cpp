@@ -18,7 +18,7 @@ void UPlayerWeaponBuy::NativeConstruct()
 	Super::NativeConstruct();
 }
 
-void UPlayerWeaponBuy::UpdateWidget(FPurchasableWeaponData* PurchasableWeaponData)
+void UPlayerWeaponBuy::UpdateWidget(FWeaponData* PurchasableWeaponData)
 {	
 	WeaponName->SetText(PurchasableWeaponData->Name);
 	FString ConvertString = FString::Printf(TEXT("[$:%d]"), PurchasableWeaponData->Price);

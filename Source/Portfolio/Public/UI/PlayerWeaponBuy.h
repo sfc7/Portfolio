@@ -15,7 +15,7 @@ class PORTFOLIO_API UPlayerWeaponBuy : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void UpdateWidget(struct FPurchasableWeaponData* PurchasableWeaponData);
+	void UpdateWidget(struct FWeaponData* PurchasableWeaponData);
 
 protected:
 	virtual void NativeOnInitialized();

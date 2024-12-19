@@ -5,7 +5,22 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/InteractionInterface.h"
+#include "Data/DataStruct.h"
 #include "Weapon.generated.h"
+
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
+
+
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
+{
+	Initial UMETA(DisplayName = "Initial State"),
+	Equipped UMETA(DisplayName = "Equipped"),
+	UnEquipped UMETA(DisplayName = "UnEquipped")
+};
+
 
 UCLASS()
 class PORTFOLIO_API AWeapon : public AActor, public IInteractionInterface 
@@ -18,10 +33,25 @@ public:
 	
 	virtual void Tick(float DeltaTime) override;
 
-	int32 GetTotalAmmo() { return TotalAmmo; }
 
-	int32 GetReloadMaxAmmo() { return ReloadMaxAmmo; }
+	FWeaponData& GetWeaponData() { return WeaponData; }
+
+	int32 GetCurrentAmmo() { return WeaponData.CurrentAmmo; }
+
+	int32 GetTotalAmmo() { return WeaponData.TotalAmmo; }
+
+	int32 GetReloadMaxAmmo() { return WeaponData.ReloadMaxAmmo; }
 	
+	void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
+
+	void SetTotalAmmo(int32 _TotalAmmo); 
+
+	void SetCurrentAmmo(int32 _CurrentAmmo);
+
+	void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
+
+	void SetWeaponData(FWeaponData _WeaponData);
+
 	virtual void BeginFocus();
 	virtual void EndFoucs();
 	virtual void BeginInteract();
@@ -37,6 +67,10 @@ public:
 	UFUNCTION(Server, Reliable)
 		void SetWeaponMesh_Server(USkeletalMesh* _Mesh);
 
+		void SetWeaponMesh(USkeletalMesh* _Mesh);
+
+		void SetWeaponState(EWeaponState _State);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -46,7 +80,12 @@ protected:
 	UFUNCTION()
 		void OnRep_WeaponMesh();
 
+	UFUNCTION()
+		void OnRep_WeaponState();
+
 public:
+	FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
+
 	UPROPERTY(EditAnywhere, Category = CrossHair)
 		class UTexture2D* CrossHairCenter;
 
@@ -64,29 +103,29 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* ImpactEffect;
-protected:
-	UPROPERTY(EditAnywhere)
-		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponMesh)
 		USkeletalMesh* ReplicateMesh;
 
-	UPROPERTY(EditAnywhere)
-		int32 TotalAmmo;
+	UPROPERTY(Replicated, EditAnywhere)
+		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(EditAnywhere)
-		int32 ReloadMaxAmmo;
+		USceneComponent* RootScene;
 
+protected:
 	UPROPERTY(EditAnywhere)
 		FString WeaponName;
-	
+
+	UPROPERTY(EditAnywhere)
+		FWeaponData WeaponData;
+
 	FInteractableData InstanceInteractableData;
 
 	UPROPERTY(EditAnywhere)
 		UParticleSystem* MuzzleFlash;
 
-	
-
-
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, EditAnywhere)
+		EWeaponState WeaponState;
 
 };

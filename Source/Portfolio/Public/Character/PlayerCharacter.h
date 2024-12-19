@@ -13,6 +13,7 @@
 #include "Engine/DataTable.h"
 #include "PlayerCharacter.generated.h"
 
+
 USTRUCT()
 struct FInteractionData {
 	GENERATED_USTRUCT_BODY()
@@ -97,9 +98,15 @@ private:
 
 	void FireBullet();
 
+	void FireBullet_LineTrace(FVector _CameraStartLocation, FVector _CameraEndLocation);
+
+	FRotator GetSprayAngle(FVector _MuzzleDirection, float _MaxAngle);
+
 	void Reload();
 
 	void ReloadAmmo();
+
+	void ThrowGrenade();
 
 	void UpdateDestroyedActor();
 
@@ -129,6 +136,8 @@ private:
 	UFUNCTION(Server, Reliable)
 		void UseAmmo_Server();
 
+		void UseAmmo();
+
 	void FireAnimationPlay();
 	//
 
@@ -152,8 +161,6 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void UpdateAimValue_NetMulticast(const float& _AimPitch, const float& _AimYaw);
 
-	UFUNCTION(Client, Reliable)
-		void UpdateDestroyedActor_Client();
 
 	void PerformInteractionCheck();
 	
@@ -183,7 +190,7 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void SpawnBloodEffect_NetMulticast(FVector _Location, FRotator _Rotation);
 
-	void ChangeWeapon();
+
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -195,12 +202,14 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TSubclassOf<class UCameraShakeBase> FireShake;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UPlayerAnimInstance> AnimInstance;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateaccess = true))
 		UDataTable* PurchasableItemData;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float MaxSprayAngle;
 
 
 	// Zoom 
@@ -253,7 +262,7 @@ private:
 
 	FInteractionData InteractionData;
 
-	FPurchasableWeaponData FindTargetWeaponData;
+	FWeaponData FindTargetWeaponData;
 
 	//
 
@@ -286,9 +295,40 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 		void PlayWeaponChangeMontage_NetMulticast();
 
+	UFUNCTION(Server, Reliable)
+		void ChangeWeaponActive_Server();
+
 	void WeaponChangeAnimationPlay();
 
+	void ChangeWeapon();
+
+	void ChangeWeaponActive();
+
+
+
 	//
+
+	UFUNCTION(Server, Unreliable)
+		void PlayWeaponSwapMontage_Server();
+
+	UFUNCTION(NetMulticast, Unreliable)
+		void PlayWeaponSwapMontage_NetMulticast();
+
+	UFUNCTION(Server, Reliable)
+		void SetSwapWeaponActive_Server();
+
+	void WeaponSwapAnimationPlay();
+
+	void Swap_1();
+
+	void Swap_2();
+
+	void SwapWeapon();
+
+	void SetSwapWeaponActive();
+
+
+
 
 
 };	

@@ -7,12 +7,10 @@ UPlayerStateSave::UPlayerStateSave()
 {
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> DefaultMeshRef(TEXT("/Script/Engine.SkeletalMesh'/Game/AnimStarterPack/UE4_Mannequin/Mesh/SK_Mannequin.SK_Mannequin'"));
 
-	PlayerCharacterName = TEXT("DefaultPlayer");
 	CurrentLevel = 1;
 	CurrentEXP = 0;
 	Money = 0;
-	CurrentAmmo = 0;
-	TotalAmmo = 0;
+
 
 	PlayerMesh = nullptr;
 	if (DefaultMeshRef.Succeeded()) {

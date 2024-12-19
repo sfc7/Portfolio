@@ -32,27 +32,38 @@ public:
 		float EXP;
 }; 
 
-UENUM()
+UENUM(BlueprintType)
 enum class EItemType : uint8
 {
 	Weapon UMETA(DisplayName = "Weapon"),
-	Ammo UMETA(DisplayName = "Ammo"),
+	Consumable UMETA(DisplayName = "Consumable"),
 	Mundane UMETA(DisplayName = "Mundane")
 };
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	AR UMETA(DisplayName = "AR"),
+	DMR UMETA(DisplayName = "DMR"),
+	SG UMETA(DisplayName = "SG"),
+	None UMETA(DisplayName = "None")
+};
 
 USTRUCT(BlueprintType)
-struct FPurchasableWeaponData : public FTableRowBase
+struct FWeaponData : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	FPurchasableWeaponData() :
+	FWeaponData() :
 		Name(FText::GetEmpty()),
-		ItemType(EItemType::Mundane),
+		ItemType(EItemType::Weapon),
+		WeaponType(EWeaponType::None),
 		CurrentAmmo(0),
 		TotalAmmo(0),
 		ReloadMaxAmmo(0),
 		Price(0),
+		Damage(0),
+		RPM(0),
 		Mesh(nullptr)
 	{};
 
@@ -62,6 +73,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		EItemType ItemType;
+
+	UPROPERTY(EditAnywhere)
+		EWeaponType WeaponType;
 
 	UPROPERTY(EditAnywhere)
 		int32 CurrentAmmo;
@@ -74,6 +88,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		int32 Price;
+
+	UPROPERTY(EditAnywhere)
+		int32 Damage;
+
+	UPROPERTY(EditAnywhere)
+		int32 RPM;
 
 	UPROPERTY(EditAnywhere)
 		USkeletalMesh* Mesh;

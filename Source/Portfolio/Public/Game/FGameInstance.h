@@ -7,9 +7,24 @@
 #include "Engine/GameInstance.h"
 #include "Engine/AssetManager.h"
 #include "Data/DataStruct.h"
+#include "Character/FCharacter.h"
 #include "FGameInstance.generated.h"
 
+USTRUCT()
+struct FWeaponSlotData
+{
+	GENERATED_USTRUCT_BODY()
+		FWeaponSlotData() {}
 
+	UPROPERTY()
+		FWeaponData FirstPrimaryWeaponData;
+
+	UPROPERTY()
+		FWeaponData SecondPrimaryWeaponData;
+
+	UPROPERTY()
+		uint8 Granade;
+};
 
 /**
  * 
@@ -48,6 +63,8 @@ public:
 	float CurrentEXP = 0;
 	int32 PlayerMoney = 5000;
 
+	UPROPERTY()
+		FWeaponSlotData WeaponSlotData;
 
 	UPROPERTY()
 		TSubclassOf<class AWeapon> CurrentWeaponType;

@@ -16,6 +16,8 @@ class PORTFOLIO_API UPlayerHUD : public UUserWidget
 public:
 	void BindCharacterComponent(class UCharacterComponent* _CharacterComponent);
 
+	void BindWeapoon(class AWeapon* _Weapon);
+
 	void BindPlayerState(class AFPlayerState* _PlayerState);
 
 protected:

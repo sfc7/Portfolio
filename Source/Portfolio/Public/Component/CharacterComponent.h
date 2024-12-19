@@ -11,7 +11,6 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrnetHpChangeDelegate, int, _CurrentHp, int, NewCurrentHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMaxHpChangeDelegate, int, _MaxHp, int, NewMaxHp);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCurrentAmmoAndTotalAmmoChangeDelegate, int32, CurrentAmmo, int32, TotalAmmo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentLevelChangedDelegate, int32, NewCurrentLevel);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentEXPChangedDelegate, float, NewCurrentEXP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxEXPChangedDelegate, float, NewMaxEXP);
@@ -24,6 +23,7 @@ enum class ECurrentState : uint8
 	None,
 	Stand,
 	Crouch,
+	Grenade,
 	End
 };
 
@@ -55,7 +55,9 @@ public:
 
 	TSubclassOf<class AWeapon> GetCurrentWeaponType() const { return CurrentWeaponType; }
 
-	TSubclassOf<class AWeapon> GetDefaultWeaponType() const { return DefaultWeaponType; }
+	TSubclassOf<class AWeapon> GetDefaultFirstPrimaryWeaponType() const { return DefaultFirstPrimaryWeaponType; }
+
+	TSubclassOf<class AWeapon> GetDefaultSecondPrimaryWeaponType() const { return DefaultSecondPrimaryWeaponType; }
 
 	void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
 
@@ -67,7 +69,9 @@ public:
 
 	void SetCurrentWeaponType(TSubclassOf<class AWeapon> _CurrentWeaponType);
 
-	void SetDefaultWeaponType(TSubclassOf<class AWeapon> _DefaultWeaponType);
+	void SetDefaultFirstPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultFirstPrimaryWeaponType);
+
+	void SetDefaultSecondPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultSecondPrimaryWeaponType);
 
 	int32 GetMaxLevel() const { return MaxLevel; }
 
@@ -147,8 +151,6 @@ public:
 
 	FOnMaxHpChangeDelegate OnMaxHpChangeDelegate;
 
-	FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
-
 	FOnCurrentLevelChangedDelegate OnCurrentLevelChangedDelegate;
 
 	FOnCurrentEXPChangedDelegate OnCurrentEXPChangedDelegate;
@@ -212,7 +214,10 @@ private:
 		int32 CurrentAmmo;
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		TSubclassOf<AWeapon> DefaultWeaponType;
+		TSubclassOf<AWeapon> DefaultFirstPrimaryWeaponType;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+		TSubclassOf<AWeapon> DefaultSecondPrimaryWeaponType;
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<AWeapon> CurrentWeaponType;

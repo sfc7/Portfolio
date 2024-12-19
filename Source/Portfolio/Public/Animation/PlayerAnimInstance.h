@@ -12,6 +12,7 @@ DECLARE_MULTICAST_DELEGATE(FFireMontageEnd);
 DECLARE_MULTICAST_DELEGATE(FReloadMontage);
 DECLARE_MULTICAST_DELEGATE(FReloadMontageEnd);
 DECLARE_MULTICAST_DELEGATE(FChangeWeaponMontage);
+DECLARE_MULTICAST_DELEGATE(FSwapWeaponMontage);
 /**
  * 
  */
@@ -38,6 +39,8 @@ public:
 
 	void PlayHitAnimMontage();
 
+	void PlaySwapWeaponAmimMontage();
+
 	UFUNCTION()
 		void AnimNotify_FireMontage();
 
@@ -53,12 +56,17 @@ public:
 	UFUNCTION()
 		void AnimNotify_ChangeWeaponMontage();
 
+	UFUNCTION()
+		void AnimNotify_SwapWeaponMontage();
+
 public:
 	FFireMontage FireMontage;
 	FFireMontageEnd FireMontageEnd;
 	FReloadMontage ReloadMontage;
 	FReloadMontageEnd ReloadMontageEnd;
 	FChangeWeaponMontage ChangeWeaponMontage;
+	FSwapWeaponMontage SwapWeaponMontage;
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class APlayerCharacter> OwnerCharacter;
@@ -107,4 +115,7 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = true))
 		TObjectPtr<class UAnimMontage> HitAnimMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation, meta = (AllowPrivateAccess = true))
+		TObjectPtr<class UAnimMontage> SwapWeaponAnimMontage;
 };	

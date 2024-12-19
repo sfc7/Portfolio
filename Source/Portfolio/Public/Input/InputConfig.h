@@ -36,5 +36,14 @@ public:
 		TObjectPtr<class UInputAction> ReloadAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> E_InteractionAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> Number1_InteractionAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> Number2_InteractionAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> Number4_InteractionAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> GrenadeAction;
 		
 };

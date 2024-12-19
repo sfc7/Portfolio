@@ -24,11 +24,19 @@ UCharacterComponent::UCharacterComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Rifle.BP_Rifle_C'"));
-
+	static ConstructorHelpers::FClassFinder<AWeapon> RifleBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_AK47.BP_AK47_C'"));
+	
 	if (RifleBP.Succeeded()) {
-		DefaultWeaponType = RifleBP.Class;
+		DefaultFirstPrimaryWeaponType = RifleBP.Class;
 	}
+	
+	static ConstructorHelpers::FClassFinder<AWeapon> ShotgunBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_ShotGun.BP_ShotGun_C'"));
+
+	if (ShotgunBP.Succeeded()) {
+		DefaultSecondPrimaryWeaponType = ShotgunBP.Class;
+	}
+
+	
 }
 
 void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -41,7 +49,8 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ThisClass, bIsDead);
 	DOREPLIFETIME(ThisClass, CurrentState);
 	DOREPLIFETIME(ThisClass, CurrentWeaponType);
-	DOREPLIFETIME(ThisClass, DefaultWeaponType);
+	DOREPLIFETIME(ThisClass, DefaultFirstPrimaryWeaponType);
+	DOREPLIFETIME(ThisClass, DefaultSecondPrimaryWeaponType);
 
 	DOREPLIFETIME_CONDITION(ThisClass, EquippedWeapon, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, ReloadMaxAmmo, COND_OwnerOnly);
@@ -195,52 +204,53 @@ void UCharacterComponent::SetHUDCrossHair(float DeltaTime)
 		return;
 	}
 
+	if (PlayerCharacter->IsLocallyControlled()) {
+		PlayerCharacterController = Cast<APlayerCharacterController>(PlayerCharacter->GetController());
+		if (IsValid(PlayerCharacterController)) {
+			AimingHUD = Cast<AAimingHUD>(PlayerCharacterController->GetHUD());
+			if (AimingHUD) {
+				if (PlayerCharacter->CurrentWeapon) {
+					CrossHairTexture.CrossHairCenter = PlayerCharacter->CurrentWeapon->CrossHairCenter;
+					CrossHairTexture.CrossHairLeft = PlayerCharacter->CurrentWeapon->CrossHairLeft;
+					CrossHairTexture.CrossHairRight = PlayerCharacter->CurrentWeapon->CrossHairRight;
+					CrossHairTexture.CrossHairTop = PlayerCharacter->CurrentWeapon->CrossHairTop;
+					CrossHairTexture.CrossHairBottom = PlayerCharacter->CurrentWeapon->CrossHairBottom;
+				}
+				else {
+					CrossHairTexture.CrossHairCenter = nullptr;
+					CrossHairTexture.CrossHairLeft = nullptr;
+					CrossHairTexture.CrossHairRight = nullptr;
+					CrossHairTexture.CrossHairTop = nullptr;
+					CrossHairTexture.CrossHairBottom = nullptr;
+				}
 
-	PlayerCharacterController = Cast<APlayerCharacterController>(PlayerCharacter->GetController());
-	if (IsValid(PlayerCharacterController)) {
-		AimingHUD = Cast<AAimingHUD>(PlayerCharacterController->GetHUD());
-		if (AimingHUD) {
-			if (EquippedWeapon) {
-				CrossHairTexture.CrossHairCenter = EquippedWeapon->CrossHairCenter;
-				CrossHairTexture.CrossHairLeft = EquippedWeapon->CrossHairLeft;
-				CrossHairTexture.CrossHairRight = EquippedWeapon->CrossHairRight;
-				CrossHairTexture.CrossHairTop = EquippedWeapon->CrossHairTop;
-				CrossHairTexture.CrossHairBottom = EquippedWeapon->CrossHairBottom;
+				FVector2D CharacterWalkSpeedRange(0.f, PlayerCharacter->GetCharacterMovement()->MaxWalkSpeed);
+				FVector2D ClampedValue(0.f, 1.f);
+				FVector Velocity = PlayerCharacter->GetVelocity();
+				Velocity.Z = 0.f;
+
+				CrossHairVelocityValue = FMath::GetMappedRangeValueClamped(CharacterWalkSpeedRange, ClampedValue, Velocity.Size());
+
+				if (PlayerCharacter->GetCharacterMovement()->IsFalling()) {
+					CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 1.5f, DeltaTime, 1.5f);
+				}
+				else {
+					CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 0.f, DeltaTime, 30.f);
+				}
+
+				if (bIsAiming) {
+					CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.58f, DeltaTime, 30.f);
+				}
+				else {
+					CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.f, DeltaTime, 30.f);
+				}
+
+				CrossHairShootingValue = FMath::FInterpTo(CrossHairShootingValue, 0.f, DeltaTime, 10.f);
+				CrossHairTexture.CrossHairSpread = 0.5f + CrossHairVelocityValue + CrossHairJumpValue - CrossHairAimingValue + CrossHairShootingValue;
+
+
+				AimingHUD->SetCrossHairTexture(CrossHairTexture);
 			}
-			else {
-				CrossHairTexture.CrossHairCenter = nullptr;
-				CrossHairTexture.CrossHairLeft = nullptr;
-				CrossHairTexture.CrossHairRight = nullptr;
-				CrossHairTexture.CrossHairTop = nullptr;
-				CrossHairTexture.CrossHairBottom = nullptr;
-			}
-
-			FVector2D CharacterWalkSpeedRange(0.f, PlayerCharacter->GetCharacterMovement()->MaxWalkSpeed);
-			FVector2D ClampedValue(0.f, 1.f);
-			FVector Velocity = PlayerCharacter->GetVelocity();
-			Velocity.Z = 0.f;
-
-			CrossHairVelocityValue = FMath::GetMappedRangeValueClamped(CharacterWalkSpeedRange, ClampedValue, Velocity.Size());
-
-			if (PlayerCharacter->GetCharacterMovement()->IsFalling()) {
-				CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 1.5f, DeltaTime, 1.5f);
-			}
-			else {
-				CrossHairJumpValue = FMath::FInterpTo(CrossHairJumpValue, 0.f, DeltaTime, 30.f);
-			}
-
-			if (bIsAiming) {
-				CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.58f, DeltaTime, 30.f);
-			}
-			else {
-				CrossHairAimingValue = FMath::FInterpTo(CrossHairAimingValue, 0.f, DeltaTime, 30.f);
-			}
-
-			CrossHairShootingValue = FMath::FInterpTo(CrossHairShootingValue, 0.f, DeltaTime, 10.f);
-			CrossHairTexture.CrossHairSpread = 0.5f + CrossHairVelocityValue + CrossHairJumpValue - CrossHairAimingValue + CrossHairShootingValue;
-
-
-			AimingHUD->SetCrossHairTexture(CrossHairTexture);
 		}
 	}
 }
@@ -259,12 +269,11 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 	if (GetCurrentWeaponType() == nullptr) {
 		SetCurrentAndTotalAmmo(EquippedWeapon->GetReloadMaxAmmo(), EquippedWeapon->GetTotalAmmo());
 		SetReloadMaxAmmo(EquippedWeapon->GetReloadMaxAmmo());
-		SetCurrentWeaponType(GetDefaultWeaponType());
+		SetCurrentWeaponType(GetDefaultFirstPrimaryWeaponType());
 	}
 	else {
-		SetCurrentWeaponType(EquippedWeapon->GetClass());
+		SetCurrentWeaponType(EquippedWeapon->GetClass());										
 	}
-
 	
 	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
 	//if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
@@ -282,7 +291,7 @@ void UCharacterComponent::SetTotalAmmo(int32 _TotalAmmo)
 {
 	TotalAmmo = _TotalAmmo;
 
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
 }
 
 void UCharacterComponent::SetCurrentAmmo(int32 _CurrentAmmo)
@@ -291,7 +300,7 @@ void UCharacterComponent::SetCurrentAmmo(int32 _CurrentAmmo)
 		CurrentAmmo = _CurrentAmmo;
 	}
 
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
 }
 
 void UCharacterComponent::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo)
@@ -299,7 +308,7 @@ void UCharacterComponent::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _Tota
 	CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
 	TotalAmmo = FMath::Max(0.f, _TotalAmmo);
 
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
 }
 
 void UCharacterComponent::SetCurrentWeaponType(TSubclassOf<class AWeapon> _CurrentWeaponType)
@@ -307,9 +316,14 @@ void UCharacterComponent::SetCurrentWeaponType(TSubclassOf<class AWeapon> _Curre
 	CurrentWeaponType = _CurrentWeaponType;
 }
 
-void UCharacterComponent::SetDefaultWeaponType(TSubclassOf<class AWeapon> _DefaultWeaponType)
+void UCharacterComponent::SetDefaultFirstPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultFirstPrimaryWeaponType)
 {
-	DefaultWeaponType = _DefaultWeaponType;
+	DefaultFirstPrimaryWeaponType = _DefaultFirstPrimaryWeaponType;
+}
+
+void UCharacterComponent::SetDefaultSecondPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultSecondPrimaryWeaponType)
+{
+	DefaultSecondPrimaryWeaponType = _DefaultSecondPrimaryWeaponType;
 }
 
 void UCharacterComponent::SetAiming(bool _bIsAiming)
@@ -331,13 +345,13 @@ void UCharacterComponent::OnCurrentLevelChanged(int32 NewCurrentLevel)
 
 void UCharacterComponent::OnRep_CurrentWeapon()
 {
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
 	
 }
 
 void UCharacterComponent::OnRep_TotalWeapon()
 {	
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
+	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
 }
 
 void UCharacterComponent::OnRep_CurrentEXP()

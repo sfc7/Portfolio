@@ -14,6 +14,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/FGameInstance.h"
 #include "Game/FPlayerState.h"
+#include "Game/PlayerStateSave.h"
 #include "Interface/InteractionInterface.h"
 #include "UI/PlayerWeaponBuy.h"
 
@@ -117,24 +118,9 @@ void APlayerCharacterController::BindPlayerState(AFPlayerState* _PlayerState)
 	}
 }
 
-void APlayerCharacterController::EndMap()
-{
-	if (IsValid(LoadingScreen)/* && IsLocalPlayerController()*/) {
-		LoadingScreen->SetVisibility(ESlateVisibility::Visible);
-
-		FInputModeUIOnly UIMode;
-		UIMode.SetWidgetToFocus(LoadingScreen->GetCachedWidget());
-		SetInputMode(UIMode);
-
-		bShowMouseCursor = true;
-	}
-
-	EndMap_Client();
-}
-
 void APlayerCharacterController::EndMap_Client_Implementation()
 {
-	if (IsValid(LoadingScreen)/* && IsLocalPlayerController()*/) {
+	if (IsValid(LoadingScreen)) {
 		LoadingScreen->SetVisibility(ESlateVisibility::Visible);
 
 		FInputModeUIOnly UIMode;
@@ -143,6 +129,28 @@ void APlayerCharacterController::EndMap_Client_Implementation()
 
 		bShowMouseCursor = true;
 	}
+
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(GetPawn());
+	if (IsValid(PlayerCharacter)) {
+		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
+		if (!IsValid(PlayerStateLoad)) {
+			PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::CreateSaveGameObject(UPlayerStateSave::StaticClass()));
+		}
+
+		PlayerStateLoad->WeaponSlotSaveData.FirstPrimaryWeaponData = PlayerCharacter->GetWeaponSlot().FirstPrimaryWeapon->GetWeaponData();
+		PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData = PlayerCharacter->GetWeaponSlot().SecondPrimaryWeapon->GetWeaponData();
+
+		UGameplayStatics::SaveGameToSlot(PlayerStateLoad, FString::FromInt(GPlayInEditorID), 0);
+
+		UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
+		if (IsValid(FGameInstance)) {
+			FGameInstance->CurrentLevel = PlayerCharacter->GetCharacterComponent()->GetCurrentLevel();
+			FGameInstance->CurrentEXP = PlayerCharacter->GetCharacterComponent()->GetCurrentEXP();
+			FGameInstance->PlayerMoney = PlayerCharacter->GetCharacterComponent()->GetMoney();
+		}
+	}
+
+
 }
 
 void APlayerCharacterController::ToggleMenu()
@@ -180,7 +188,7 @@ void APlayerCharacterController::SpawnPlayerMove_Server_Implementation()
 	}
 }
 
-void APlayerCharacterController::WeaponBuyShow(FPurchasableWeaponData* PurchasableWeaponData)
+void APlayerCharacterController::WeaponBuyShow(FWeaponData* PurchasableWeaponData)
 {
 	if (IsValid(WeaponBuyWidget)) {
 		if (WeaponBuyWidget->GetVisibility() == ESlateVisibility::Collapsed) {

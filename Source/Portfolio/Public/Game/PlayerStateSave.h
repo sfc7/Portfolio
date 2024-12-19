@@ -4,8 +4,26 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "Data/DataStruct.h"
+#include "FGameInstance.h"
 #include "PlayerStateSave.generated.h"
 
+
+USTRUCT(BlueprintType)
+struct FWeaponSlotSaveData
+{
+	GENERATED_USTRUCT_BODY()
+		FWeaponSlotSaveData() {}
+
+	UPROPERTY()
+		FWeaponData FirstPrimaryWeaponData;
+
+	UPROPERTY()
+		FWeaponData SecondPrimaryWeaponData;
+
+	UPROPERTY()
+		uint8 Granade;
+};
 /**
  * 
  */
@@ -17,23 +35,21 @@ public:
 	UPlayerStateSave();
 
 public:
-	UPROPERTY()
-		FString PlayerCharacterName;
 	
 	UPROPERTY()
 		int32 CurrentLevel;
 
 	UPROPERTY()
-		float CurrentEXP;
-
-	UPROPERTY()
 		float Money;
 
 	UPROPERTY()
-		float CurrentAmmo;
+		float CurrentEXP;
 
 	UPROPERTY()
-		float TotalAmmo;
+		FWeaponData FirstPrimaryWeaponData;
+
+	UPROPERTY()
+		FWeaponSlotSaveData WeaponSlotSaveData;
 
 	UPROPERTY()
 		class USkeletalMesh* PlayerMesh;

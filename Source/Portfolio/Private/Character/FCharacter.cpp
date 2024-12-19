@@ -43,19 +43,26 @@ void AFCharacter::BeginPlay()
 
 	if (IsLocallyControlled()) {
 		FPlayerState = GetPlayerState<AFPlayerState>();
-
-		APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
-		if (IsValid(PlayerController)) {
-			if (IsValid(CharacterComponent)) {
-				PlayerController->GetHUDWidget()->BindCharacterComponent(CharacterComponent);
-			}
-		}
+		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
 
 		if (HasAuthority()) {
-			EquipWeapon();
+			if (IsValid(PlayerStateLoad)) {
+				EquipWeapon();
+			}
+			else {
+				FirstEquipWeapon();
+			}
+
+			LoadPlayerStateSave();
+			WeaponHudBind();
 		}
 		else {
-			EquipWeapon_Server();
+			if (IsValid(PlayerStateLoad)) {
+				EquipWeapon_Server();
+			}
+			else {
+				FirstEquipWeapon_Server();
+			}
 		}
 	}
 }
@@ -75,12 +82,51 @@ void AFCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 }
 
+void AFCharacter::LoadPlayerStateSave()
+{
+	if (IsLocallyControlled()) {
+		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
+		if (IsValid(PlayerStateLoad) && !bFirstPlayerStateLoad) {
+			WeaponSlot.FirstPrimaryWeapon->SetWeaponData(PlayerStateLoad->WeaponSlotSaveData.FirstPrimaryWeaponData);
+			WeaponSlot.SecondPrimaryWeapon->SetWeaponData(PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData);
+			WeaponSlot.FirstPrimaryWeapon->SetWeaponMesh(PlayerStateLoad->WeaponSlotSaveData.FirstPrimaryWeaponData.Mesh);
+			WeaponSlot.SecondPrimaryWeapon->SetWeaponMesh(PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData.Mesh);
+
+			bFirstPlayerStateLoad = true;
+		}
+	}
+}
+
+void AFCharacter::WeaponHudBind()
+{
+	APlayerCharacterController* PlayerController = Cast<APlayerCharacterController>(GetController());
+	if (IsValid(PlayerController)) {
+		if (IsValid(CharacterComponent)) {
+			PlayerController->GetHUDWidget()->BindWeapoon(WeaponSlot.FirstPrimaryWeapon);
+			PlayerController->GetHUDWidget()->BindWeapoon(WeaponSlot.SecondPrimaryWeapon);
+			PlayerController->GetHUDWidget()->BindCharacterComponent(CharacterComponent);
+			if (CurrentWeapon) {
+				CurrentWeapon->SetCurrentAndTotalAmmo(CurrentWeapon->GetCurrentAmmo(), CurrentWeapon->GetTotalAmmo());
+			}
+		}
+	}
+}
+
+void AFCharacter::OnRep_Weapon()
+{
+	if (IsLocallyControlled()) {
+		LoadPlayerStateSave();
+		WeaponHudBind();
+	}
+}
+
 void AFCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, ReplicateMesh);
-	DOREPLIFETIME(ThisClass, Weapon);
+	DOREPLIFETIME(ThisClass, CurrentWeapon);
+	DOREPLIFETIME(ThisClass, WeaponSlot);
 }
 
 void AFCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -124,25 +170,60 @@ void AFCharacter::OnRep_Mesh()
 
 void AFCharacter::EquipWeapon()
 {
-	if (IsValid(GetCharacterComponent()) && GetCharacterComponent()->GetCurrentWeaponType() == nullptr) {
-		Weapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetDefaultWeaponType());
+	WeaponSlot.FirstPrimaryWeapon = GetWorld()->SpawnActor<AWeapon>(AWeapon::StaticClass());
+	if (IsValid(WeaponSlot.FirstPrimaryWeapon)) {
+		WeaponSlot.FirstPrimaryWeapon->SetOwner(this);
+		WeaponAttachToSocket(WeaponSlot.FirstPrimaryWeapon);
+		WeaponSlot.FirstPrimaryWeapon->SetWeaponState(EWeaponState::Equipped);
+		CurrentWeapon = WeaponSlot.FirstPrimaryWeapon;
 	}
-	else if (IsValid(GetCharacterComponent()) && IsValid(GetCharacterComponent()->GetCurrentWeaponType())) {
-		Weapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetCurrentWeaponType());
+	WeaponSlot.SecondPrimaryWeapon = GetWorld()->SpawnActor<AWeapon>(AWeapon::StaticClass());
+	if (IsValid(WeaponSlot.SecondPrimaryWeapon)) {
+		WeaponSlot.SecondPrimaryWeapon->SetOwner(this);
+		WeaponSlot.SecondPrimaryWeapon->SetWeaponState(EWeaponState::UnEquipped);
+		WeaponAttachToSocket(WeaponSlot.SecondPrimaryWeapon);
 	}
+}
 
-	if (IsValid(Weapon)) {
-		FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
+void AFCharacter::FirstEquipWeapon()
+{
+	WeaponSlot.FirstPrimaryWeapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetDefaultFirstPrimaryWeaponType());
+	if (IsValid(WeaponSlot.FirstPrimaryWeapon)) {
+		WeaponSlot.FirstPrimaryWeapon->SetOwner(this);
+		WeaponSlot.FirstPrimaryWeapon->SetWeaponState(EWeaponState::Equipped);
+		WeaponAttachToSocket(WeaponSlot.FirstPrimaryWeapon);
+		CurrentWeapon = WeaponSlot.FirstPrimaryWeapon;
+	}
+	WeaponSlot.SecondPrimaryWeapon = GetWorld()->SpawnActor<AWeapon>(GetCharacterComponent()->GetDefaultSecondPrimaryWeaponType());
+	if (IsValid(WeaponSlot.SecondPrimaryWeapon)) {
+		WeaponSlot.SecondPrimaryWeapon->SetOwner(this);
+		WeaponSlot.SecondPrimaryWeapon->SetWeaponState(EWeaponState::UnEquipped);
+		WeaponAttachToSocket(WeaponSlot.SecondPrimaryWeapon);
+	}
+}
+
+void AFCharacter::WeaponAttachToSocket(AWeapon* _Weapon)
+{
+	if (_Weapon->GetWeaponData().WeaponType == EWeaponType::AR) {
+		FName WeaponSocketName(TEXT("AR_Socket"));
 		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
-			Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
-			Weapon->SetOwner(this);
+			_Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 		}
 	}
-
-	GetCharacterComponent()->EquipWeapon(Weapon);
+	else if (_Weapon->GetWeaponData().WeaponType == EWeaponType::SG) {
+		FName WeaponSocketName(TEXT("SG_Socket"));
+		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
+			_Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+		}
+	}
 }
 
 void AFCharacter::EquipWeapon_Server_Implementation()
 {
 	EquipWeapon();
+}
+
+void AFCharacter::FirstEquipWeapon_Server_Implementation()
+{
+	FirstEquipWeapon();
 }

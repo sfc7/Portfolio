@@ -7,6 +7,7 @@
 #include "Components/TextBlock.h"
 #include "Game/FGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "WorldStatic/Weapon/Weapon.h"
 #include "Game/FPlayerState.h"
 
 
@@ -18,7 +19,6 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 		CharacterComponent->OnCurrnetHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnCurrentHpChange);
 		CharacterComponent->OnCurrnetHpChangeDelegate.AddDynamic(this, &ThisClass::CurrntHpTextChange);
 		CharacterComponent->OnMaxHpChangeDelegate.AddDynamic(Hp_Bar, &UPlayer_HPBar::OnMaxHpChange);
-		CharacterComponent->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 		CharacterComponent->OnCurrentEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnCurrentEXPChange);
 		CharacterComponent->OnMaxEXPChangedDelegate.AddDynamic(Exp_Bar, &UPlayer_EXPBar::OnMaxEXPChange);
 		CharacterComponent->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::LevelTextChange);
@@ -46,6 +46,11 @@ void UPlayerHUD::BindCharacterComponent(UCharacterComponent* _CharacterComponent
 	}
 
 	BindRenewal(_CharacterComponent);
+}
+
+void UPlayerHUD::BindWeapoon(AWeapon* _Weapon)
+{
+	_Weapon->OnCurrentAmmoAndTotalAmmoChangeDelegate.AddDynamic(this, &ThisClass::CurrentAmmoAndTotalAmmoChange);
 }
 
 void UPlayerHUD::BindPlayerState(AFPlayerState* _PlayerState)
@@ -84,7 +89,6 @@ void UPlayerHUD::BindRenewal(UCharacterComponent* _CharacterComponent)
 {
 	Hp_Bar->OnCurrentHpChange(0, _CharacterComponent->GetCurrentHp());
 	Hp_Bar->OnMaxHpChange(0, CharacterComponent->GetMaxHp());
-	CurrentAmmoAndTotalAmmoChange(CharacterComponent->GetCurrentAmmo(), CharacterComponent->GetTotalAmmo());
 	Exp_Bar->OnCurrentEXPChange(CharacterComponent->GetCurrentEXP());
 	Exp_Bar->OnMaxEXPChange(CharacterComponent->GetMaxEXP());
 	LevelTextChange(CharacterComponent->GetCurrentLevel());
