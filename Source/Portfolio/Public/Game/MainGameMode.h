@@ -114,10 +114,10 @@ private:
 		int32 RoomTime = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 WaitTime = 50;
+		int32 WaitTime = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RemaningWaitTime = 50;
+		int32 RemaningWaitTime = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		int32 RemaningRoomTime = 50;

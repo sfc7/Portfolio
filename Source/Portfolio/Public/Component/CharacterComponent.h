@@ -47,27 +47,11 @@ public:
 
 	void EquipWeapon(class AWeapon* _Weapon);
 
-	int32 GetReloadMaxAmmo() const { return ReloadMaxAmmo; }
-
-	int32 GetCurrentAmmo() const { return CurrentAmmo; }
-
-	int32 GetTotalAmmo() const { return TotalAmmo; }
-
-	TSubclassOf<class AWeapon> GetCurrentWeaponType() const { return CurrentWeaponType; }
-
 	TSubclassOf<class AWeapon> GetDefaultFirstPrimaryWeaponType() const { return DefaultFirstPrimaryWeaponType; }
 
 	TSubclassOf<class AWeapon> GetDefaultSecondPrimaryWeaponType() const { return DefaultSecondPrimaryWeaponType; }
 
-	void SetReloadMaxAmmo(int32 _ReloadMaxAmmo);
-
-	void SetTotalAmmo(int32 _TotalAmmo);
-
-	void SetCurrentAmmo(int32 _CurrentAmmo);
-
-	void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
-
-	void SetCurrentWeaponType(TSubclassOf<class AWeapon> _CurrentWeaponType);
+	TSubclassOf<class AGrenade> GetGrenadeType() const { return GrenadeType; }
 
 	void SetDefaultFirstPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultFirstPrimaryWeaponType);
 
@@ -92,9 +76,6 @@ public:
 	uint8 GetIsDead() const { return bIsDead; }
 
 	void SetIsDead(uint8 _bIsDead);
-
-	UFUNCTION(Server, Reliable)
-		void SendGameInstanceWeaponVariable_Server(int32 _TotalAmmo, int32 _CurrentAmmo, int32 _ReloadMaxAmmo, TSubclassOf<AWeapon> _CurrentWeaponType);
 
 	UFUNCTION(Server, Reliable)
 		void SendGameInstanceXPVariable_Server(int32 _CurrentLevel, int32 _CurrentEXP, int32 _Money);
@@ -204,23 +185,14 @@ private:
 	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		uint8 bIsDead : 1; 
 
-	UPROPERTY(Replicated, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		int32 ReloadMaxAmmo;
-
-	UPROPERTY(ReplicatedUsing = OnRep_TotalWeapon, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		int32 TotalAmmo;
-
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon, VisibleInstanceOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		int32 CurrentAmmo;
-
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<AWeapon> DefaultFirstPrimaryWeaponType;
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 		TSubclassOf<AWeapon> DefaultSecondPrimaryWeaponType;
 
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-		TSubclassOf<AWeapon> CurrentWeaponType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+		TSubclassOf<AGrenade> GrenadeType;
 
 	UPROPERTY(Replicated)
 		int32 MaxLevel;

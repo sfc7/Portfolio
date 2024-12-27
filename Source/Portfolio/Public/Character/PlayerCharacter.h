@@ -54,6 +54,22 @@ public:
 
 	bool IsInteracting() const { return GetWorldTimerManager().IsTimerActive(InteractionTimerHandle); }
 
+	UPROPERTY(Replicated)
+	bool bThrowMontageEndFlag;
+
+	UPROPERTY(EditAnywhere)
+		TObjectPtr<class USplineComponent> SplinePath;
+
+	UPROPERTY(EditAnywhere)
+		class UStaticMesh* SplineStaticMesh;
+
+	UPROPERTY(EditAnywhere)
+		class UMaterialInterface* SplineStaticMaterial;
+
+
+	TArray<class USplineMeshComponent*> SplineMeshComponents;
+
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -106,7 +122,9 @@ private:
 
 	void ReloadAmmo();
 
-	void ThrowGrenade();
+	void ThrowGrenade(const FInputActionValue& InValue);
+
+	void ThrowGrenadeDistance(const FInputActionValue& InValue);
 
 	void UpdateDestroyedActor();
 
@@ -327,8 +345,36 @@ private:
 
 	void SetSwapWeaponActive();
 
+	//
+
+	//
+
+	UFUNCTION(Server, Reliable)
+		void PlayThrowGrenadeMontage_Server();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void PlayThrowGrenadeMontage_NetMulticast();
+
+	float Grenade_Distance = 0.f;
+
+	void ThrowGrenadeAnimationPlay();
+
+	void ThrowGrenade_Tick();
+
+	void ThrowGrenadeEnd();
+
+	UFUNCTION(Server, Reliable)
+		void ThrowGrenadeEnd_Server();
+
+	UFUNCTION(Server, Reliable)
+		void ThrowGrenadeSpawn_Server(FVector _LaunchVecter);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void ThrowGrenadeEnd_NetMulticast();
 
 
+	void ThrowGrenadeAnimationEnd();
 
 
+	FVector LaunchVecter;
 };	

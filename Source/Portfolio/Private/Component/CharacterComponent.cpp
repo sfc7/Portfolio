@@ -11,6 +11,7 @@
 #include "Game/FPlayerState.h"
 #include "Character/PlayerCharacter.h"
 #include "WorldStatic/Weapon/Weapon.h"
+#include "WorldStatic/Weapon/Grenade.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Character/PlayerCharacter.h"
 #include "Controller/PlayerCharacterController.h"
@@ -36,7 +37,11 @@ UCharacterComponent::UCharacterComponent()
 		DefaultSecondPrimaryWeaponType = ShotgunBP.Class;
 	}
 
-	
+	static ConstructorHelpers::FClassFinder<AGrenade> GrenadeBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_Grenade.BP_Grenade_C'"));
+
+	if (GrenadeBP.Succeeded()) {
+		GrenadeType = GrenadeBP.Class;
+	}
 }
 
 void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -48,14 +53,10 @@ void UCharacterComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ThisClass, bIsAiming);
 	DOREPLIFETIME(ThisClass, bIsDead);
 	DOREPLIFETIME(ThisClass, CurrentState);
-	DOREPLIFETIME(ThisClass, CurrentWeaponType);
 	DOREPLIFETIME(ThisClass, DefaultFirstPrimaryWeaponType);
 	DOREPLIFETIME(ThisClass, DefaultSecondPrimaryWeaponType);
 
 	DOREPLIFETIME_CONDITION(ThisClass, EquippedWeapon, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ThisClass, ReloadMaxAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ThisClass, CurrentAmmo, COND_OwnerOnly);
-	DOREPLIFETIME_CONDITION(ThisClass, TotalAmmo, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, CurrentLevel, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, MaxEXP, COND_OwnerOnly);
 	DOREPLIFETIME_CONDITION(ThisClass, CurrentEXP, COND_OwnerOnly);
@@ -80,15 +81,6 @@ void UCharacterComponent::BeginPlay()
 	if (IsValid(PlayerCharacter)) {
 		if (IsValid(FGameInstance)) {
 			if (PlayerCharacter->IsLocallyControlled() || (PlayerCharacter->HasAuthority())) {
-				CurrentAmmo = FGameInstance->CurrentAmmo;
-				TotalAmmo = FGameInstance->TotalAmmo;
-				ReloadMaxAmmo = FGameInstance->ReloadMaxAmmo;
-				if (FGameInstance->CurrentWeaponType != nullptr) {
-					CurrentWeaponType = FGameInstance->CurrentWeaponType;
-				}
-
-				SendGameInstanceWeaponVariable_Server(TotalAmmo, CurrentAmmo, ReloadMaxAmmo, CurrentWeaponType);
-
 				if (nullptr != FGameInstance->GetCharacterTable() || nullptr != FGameInstance->GetCharacterTableRowFromLevel(1)) {
 					MaxLevel = FGameInstance->GetCharacterTable()->GetRowMap().Num();
 					CurrentLevel = FGameInstance->CurrentLevel;
@@ -265,55 +257,6 @@ void UCharacterComponent::EquipWeapon(AWeapon* _Weapon)
 	if (PlayerCharacter == nullptr || _Weapon == nullptr) return;
 
 	EquippedWeapon = _Weapon;
-
-	if (GetCurrentWeaponType() == nullptr) {
-		SetCurrentAndTotalAmmo(EquippedWeapon->GetReloadMaxAmmo(), EquippedWeapon->GetTotalAmmo());
-		SetReloadMaxAmmo(EquippedWeapon->GetReloadMaxAmmo());
-		SetCurrentWeaponType(GetDefaultFirstPrimaryWeaponType());
-	}
-	else {
-		SetCurrentWeaponType(EquippedWeapon->GetClass());										
-	}
-	
-	//FName WeaponSocketName = FName(TEXT("Weapon_Socket"));
-	//if (PlayerCharacter->GetMesh()->DoesSocketExist(WeaponSocketName)) {
-	//	const USkeletalMeshSocket* WeaponSocket = PlayerCharacter->GetMesh()->GetSocketByName(FName("Weapon_Socket"));
-	//	WeaponSocket->AttachActor(EquippedWeapon, PlayerCharacter->GetMesh());
-	//}
-}
-
-void UCharacterComponent::SetReloadMaxAmmo(int32 _ReloadMaxAmmo)
-{
-	ReloadMaxAmmo = _ReloadMaxAmmo;
-}
-
-void UCharacterComponent::SetTotalAmmo(int32 _TotalAmmo)
-{
-	TotalAmmo = _TotalAmmo;
-
-	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
-}
-
-void UCharacterComponent::SetCurrentAmmo(int32 _CurrentAmmo)
-{
-	if (_CurrentAmmo >= 0) {
-		CurrentAmmo = _CurrentAmmo;
-	}
-
-	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
-}
-
-void UCharacterComponent::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo)
-{
-	CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
-	TotalAmmo = FMath::Max(0.f, _TotalAmmo);
-
-	/*OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);*/
-}
-
-void UCharacterComponent::SetCurrentWeaponType(TSubclassOf<class AWeapon> _CurrentWeaponType)
-{
-	CurrentWeaponType = _CurrentWeaponType;
 }
 
 void UCharacterComponent::SetDefaultFirstPrimaryWeaponType(TSubclassOf<class AWeapon> _DefaultFirstPrimaryWeaponType)
@@ -372,15 +315,6 @@ void UCharacterComponent::OnRep_PlayerMoney()
 void UCharacterComponent::OnRep_CurrentLevel()
 {
 	OnCurrentLevelChangedDelegate.Broadcast(CurrentLevel);
-}
-
-void UCharacterComponent::SendGameInstanceWeaponVariable_Server_Implementation(int32 _TotalAmmo, int32 _CurrentAmmo, int32 _ReloadMaxAmmo, TSubclassOf<AWeapon> _CurrentWeaponType)
-{
-
-	TotalAmmo = _TotalAmmo;
-	CurrentAmmo = _CurrentAmmo;
-	ReloadMaxAmmo = _ReloadMaxAmmo;
-	CurrentWeaponType = _CurrentWeaponType;
 }
 
 void UCharacterComponent::SendGameInstanceXPVariable_Server_Implementation(int32 _CurrentLevel, int32 _CurrentEXP, int32 _Money)

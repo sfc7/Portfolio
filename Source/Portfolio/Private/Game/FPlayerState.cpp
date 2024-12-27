@@ -24,11 +24,12 @@ void AFPlayerState::InitPlayerState()
 {
 	APlayerController* PlayerController = Cast<APlayerController>(GetOwner());
 	AFCharacter* FCharacter = Cast<AFCharacter>(PlayerController->GetPawn());
-	UPlayerStateSave* PlayerStateSave = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID),0));
+	FString SlotName = TEXT("Playermesh") + FString::FromInt(GPlayInEditorID);
+	UPlayerStateSave* LoadGameFromSlot = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(SlotName ,0));
 	
-	if (IsValid(PlayerStateSave)) {
+	if (IsValid(LoadGameFromSlot)) {
 		if (IsValid(FCharacter)) {
-			FCharacter->SetPlayerMesh_Server(PlayerStateSave->PlayerMesh);
+			FCharacter->SetPlayerMesh_Server(LoadGameFromSlot->PlayerMesh);
 		}
 	}
 }

@@ -50,6 +50,10 @@ public:
 
 	void SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo);
 
+	UFUNCTION(Server, Reliable)
+		void SetWeaponData_Server(FWeaponData _WeaponData);
+		
+
 	void SetWeaponData(FWeaponData _WeaponData);
 
 	virtual void BeginFocus();
@@ -82,7 +86,6 @@ protected:
 
 	UFUNCTION()
 		void OnRep_WeaponState();
-
 public:
 	FOnCurrentAmmoAndTotalAmmoChangeDelegate OnCurrentAmmoAndTotalAmmoChangeDelegate;
 
@@ -101,8 +104,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = CrossHair)
 		class UTexture2D* CrossHairBottom;
 
-	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactEffect;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponMesh)
 		USkeletalMesh* ReplicateMesh;
@@ -117,13 +118,10 @@ protected:
 	UPROPERTY(EditAnywhere)
 		FString WeaponName;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 		FWeaponData WeaponData;
 
 	FInteractableData InstanceInteractableData;
-
-	UPROPERTY(EditAnywhere)
-		UParticleSystem* MuzzleFlash;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, EditAnywhere)
 		EWeaponState WeaponState;

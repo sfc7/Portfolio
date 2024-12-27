@@ -46,6 +46,9 @@ public:
 
 	void WeaponAttachToSocket(AWeapon* _Weapon);
 
+	UFUNCTION(Server, Reliable)
+		void WeaponAttachToSocket_Server();
+
 	void FirstEquipWeapon();
 
 	UFUNCTION(Server, Reliable)

@@ -52,7 +52,6 @@ void AFCharacter::BeginPlay()
 			else {
 				FirstEquipWeapon();
 			}
-
 			LoadPlayerStateSave();
 			WeaponHudBind();
 		}
@@ -88,9 +87,10 @@ void AFCharacter::LoadPlayerStateSave()
 		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
 		if (IsValid(PlayerStateLoad) && !bFirstPlayerStateLoad) {
 			WeaponSlot.FirstPrimaryWeapon->SetWeaponData(PlayerStateLoad->WeaponSlotSaveData.FirstPrimaryWeaponData);
-			WeaponSlot.SecondPrimaryWeapon->SetWeaponData(PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData);
 			WeaponSlot.FirstPrimaryWeapon->SetWeaponMesh(PlayerStateLoad->WeaponSlotSaveData.FirstPrimaryWeaponData.Mesh);
+			WeaponSlot.SecondPrimaryWeapon->SetWeaponData(PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData);
 			WeaponSlot.SecondPrimaryWeapon->SetWeaponMesh(PlayerStateLoad->WeaponSlotSaveData.SecondPrimaryWeaponData.Mesh);
+			WeaponAttachToSocket_Server();
 
 			bFirstPlayerStateLoad = true;
 		}
@@ -106,7 +106,7 @@ void AFCharacter::WeaponHudBind()
 			PlayerController->GetHUDWidget()->BindWeapoon(WeaponSlot.SecondPrimaryWeapon);
 			PlayerController->GetHUDWidget()->BindCharacterComponent(CharacterComponent);
 			if (CurrentWeapon) {
-				CurrentWeapon->SetCurrentAndTotalAmmo(CurrentWeapon->GetCurrentAmmo(), CurrentWeapon->GetTotalAmmo());
+				CurrentWeapon->SetCurrentAndTotalAmmo(CurrentWeapon->GetWeaponData().CurrentAmmo, CurrentWeapon->GetWeaponData().TotalAmmo);
 			}
 		}
 	}
@@ -143,16 +143,18 @@ float AFCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, ACo
 
 void AFCharacter::SetSkeletalMeshInPlayerStateSave(USkeletalMesh* _PlayerMesh)
 {
-	UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-	if (!IsValid(PlayerStateLoad)) {
-		PlayerStateLoad = NewObject<UPlayerStateSave>();
-		PlayerStateLoad->PlayerMesh = _PlayerMesh;
+	FString SlotName = TEXT("Playermesh") + FString::FromInt(GPlayInEditorID);
+	UPlayerStateSave* PlayerMeshLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+	if (!IsValid(PlayerMeshLoad)) {
+		PlayerMeshLoad = NewObject<UPlayerStateSave>();
+		PlayerMeshLoad->PlayerMesh = _PlayerMesh;
 	}
 	else {
-		PlayerStateLoad->PlayerMesh = _PlayerMesh;
+		PlayerMeshLoad->PlayerMesh = _PlayerMesh;
 	}
 
-	UGameplayStatics::SaveGameToSlot(PlayerStateLoad, FString::FromInt(GPlayInEditorID), 0);
+
+	UGameplayStatics::SaveGameToSlot(PlayerMeshLoad, SlotName, 0);
 
 	SetPlayerMesh_Server(_PlayerMesh);
 }
@@ -173,7 +175,6 @@ void AFCharacter::EquipWeapon()
 	WeaponSlot.FirstPrimaryWeapon = GetWorld()->SpawnActor<AWeapon>(AWeapon::StaticClass());
 	if (IsValid(WeaponSlot.FirstPrimaryWeapon)) {
 		WeaponSlot.FirstPrimaryWeapon->SetOwner(this);
-		WeaponAttachToSocket(WeaponSlot.FirstPrimaryWeapon);
 		WeaponSlot.FirstPrimaryWeapon->SetWeaponState(EWeaponState::Equipped);
 		CurrentWeapon = WeaponSlot.FirstPrimaryWeapon;
 	}
@@ -181,7 +182,6 @@ void AFCharacter::EquipWeapon()
 	if (IsValid(WeaponSlot.SecondPrimaryWeapon)) {
 		WeaponSlot.SecondPrimaryWeapon->SetOwner(this);
 		WeaponSlot.SecondPrimaryWeapon->SetWeaponState(EWeaponState::UnEquipped);
-		WeaponAttachToSocket(WeaponSlot.SecondPrimaryWeapon);
 	}
 }
 
@@ -204,7 +204,7 @@ void AFCharacter::FirstEquipWeapon()
 
 void AFCharacter::WeaponAttachToSocket(AWeapon* _Weapon)
 {
-	if (_Weapon->GetWeaponData().WeaponType == EWeaponType::AR) {
+	if (_Weapon->GetWeaponData().WeaponType == EWeaponType::AR || _Weapon->GetWeaponData().WeaponType == EWeaponType::DMR) {
 		FName WeaponSocketName(TEXT("AR_Socket"));
 		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
 			_Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
@@ -216,6 +216,18 @@ void AFCharacter::WeaponAttachToSocket(AWeapon* _Weapon)
 			_Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
 		}
 	}
+	else if (_Weapon->GetWeaponData().WeaponType == EWeaponType::SMG) {
+		FName WeaponSocketName(TEXT("SMG_Socket"));
+		if (GetMesh()->DoesSocketExist(WeaponSocketName)) {
+			_Weapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, WeaponSocketName);
+		}
+	}
+}
+
+void AFCharacter::WeaponAttachToSocket_Server_Implementation()
+{
+	WeaponAttachToSocket(WeaponSlot.FirstPrimaryWeapon);
+	WeaponAttachToSocket(WeaponSlot.SecondPrimaryWeapon);
 }
 
 void AFCharacter::EquipWeapon_Server_Implementation()

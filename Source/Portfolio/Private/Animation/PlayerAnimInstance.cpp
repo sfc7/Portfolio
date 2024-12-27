@@ -102,6 +102,13 @@ void UPlayerAnimInstance::PlaySwapWeaponAmimMontage()
 	}
 }
 
+void UPlayerAnimInstance::PlayThrowGrenadeWeaponAmimMontage()
+{
+	if (!Montage_IsPlaying(ThrowGrenadeAnimMontage)) {
+		Montage_Play(ThrowGrenadeAnimMontage);
+	}
+}
+
 void UPlayerAnimInstance::AnimNotify_FireMontage()
 {
 	FireMontage.Broadcast();	
@@ -130,5 +137,17 @@ void UPlayerAnimInstance::AnimNotify_ChangeWeaponMontage()
 void UPlayerAnimInstance::AnimNotify_SwapWeaponMontage()
 {
 	SwapWeaponMontage.Broadcast();
+}
+
+void UPlayerAnimInstance::AnimNotify_ThrowGrenadePauseMontage()
+{
+	if (Montage_IsPlaying(ThrowGrenadeAnimMontage)) {
+		if (!OwnerCharacter->bThrowMontageEndFlag) Montage_Pause(ThrowGrenadeAnimMontage);
+	}
+}
+
+void UPlayerAnimInstance::AnimNotify_ThrowGrenadeMontageEnd()
+{
+	ThrowGrenadeMontageEnd.Broadcast();
 }
 

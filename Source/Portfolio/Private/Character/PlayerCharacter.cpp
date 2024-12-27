@@ -1,5 +1,6 @@
 #include "Character/PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SplineMeshComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,7 +26,10 @@
 #include "Animation/PlayerAnimInstance.h"
 #include "Game/FGameInstance.h"
 #include "Character/ZombieCharacter.h"
+#include "Components/SplineComponent.h"
 #include "UI/PlayerHUD.h"
+#include "WorldStatic/Weapon/Grenade.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Data/DataStruct.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -54,18 +58,13 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
-	TimeBetWeenFire = 60.f / FirePerMinute;
+	SplinePath = CreateDefaultSubobject<USplineComponent>(TEXT("SplinePath"));
+	SplinePath->SetupAttachment(GetMesh());
 }
-
+	
 void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-
-	//if (IsValid(FPlayerState)) {
-	//	if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
-	//		FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
-	//	}
-	//}
 }
 
 void APlayerCharacter::BeginPlay()
@@ -90,26 +89,24 @@ void APlayerCharacter::BeginPlay()
 
 	RecoilTimeline.AddInterpFloat(HorizontalCurve, RecoilCurve_X);
 	RecoilTimeline.AddInterpFloat(VerticalCurve, RecoilCurve_Y);
-
 }
 
 void APlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
-	/*if (IsValid(FPlayerState)) {
-		if (!FPlayerState->OnCurrentLevelChangedDelegate.IsAlreadyBound(this, &ThisClass::OnCurrentLevelChanged)) {
-			FPlayerState->OnCurrentLevelChangedDelegate.AddDynamic(this, &ThisClass::OnCurrentLevelChanged);
-		}
-	}*/
 }
 
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (IsLocallyControlled()) {
+		ThrowGrenade_Tick();
+	}
+
 	CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 10.f);
 	CameraComponent->SetFieldOfView(CurrentFOV);
+
 	if (IsValid(GetController())) {
 		FRotator ControlRotation = GetController()->GetControlRotation();
 		AimPitch = ControlRotation.Pitch;
@@ -186,7 +183,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->Number1_InteractionAction, ETriggerEvent::Started, this, &ThisClass::Swap_1);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->Number2_InteractionAction, ETriggerEvent::Started, this, &ThisClass::Swap_2);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Started, this, &ThisClass::ThrowGrenade);
-
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Triggered, this, &ThisClass::ThrowGrenadeDistance);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Completed, this, &ThisClass::ThrowGrenadeEnd);
 	}
 }
 
@@ -235,7 +233,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(ThisClass, ForwardInputValue);
 	DOREPLIFETIME(ThisClass, RightInputValue);
 	DOREPLIFETIME(ThisClass, AimPitch);
-	DOREPLIFETIME(ThisClass, AimYaw);
+	DOREPLIFETIME(ThisClass, AimYaw); 
+	DOREPLIFETIME(ThisClass, bThrowMontageEndFlag); 
 }
 
 void APlayerCharacter::PostInitializeComponents()
@@ -252,17 +251,13 @@ void APlayerCharacter::PostInitializeComponents()
 		AnimInstance->ReloadMontageEnd.AddUObject(this, &ThisClass::ReloadAmmo);
 		AnimInstance->ChangeWeaponMontage.AddUObject(this, &ThisClass::ChangeWeapon);
 		AnimInstance->SwapWeaponMontage.AddUObject(this, &ThisClass::SwapWeapon);
-
+		AnimInstance->ThrowGrenadeMontageEnd.AddUObject(this, &ThisClass::ThrowGrenadeAnimationEnd);
 	}
 }
 
 void APlayerCharacter::Destroyed()
 {
 	Super::Destroyed();
-
-	/*if (HasAuthority()) {
-		UpdateDestroyedActor();
-	}*/
 }
 
 void APlayerCharacter::UpdateInputValue_Server_Implementation(const float& _ForwardInputValue, const float& _RightInputValue)
@@ -354,7 +349,6 @@ void APlayerCharacter::EndAiming(const FInputActionValue& InValue)
 
 void APlayerCharacter::FireBullet()
 {
-
 	if (GetOwner() != UGameplayStatics::GetPlayerController(this, 0))
 	{
 		return;
@@ -366,17 +360,22 @@ void APlayerCharacter::FireBullet()
 		return;
 	}
 
-	//UseAmmo_Server();
 	if (IsLocallyControlled()) {
 		UseAmmo();
 	}
 
-	//FVector CameraStartLocation = CameraComponent->GetComponentLocation();
-	//FVector CameraEndLocation = CameraStartLocation + CameraComponent->GetForwardVector() * GunRange;
-	//CameraEndLocation.Y += CameraEndLocation.Y * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
-	//CameraEndLocation.Z += CameraEndLocation.Z * FMath::RandRange(-RandomSpreadValue, RandomSpreadValue);
+	if (CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::SG) {
+		for (int i = 0; i < 6; i++) {
+			FVector CameraStartLocation = CameraComponent->GetComponentLocation();
+			MaxSprayAngle = 5.0f;
+			FRotator SprayRotation = GetSprayAngle(CameraComponent->GetForwardVector(), FMath::DegreesToRadians(MaxSprayAngle));
+			FVector SprayDirection = SprayRotation.Vector();
+			FVector CameraEndLocation = CameraStartLocation + (SprayDirection * GunRange);
 
-	if (CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::AR || CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::DMR) {
+			FireBullet_LineTrace(CameraStartLocation, CameraEndLocation);
+		}
+	}
+	else {
 		FVector CameraStartLocation = CameraComponent->GetComponentLocation();
 		MaxSprayAngle = 1.0f;
 		FRotator SprayRotation = GetSprayAngle(CameraComponent->GetForwardVector(), FMath::DegreesToRadians(MaxSprayAngle));
@@ -384,17 +383,6 @@ void APlayerCharacter::FireBullet()
 		FVector CameraEndLocation = CameraStartLocation + (SprayDirection * GunRange);
 
 		FireBullet_LineTrace(CameraStartLocation, CameraEndLocation);
-	}
-	else if (CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::SG) {
-		for (int i = 0; i < 6; i++) {
-			FVector CameraStartLocation = CameraComponent->GetComponentLocation();
-			MaxSprayAngle = 2.0f;
-			FRotator SprayRotation = GetSprayAngle(CameraComponent->GetForwardVector(), FMath::DegreesToRadians(MaxSprayAngle));
-			FVector SprayDirection = SprayRotation.Vector();
-			FVector CameraEndLocation = CameraStartLocation + (SprayDirection * GunRange);
-
-			FireBullet_LineTrace(CameraStartLocation, CameraEndLocation);
-		}
 	}
 	
 
@@ -423,7 +411,7 @@ void APlayerCharacter::FireBullet_LineTrace(FVector _CameraStartLocation, FVecto
 		//DrawDebugLine(GetWorld(), _CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);	
 
 		FVector ShotDirection = -(CameraComponent->GetComponentRotation().Vector());
-		UParticleSystem* ImpactEffect = CurrentWeapon->ImpactEffect;
+		UParticleSystem* ImpactEffect = CurrentWeapon->GetWeaponData().ImpactEffect;
 		SpawnImpactEffect_Server(ImpactEffect, HitResult.Location, ShotDirection.Rotation());
 
 		AZombieCharacter* HitZombie = Cast<AZombieCharacter>(HitResult.GetActor());
@@ -453,7 +441,7 @@ void APlayerCharacter::FireBullet_LineTrace(FVector _CameraStartLocation, FVecto
 				}
 			}
 			else {
-				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, 40.f, DamageEvent, GetController(), this);
+				ApplyDamageAndDrawLine_Server(HitZombie, HitResult, CurrentWeapon->GetWeaponData().Damage, DamageEvent, GetController(), this);
 			}
 		}
 	}
@@ -472,12 +460,13 @@ FRotator APlayerCharacter::GetSprayAngle(FVector _MuzzleDirection, float _MaxAng
 
 void APlayerCharacter::UseAmmo_Server_Implementation()
 {
-	GetCharacterComponent()->SetCurrentAndTotalAmmo(GetCharacterComponent()->GetCurrentAmmo() - 1, GetCharacterComponent()->GetTotalAmmo());
+	CurrentWeapon->SetCurrentAndTotalAmmo(CurrentWeapon->GetCurrentAmmo() - 1, CurrentWeapon->GetTotalAmmo());
 }
 
 void APlayerCharacter::Reload()
 {
 	if (CurrentWeapon->GetWeaponData().TotalAmmo > 0 && CurrentWeapon->GetWeaponData().ReloadMaxAmmo != CurrentWeapon->GetWeaponData().CurrentAmmo) {
+		if(GetCharacterComponent()->CurrentState == ECurrentState::Stand || GetCharacterComponent()->CurrentState == ECurrentState::Stand)
 		ReloadAnimationPlay();
 		PlayReloadMontage_Server();
 	}
@@ -506,20 +495,13 @@ void APlayerCharacter::ReloadAmmo()
 	return;
 }
 
-void APlayerCharacter::ThrowGrenade()
-{
-}
-
 void APlayerCharacter::UpdateDestroyedActor()
 {
 	
 	UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
 	if (IsValid(FGameInstance)) {
 		FGameInstance->WeaponSlotData.FirstPrimaryWeaponData = WeaponSlot.FirstPrimaryWeapon->GetWeaponData();
-		FGameInstance->TotalAmmo = GetCharacterComponent()->GetTotalAmmo();
-		FGameInstance->CurrentAmmo = GetCharacterComponent()->GetCurrentAmmo();
-		FGameInstance->ReloadMaxAmmo = GetCharacterComponent()->GetReloadMaxAmmo();
-		FGameInstance->CurrentWeaponType = GetCharacterComponent()->GetCurrentWeaponType();
+		FGameInstance->WeaponSlotData.SecondPrimaryWeaponData = WeaponSlot.SecondPrimaryWeapon->GetWeaponData();
 
 		FGameInstance->CurrentLevel = GetCharacterComponent()->GetCurrentLevel();
 		FGameInstance->CurrentEXP = GetCharacterComponent()->GetCurrentEXP();
@@ -531,8 +513,10 @@ void APlayerCharacter::Swap_1()
 {
 	if (CurrentWeapon == WeaponSlot.SecondPrimaryWeapon) {
 		if (WeaponSlot.FirstPrimaryWeapon->GetWeaponData().Mesh != nullptr) {
-			WeaponSwapAnimationPlay();
-			PlayWeaponSwapMontage_Server();
+			if (GetCharacterComponent()->CurrentState == ECurrentState::Stand || GetCharacterComponent()->CurrentState == ECurrentState::Crouch) {
+				WeaponSwapAnimationPlay();
+				PlayWeaponSwapMontage_Server();
+			}
 		}
 	} 
 }
@@ -541,8 +525,10 @@ void APlayerCharacter::Swap_2()
 {
 	if (CurrentWeapon == WeaponSlot.FirstPrimaryWeapon) {
 		if (WeaponSlot.SecondPrimaryWeapon->GetWeaponData().Mesh != nullptr) {
-			WeaponSwapAnimationPlay();
-			PlayWeaponSwapMontage_Server();
+			if (GetCharacterComponent()->CurrentState == ECurrentState::Stand || GetCharacterComponent()->CurrentState == ECurrentState::Crouch) {
+				WeaponSwapAnimationPlay();
+				PlayWeaponSwapMontage_Server();
+			}
 		}
 	}
 }
@@ -565,7 +551,6 @@ void APlayerCharacter::SetSwapWeaponActive()
 {
 	if (CurrentWeapon == WeaponSlot.SecondPrimaryWeapon) {
 		if (WeaponSlot.FirstPrimaryWeapon->GetWeaponData().Mesh != nullptr) {
-			USER_LOG(LogTemp, Log, TEXT("SetSwapWeaponActive"));
 			WeaponSlot.SecondPrimaryWeapon->SetWeaponState(EWeaponState::UnEquipped);
 			WeaponSlot.FirstPrimaryWeapon->SetWeaponState(EWeaponState::Equipped);
 			CurrentWeapon = WeaponSlot.FirstPrimaryWeapon;
@@ -586,8 +571,6 @@ void APlayerCharacter::SetSwapWeaponActive()
 
 void APlayerCharacter::SetSwapWeaponActive_Server_Implementation()
 {
-
-	USER_LOG(LogTemp, Log, TEXT("CurrentWeapon == WeaponSlot.SecondPrimaryWeapon"));
 	SetSwapWeaponActive();
 }
 
@@ -631,10 +614,12 @@ void APlayerCharacter::OnCurrentLevelChanged(int32 NewCurrentLevel)
 
 void APlayerCharacter::ToggleBurstTrigger(const FInputActionValue& InValue)
 {
-	if (CurrentWeapon->GetWeaponData().WeaponType != EWeaponType::SG) {
+	if (CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::AR || CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::SMG) {
 		bIsBurstTrigger = !bIsBurstTrigger;
+		TimeBetWeenFire = 60.f / (float)CurrentWeapon->GetWeaponData().RPM;
+		UE_LOG(LogTemp, Log, TEXT("%f"), TimeBetWeenFire);
+		UE_LOG(LogTemp, Log, TEXT("%f"), (float)CurrentWeapon->GetWeaponData().RPM);
 	}
-	
 }
 
 void APlayerCharacter::AttackOnBurstTrigger(const FInputActionValue& InValue)
@@ -659,12 +644,6 @@ void APlayerCharacter::Fire()
 		GetWorldTimerManager().ClearTimer(BetweenShotsTimer);
 		return;
 	}
-
-	//if (!IsValid(GetCharacterComponent()) || GetCharacterComponent()->GetCurrentAmmo() == 0) {
-	//	ReverseRecoil();
-	//	GetWorldTimerManager().ClearTimer(BetweenShotsTimer);
-	//	return;
-	//}
 
 	FireAnimationPlay();
 	PlayAttackMontage_Server();
@@ -756,17 +735,6 @@ void APlayerCharacter::WeaponChangeAnimationPlay()
 		return;
 	}
 
-	//if (IsAiming()) {
-	//	if (GetCharacterComponent()) {
-	//		GetCharacterMovement()->RotationRate = FRotator(0.f, 360.f, 0.f);
-	//		TargetFOV = 70.f;
-
-	//		if (GetCharacterComponent()) {
-	//			GetCharacterComponent()->SetAiming(false);
-	//		}
-	//	}
-	//}
-
 	AnimInstance->PlayChangeWeaponAnimMontage();
 }
 
@@ -779,6 +747,186 @@ void APlayerCharacter::WeaponSwapAnimationPlay()
 	AnimInstance->PlaySwapWeaponAmimMontage();
 }
 
+void APlayerCharacter::ThrowGrenadeAnimationPlay()
+{
+	if (!IsValid(AnimInstance)) {
+		return;
+	}
+
+	if (IsValid(GetCharacterComponent())) {
+		GetCharacterComponent()->CurrentState = ECurrentState::Grenade;
+	}
+
+	bThrowMontageEndFlag = false;
+	AnimInstance->PlayThrowGrenadeWeaponAmimMontage();
+}
+
+void APlayerCharacter::ThrowGrenade_Tick()
+{
+	if (GetCharacterComponent()->CurrentState == ECurrentState::Grenade) {
+		FHitResult HitResult;
+		TArray<FVector> PathResults;
+		FVector LastTraceDestinationResult;
+		TArray<TEnumAsByte<EObjectTypeQuery>> PredictObjectType;
+		PredictObjectType.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
+		TArray<AActor*> IgnoreActors;
+
+		FVector ForwardVector = GetActorForwardVector();
+		ForwardVector *= 100.f;
+		ForwardVector += FVector(0.0f, 0.0f, 50.0f);
+
+		FVector SocketForwardVector = GetActorForwardVector();
+		LaunchVecter = (SocketForwardVector + SocketForwardVector * Grenade_Distance) * 500.f;
+
+		bool bHit = UGameplayStatics::Blueprint_PredictProjectilePath_ByObjectType(
+			this,
+			OUT HitResult,
+			OUT PathResults,
+			OUT LastTraceDestinationResult,
+			GetActorLocation() + ForwardVector,
+			LaunchVecter,
+			true,
+			10.0f,
+			PredictObjectType,
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::None,
+			1.0f,
+			10.0f,
+			10.0f,
+			0.0f
+		);
+
+		if (SplinePath)
+		{
+			if (SplinePath)
+			{
+				SplinePath->ClearSplinePoints();
+
+				for (USplineMeshComponent* MeshComp : SplineMeshComponents)
+				{
+					MeshComp->DestroyComponent();
+				}
+				SplineMeshComponents.Empty();
+			}
+
+			for (int32 i = 0; i < PathResults.Num(); i++)
+			{
+				SplinePath->AddSplinePointAtIndex(PathResults[i], i, ESplineCoordinateSpace::World, true);
+			}
+
+			SplinePath->UpdateSpline();
+
+			for (int32 i = 0; i < SplinePath->GetNumberOfSplinePoints() - 1; i++) // SplinePoints - 1·Î ¼öÁ¤
+			{
+				USplineMeshComponent* SplineMeshComponent = NewObject<USplineMeshComponent>(this);
+
+				if (SplineMeshComponent) {
+
+					SplineMeshComponent->SetMobility(EComponentMobility::Movable);
+					SplineMeshComponent->AttachToComponent(SplinePath, FAttachmentTransformRules::KeepRelativeTransform);
+
+					FVector StartPos = SplinePath->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local);
+					FVector EndPos = SplinePath->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::Local);
+					FVector StartTangent = SplinePath->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Local);
+					FVector EndTangent = SplinePath->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::Local);
+					SplineMeshComponent->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent, true);
+					SplineMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+					if (SplineStaticMaterial) {
+						SplineMeshComponent->SetStaticMesh(SplineStaticMesh);
+					}
+
+					SplineMeshComponent->RegisterComponent();
+
+					SplineMeshComponents.Add(SplineMeshComponent);
+				}
+			}
+		}
+	}
+	else {
+		if (SplinePath)
+		{
+			SplinePath->ClearSplinePoints();
+
+			for (USplineMeshComponent* MeshComp : SplineMeshComponents)
+			{
+				MeshComp->DestroyComponent();
+			}
+			SplineMeshComponents.Empty();
+		}
+	}
+}
+
+void APlayerCharacter::ThrowGrenade(const FInputActionValue& InValue)
+{
+	if (WeaponSlot.Granade >= 0) {
+		Grenade_Distance = 0;
+		
+		ThrowGrenadeAnimationPlay();
+		PlayThrowGrenadeMontage_Server();
+	}
+}
+
+void APlayerCharacter::ThrowGrenadeDistance(const FInputActionValue& InValue)
+{
+	float Value = InValue.Get<float>();
+	Grenade_Distance = FMath::FInterpTo(Grenade_Distance, Grenade_Distance + (Value / 10.f), GetWorld()->GetDeltaSeconds(), 5.0f);
+}
+
+void APlayerCharacter::ThrowGrenadeEnd()
+{
+	UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
+	AnimInstance->Montage_Resume(CurrentMontage);
+	bThrowMontageEndFlag = true;
+	GetCharacterComponent()->SetCurrenState(ECurrentState::Stand);
+
+	if (IsLocallyControlled()) {
+		ThrowGrenadeEnd_Server();
+	}
+}
+
+void APlayerCharacter::ThrowGrenadeSpawn_Server_Implementation(FVector _LaunchVecter)
+{
+	FActorSpawnParameters SpawnParam;
+	SpawnParam.Owner = this;
+	SpawnParam.Instigator = this;
+
+	AGrenade* SpawnGrenade = GetWorld()->SpawnActor<AGrenade>(
+		CharacterComponent->GetGrenadeType(),
+		GetMesh()->GetSocketLocation("Grenade_Socket"),
+		GetMesh()->GetSocketRotation("Grenade_Socket"),
+		SpawnParam
+	);
+
+	if (SpawnGrenade)
+	{
+		SpawnGrenade->SetVelocity(_LaunchVecter);
+	}
+}
+
+void APlayerCharacter::ThrowGrenadeEnd_Server_Implementation()
+{
+	UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
+	AnimInstance->Montage_Resume(CurrentMontage);
+	bThrowMontageEndFlag = true;
+	ThrowGrenadeEnd_NetMulticast();
+}
+
+void APlayerCharacter::ThrowGrenadeEnd_NetMulticast_Implementation()
+{
+	UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
+	AnimInstance->Montage_Resume(CurrentMontage);
+	bThrowMontageEndFlag = true;
+}
+
+void APlayerCharacter::ThrowGrenadeAnimationEnd()
+{
+	if (IsLocallyControlled()) {
+		ThrowGrenadeSpawn_Server(LaunchVecter);
+	}
+}
+
 void APlayerCharacter::PerformInteractionCheck()
 {
 	InteractionData.LastInteractionCheckTime = GetWorld()->GetTimeSeconds();
@@ -788,15 +936,13 @@ void APlayerCharacter::PerformInteractionCheck()
 
 	float LookDirection = FVector::DotProduct(GetActorForwardVector(), CameraComponent->GetForwardVector());
 	if (LookDirection > 0) {
-		/*DrawDebugLine(GetWorld(), CameraStartLocation, CameraEndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);*/
-
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(this);
 		FHitResult HitResult;
 		
 		bool IsHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraStartLocation, CameraEndLocation, ECC_GameTraceChannel6, QueryParams);
 		if (IsHit) {
-			if (HitResult.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass())) {
+			if (HitResult.GetActor()->GetClass()->ImplementsInterface(UInteractionInterface::StaticClass()) && HitResult.GetActor()->GetOwner() == nullptr) {
 				if (HitResult.GetActor() != InteractionData.CurrentInteractable) {
 					FoundInteractable(HitResult.GetActor());
 					return;
@@ -908,16 +1054,10 @@ void APlayerCharacter::FindTargetInteractableInfo()
 		case EInteractableType::Trade:
 		{
 			FName ItemName = FName(*TargetInteractable->InteractableData.Name.ToString());
-			
 			FWeaponData* ItemData = PurchasableItemData->FindRow<FWeaponData>(ItemName, ItemName.ToString());
 
 			if (ItemData) {
-				FindTargetWeaponData.Name = ItemData->Name;
-				FindTargetWeaponData.CurrentAmmo = ItemData->CurrentAmmo;
-				FindTargetWeaponData.TotalAmmo = ItemData->TotalAmmo;
-				FindTargetWeaponData.ReloadMaxAmmo = ItemData->ReloadMaxAmmo;
-				FindTargetWeaponData.Price = ItemData->Price;
-				FindTargetWeaponData.Mesh = ItemData->Mesh;
+				FindTargetWeaponData = *ItemData;
 			}
 		break;
 		}	
@@ -942,6 +1082,8 @@ void APlayerCharacter::WeaponBuyInteract()
 		// or Interact();
 	}
 }
+
+
 
 void APlayerCharacter::ChangeWeapon()
 {
@@ -1066,4 +1208,16 @@ void APlayerCharacter::PlayWeaponSwapMontage_NetMulticast_Implementation()
 	if (!HasAuthority() && GetOwner() != UGameplayStatics::GetPlayerController(this, 0)) {
 		WeaponSwapAnimationPlay();
 	}
+}
+
+void APlayerCharacter::PlayThrowGrenadeMontage_Server_Implementation()
+{
+	ThrowGrenadeAnimationPlay();
+	PlayThrowGrenadeMontage_NetMulticast();
+
+}
+
+void APlayerCharacter::PlayThrowGrenadeMontage_NetMulticast_Implementation()
+{
+	ThrowGrenadeAnimationPlay();
 }

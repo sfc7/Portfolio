@@ -46,6 +46,7 @@ enum class EWeaponType : uint8
 	AR UMETA(DisplayName = "AR"),
 	DMR UMETA(DisplayName = "DMR"),
 	SG UMETA(DisplayName = "SG"),
+	SMG UMETA(DisplayName = "SMG"),
 	None UMETA(DisplayName = "None")
 };
 
@@ -64,7 +65,9 @@ public:
 		Price(0),
 		Damage(0),
 		RPM(0),
-		Mesh(nullptr)
+		Mesh(nullptr),
+		ImpactEffect(nullptr),
+		MuzzleFlash(nullptr)
 	{};
 
 public:
@@ -97,4 +100,10 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		USkeletalMesh* Mesh;
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* ImpactEffect;
+
+	UPROPERTY(EditAnywhere)
+		UParticleSystem* MuzzleFlash;
 };

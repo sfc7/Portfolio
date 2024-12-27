@@ -66,44 +66,6 @@ void AWeapon::BeginPlay()
 	if (IsValid(WeaponMesh)) {
 		WeaponData.Mesh = WeaponMesh->GetSkeletalMeshAsset();
 	}
-	
-
-	//UFGameInstance* FGameInstance = Cast<UFGameInstance>(GetWorld()->GetGameInstance());
-	//if (IsValid(FGameInstance)) {
-	//	if (FGameInstance->WeaponData.CurrentAmmo != 0) {
-	//		WeaponData = FGameInstance->WeaponData;
-	//	}
-	//	else {
-	//		WeaponData.CurrentAmmo = 40;
-	//	}
-	//}
-
-	
-
-	//AFCharacter* CharacterOwner = Cast<AFCharacter>(GetOwner());
-	//if (IsValid(CharacterOwner)) {
-	//	USER_LOG(LogUser, Log, TEXT("dd"));
-	//	if (CharacterOwner->HasAuthority()) {
-	//		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-	//		if (IsValid(PlayerStateLoad)) {
-	//			SetWeaponData(PlayerStateLoad->WeaponData);
-	//			UE_LOG(LogTemp, Log, TEXT("PlayerStateLoad O FGameInstance %d : %d"), GPlayInEditorID, GetWeaponData().CurrentAmmo);
-	//		}		
-	//		UGameplayStatics::SaveGameToSlot(PlayerStateLoad, FString::FromInt(GPlayInEditorID), 0);
-	//		
-	//	}
-	//	else if(CharacterOwner->IsLocallyControlled()){
-	//		UPlayerStateSave* PlayerStateLoad = Cast<UPlayerStateSave>(UGameplayStatics::LoadGameFromSlot(FString::FromInt(GPlayInEditorID), 0));
-	//		if (IsValid(PlayerStateLoad)) {
-	//			SetWeaponData(PlayerStateLoad->WeaponData);
-	//			UE_LOG(LogTemp, Log, TEXT("PlayerStateLoad O FGameInstance %d : %d"), GPlayInEditorID, GetWeaponData().CurrentAmmo);
-	//		}
-	//		UGameplayStatics::SaveGameToSlot(PlayerStateLoad, FString::FromInt(GPlayInEditorID), 0);
-	//		UE_LOG(LogTemp, Log, TEXT("PlayerStateLoad X FGameInstance %d : %d"), GPlayInEditorID, GetWeaponData().CurrentAmmo);
-	//	}
-
-	//}
-	
 }
 
 // Called every frame
@@ -150,13 +112,13 @@ void AWeapon::Interact()
 
 void AWeapon::SpawnMuzzleFlash_Server_Implementation()
 {
-	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
+	UGameplayStatics::SpawnEmitterAttached(WeaponData.MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
 	SpawnMuzzleFlash_NetMulticast();
 }
 
 void AWeapon::SpawnMuzzleFlash_NetMulticast_Implementation()
 {
-	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
+	UGameplayStatics::SpawnEmitterAttached(WeaponData.MuzzleFlash, WeaponMesh, TEXT("Muzzle"));
 }
 
 void AWeapon::SetWeaponMesh(USkeletalMesh* _Mesh)
@@ -220,18 +182,20 @@ void AWeapon::SetTotalAmmo(int32 _TotalAmmo)
 	//OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
 }
 
+void AWeapon::SetWeaponData_Server_Implementation(FWeaponData _WeaponData)
+{
+	WeaponData = _WeaponData;
+}
+
 void AWeapon::SetWeaponData(FWeaponData _WeaponData)
 {
 	WeaponData = _WeaponData;
-
-	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(WeaponData.CurrentAmmo, WeaponData.TotalAmmo);
+	SetWeaponData_Server(_WeaponData);
 }
 
 void AWeapon::SetCurrentAmmo(int32 _CurrentAmmo)
 {
 	WeaponData.CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
-
-	UE_LOG(LogTemp, Log, TEXT("Current Ammo : %d"), WeaponData.CurrentAmmo);
 	//OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(CurrentAmmo, TotalAmmo);
 }
 
@@ -239,7 +203,6 @@ void AWeapon::SetCurrentAndTotalAmmo(int32 _CurrentAmmo, int32 _TotalAmmo)
 {
 	WeaponData.CurrentAmmo = FMath::Max(0.f, _CurrentAmmo);
 	WeaponData.TotalAmmo = FMath::Max(0.f, _TotalAmmo);
-		
-	UE_LOG(LogTemp, Log, TEXT("Current Ammo : %d"), WeaponData.CurrentAmmo);
+
 	OnCurrentAmmoAndTotalAmmoChangeDelegate.Broadcast(WeaponData.CurrentAmmo, WeaponData.TotalAmmo);
 }

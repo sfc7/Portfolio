@@ -17,6 +17,7 @@
 #include "Game/FGameState.h"
 #include "Portfolio/Portfolio.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/DamageEvents.h"
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -74,8 +75,22 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 {
 	if (GetMonsterComponent()->GetIsDead())
 	{
+		if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID)) {
+			APlayerCharacter* CauserCharacter = Cast<APlayerCharacter>(DamageCauser);
+			if (IsValid(CauserCharacter)) {
+				UCharacterComponent* CharacterComponent = CauserCharacter->GetCharacterComponent();
+
+				if (IsValid(CharacterComponent)) {
+					CharacterComponent->SetCurrentEXP(CharacterComponent->GetCurrentEXP() + GetMonsterComponent()->GetMonsterExpValue());
+					CharacterComponent->SetMoney(CharacterComponent->GetMoney() + 50.f);
+				}
+			}
+		}
+
 		return 0.f;
 	}
+
+	
 
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	
@@ -123,15 +138,10 @@ void AZombieCharacter::ZombieHitted(APlayerCharacter* Player, FHitResult _HitRes
 		if (IsValid(CharacterComponent)) {
 			CurrentBoneName = _HitResult.BoneName.ToString();
 
-			if (CurrentBoneName == FString("None")) {
-				return;
-			}
-			else {
-				if (uint8 HitPart = GetNumberFromHitPart(CurrentBoneName))
-				{
-					if (uint8 RecentGetMoney = GetMoneyFromHitPart(HitPart)) {
-						CharacterComponent->SetMoney(CharacterComponent->GetMoney() + RecentGetMoney);
-					}
+			if (uint8 HitPart = GetNumberFromHitPart(CurrentBoneName))
+			{
+				if (uint8 RecentGetMoney = GetMoneyFromHitPart(HitPart)) {
+					CharacterComponent->SetMoney(CharacterComponent->GetMoney() + RecentGetMoney);
 				}
 			}
 		}
@@ -243,6 +253,9 @@ uint8 AZombieCharacter::GetNumberFromHitPart(FString BoneName)
 	{
 		return 3;
 	}
+	else {
+		return 4;
+	}
 
 	return 0;
 }
@@ -258,6 +271,9 @@ uint8 AZombieCharacter::GetMoneyFromHitPart(uint8 HitPart)
 			break;
 		case 3:
 			return 100;
+			break;
+		case 4:
+			return 20;
 			break;
 		default:
 			break;
