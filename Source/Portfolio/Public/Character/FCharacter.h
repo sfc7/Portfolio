@@ -64,6 +64,8 @@ public:
 
 	void WeaponHudBind();
 
+	class UCameraComponent* GetCameraCommpoent() { return CameraComponent; }
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -82,6 +84,8 @@ protected:
 
 	UFUNCTION()
 		void OnRep_Weapon();
+
+
 
 public:	
 

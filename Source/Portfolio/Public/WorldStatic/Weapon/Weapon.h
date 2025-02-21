@@ -114,6 +114,16 @@ public:
 	UPROPERTY(EditAnywhere)
 		USceneComponent* RootScene;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class USpotLightComponent* MuzzleSpotLightComponent;
+
+	UPROPERTY(EditAnywhere)
+		class UMaterial* MuzzleLightMaterial;
+
+	FSoftObjectPath	MuzzleLightMaterialPath = FSoftObjectPath();
+
+	TSharedPtr<struct FStreamableHandle> AssetStreamableHandle = nullptr;
+
 protected:
 	UPROPERTY(EditAnywhere)
 		FString WeaponName;

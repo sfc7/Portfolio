@@ -9,6 +9,11 @@
 #include "Portfolio/Portfolio.h"
 #include "Game/FGameInstance.h"
 #include "Game/PlayerStateSave.h"
+#include "Components/SpotLightComponent.h"
+#include "Engine/StreamableManager.h"
+#include "Camera/CameraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "PlayerCharacterSettings.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
@@ -51,6 +56,28 @@ AWeapon::AWeapon()
 	if (CrossHairBottomBP.Succeeded()) {
 		CrossHairBottom = CrossHairBottomBP.Object;
 	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterial> MuzzleLightMaterialBP(TEXT("/Game/Source/Material/Effect/M_FlashLight.M_FlashLight"));
+	if (MuzzleLightMaterialBP.Succeeded())
+	{
+		MuzzleLightMaterial = MuzzleLightMaterialBP.Object;
+	}
+
+	MuzzleSpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("MuzzleSpotLight"));
+	MuzzleSpotLightComponent->Intensity = 100000.0f;
+	MuzzleSpotLightComponent->OuterConeAngle = 12.0f;
+	MuzzleSpotLightComponent->InnerConeAngle = 12.0f;
+	MuzzleSpotLightComponent->AttenuationRadius = 16000.0f;
+	MuzzleSpotLightComponent->bUseTemperature = true;
+	MuzzleSpotLightComponent->Temperature = 5500.0f;
+	MuzzleSpotLightComponent->SetRelativeRotation(FRotator(4.5f, 4.5f, 0.f));
+	MuzzleSpotLightComponent->SetIsReplicated(true);
+	MuzzleSpotLightComponent->SetVisibility(false);
+
+	if (MuzzleSpotLightComponent)
+	{
+		MuzzleSpotLightComponent->SetLightFunctionMaterial(MuzzleLightMaterial);
+	}
 }
 
 // Called when the game starts or when spawned
@@ -62,16 +89,18 @@ void AWeapon::BeginPlay()
 	InstanceInteractableData.InteractableType = EInteractableType::Trade;
 
 	InteractableData = InstanceInteractableData; // InteractableData 와 InstanceInteractableData를 분리해서 만든 이유 : InstanceInteractableData는 기본 값, InteractableData는 현재값으로 분리하여 초기 상태로 복구 가능하게끔
-
-	if (IsValid(WeaponMesh)) {
-		WeaponData.Mesh = WeaponMesh->GetSkeletalMeshAsset();
-	}
 }
 
 // Called every frame
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AActor* WeaponOwner = GetOwner();
+
+	if (IsValid(WeaponMesh)) {
+		WeaponData.Mesh = WeaponMesh->GetSkeletalMeshAsset();
+	}
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -131,6 +160,14 @@ void AWeapon::SetWeaponMesh_Server_Implementation(USkeletalMesh* _Mesh)
 	ReplicateMesh = _Mesh;
 	WeaponData.Mesh = ReplicateMesh;
 	WeaponMesh->SetSkeletalMesh(ReplicateMesh);
+
+	if (WeaponMesh->DoesSocketExist(TEXT("Muzzle"))) {
+		MuzzleSpotLightComponent->AttachToComponent(WeaponMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
+		FVector MuzzleLocalLocation = WeaponMesh->GetSocketLocation(TEXT("Muzzle"));
+		FRotator MuzzleLocalRotation = WeaponMesh->GetSocketRotation(TEXT("Muzzle"));
+		MuzzleSpotLightComponent->SetRelativeLocation(MuzzleLocalLocation);
+		MuzzleSpotLightComponent->SetRelativeRotation(MuzzleLocalRotation);
+	}
 }
 
 void AWeapon::OnRep_WeaponMesh()

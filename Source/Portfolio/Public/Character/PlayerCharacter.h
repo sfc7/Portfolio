@@ -62,12 +62,15 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		class UStaticMesh* SplineStaticMesh;
-
+			
 	UPROPERTY(EditAnywhere)
 		class UMaterialInterface* SplineStaticMaterial;
 
-
 	TArray<class USplineMeshComponent*> SplineMeshComponents;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UMaterialInterface* MuzzleSpotLightMaterial;
 
 
 protected:
@@ -210,6 +213,7 @@ private:
 
 
 
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UInputConfig> PlayerCharacterInputConfigData;
@@ -275,7 +279,7 @@ private:
 	float InteractionCheckFrequency = 0.1f;
 
 	float InteractionCheckRange = 400.0f;
-
+	
 	FTimerHandle InteractionTimerHandle;
 
 	FInteractionData InteractionData;
@@ -324,7 +328,7 @@ private:
 
 
 
-	//
+	// Swap
 
 	UFUNCTION(Server, Unreliable)
 		void PlayWeaponSwapMontage_Server();
@@ -345,9 +349,8 @@ private:
 
 	void SetSwapWeaponActive();
 
-	//
 
-	//
+	// Grenade
 
 	UFUNCTION(Server, Reliable)
 		void PlayThrowGrenadeMontage_Server();
@@ -377,4 +380,16 @@ private:
 
 
 	FVector LaunchVecter;
+
+	// SpotLight
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	class USpotLightComponent* SpotLightComponent;
+
+
+
+	UFUNCTION(Server, Reliable)
+	void ToggleFlashLight_Server();
+
+	void ToggleFlashLight();
+
 };	

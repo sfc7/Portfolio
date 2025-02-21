@@ -61,7 +61,7 @@ public:
 	uint8 bWeaponEquipFlag : 1;
 	int32 CurrentLevel = 1;
 	float CurrentEXP = 0;
-	int32 PlayerMoney = 5000;
+	int32 PlayerMoney = 100;
 
 	UPROPERTY()
 		FWeaponSlotData WeaponSlotData;

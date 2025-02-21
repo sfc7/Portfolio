@@ -111,7 +111,10 @@ private:
 	ELevelState LevelState = ELevelState::Room;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RoomTime = 50;
+		int32 RoomTime = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
+		int32 RemaningRoomTime = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		int32 WaitTime = 10;
@@ -119,8 +122,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		int32 RemaningWaitTime = 10;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
-		int32 RemaningRoomTime = 50;
+
 
 	TSubclassOf<class APlayerCharacter> PlayerCharacterClass;
 

@@ -30,6 +30,7 @@
 #include "UI/PlayerHUD.h"
 #include "WorldStatic/Weapon/Grenade.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "Data/DataStruct.h"
 
 APlayerCharacter::APlayerCharacter()
@@ -60,6 +61,9 @@ APlayerCharacter::APlayerCharacter()
 
 	SplinePath = CreateDefaultSubobject<USplineComponent>(TEXT("SplinePath"));
 	SplinePath->SetupAttachment(GetMesh());
+
+	SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
+	SpotLightComponent->SetupAttachment(GetCapsuleComponent());
 }
 	
 void APlayerCharacter::PossessedBy(AController* NewController)
@@ -89,6 +93,8 @@ void APlayerCharacter::BeginPlay()
 
 	RecoilTimeline.AddInterpFloat(HorizontalCurve, RecoilCurve_X);
 	RecoilTimeline.AddInterpFloat(VerticalCurve, RecoilCurve_Y);
+
+	
 }
 
 void APlayerCharacter::OnRep_PlayerState()
@@ -185,6 +191,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Started, this, &ThisClass::ThrowGrenade);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Triggered, this, &ThisClass::ThrowGrenadeDistance);
 		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->GrenadeAction, ETriggerEvent::Completed, this, &ThisClass::ThrowGrenadeEnd);
+		EnhancedInputComponent->BindAction(PlayerCharacterInputConfigData->FlashLightAction, ETriggerEvent::Started, this, &ThisClass::ToggleFlashLight);
+
 	}
 }
 
@@ -408,7 +416,7 @@ void APlayerCharacter::FireBullet_LineTrace(FVector _CameraStartLocation, FVecto
 	bool bIsHit = GetWorld()->LineTraceSingleByChannel(HitResult, _CameraStartLocation, _CameraEndLocation, ECC_GameTraceChannel3, QueryParams);
 
 	if (bIsHit) {
-		//DrawDebugLine(GetWorld(), _CameraStartLocation, HitResult.Location, FColor::Red, true, 0.1f, 0U, 0.5f);	
+		/*DrawDebugLine(GetWorld(), _CameraStartLocation, HitResult.Location, FColor::Blue, true, 0.1f, 0U, 0.5f);*/	
 
 		FVector ShotDirection = -(CameraComponent->GetComponentRotation().Vector());
 		UParticleSystem* ImpactEffect = CurrentWeapon->GetWeaponData().ImpactEffect;
@@ -617,8 +625,6 @@ void APlayerCharacter::ToggleBurstTrigger(const FInputActionValue& InValue)
 	if (CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::AR || CurrentWeapon->GetWeaponData().WeaponType == EWeaponType::SMG) {
 		bIsBurstTrigger = !bIsBurstTrigger;
 		TimeBetWeenFire = 60.f / (float)CurrentWeapon->GetWeaponData().RPM;
-		UE_LOG(LogTemp, Log, TEXT("%f"), TimeBetWeenFire);
-		UE_LOG(LogTemp, Log, TEXT("%f"), (float)CurrentWeapon->GetWeaponData().RPM);
 	}
 }
 
@@ -1000,7 +1006,7 @@ void APlayerCharacter::NoInteractableFound()
 }
 
 
-//아무것도 변하지 않았는지 확인하기위한 안전장치, 동일한 것을 보고 있다는 것을 확인, 미사용중
+
 void APlayerCharacter::BeginInteract()
 {
 	PerformInteractionCheck();
@@ -1083,7 +1089,24 @@ void APlayerCharacter::WeaponBuyInteract()
 	}
 }
 
+void APlayerCharacter::ToggleFlashLight_Server_Implementation()
+{
+	bool bIsCurrentlyHidden = CurrentWeapon->MuzzleSpotLightComponent->IsVisible();
+	CurrentWeapon->MuzzleSpotLightComponent->SetVisibility(!bIsCurrentlyHidden);
+}
 
+void APlayerCharacter::ToggleFlashLight()
+{
+	if (HasAuthority())
+	{
+		bool bIsCurrentlyHidden = CurrentWeapon->MuzzleSpotLightComponent->IsVisible();
+		CurrentWeapon->MuzzleSpotLightComponent->SetVisibility(!bIsCurrentlyHidden);
+	}
+	else
+	{
+		ToggleFlashLight_Server();
+	}
+}
 
 void APlayerCharacter::ChangeWeapon()
 {

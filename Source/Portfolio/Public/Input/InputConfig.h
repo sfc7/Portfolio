@@ -45,5 +45,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TObjectPtr<class UInputAction> GrenadeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		TObjectPtr<class UInputAction> FlashLightAction;
 		
 };
