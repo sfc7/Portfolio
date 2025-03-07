@@ -32,6 +32,7 @@ void UZombieAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (IsValid(OwnerCharacter) && IsValid(MovementComponent)) {
 		GroundSpeed = MovementComponent->GetLastUpdateVelocity().Size();
+		RandomWalkBlendSpace = OwnerCharacter->GetRandomWalkBlendSpace();
 	}
 }
 

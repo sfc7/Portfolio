@@ -22,6 +22,9 @@ public:
 
 	class UMonsterComponent* GetMonsterComponent() { return MonsterComponent; }
 
+	UFUNCTION(BlueprintCallable)
+	void NavLinkMantle();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -63,6 +66,9 @@ private:
 	uint8 GetMoneyFromHitPart(uint8 HitPart);
 	//
 
+public:
+	int32 GetRandomWalkBlendSpace() { return RandomWalkBlendSpace; }
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
 		TObjectPtr<class UMonsterComponent> MonsterComponent;
@@ -77,6 +83,15 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Mesh)
 	USkeletalMesh* ReplicateMesh;
 
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
+
+	//ABP
+
+	TArray<float> SpeedArray = { 50.f ,200.f, 200.f, 200.f, 200.f, 300.f };
+
+	int32 RandomWalkBlendSpace;
+	int32 RandomWalkBlendSpaceCount = 6;
+
 	//Attack
 	float AttackDamage = 10.f;
 	
@@ -90,4 +105,6 @@ private:
 	
 	FString CurrentBoneName;
 	//
+
+
 };

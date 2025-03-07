@@ -28,6 +28,80 @@ AZombieCharacter::AZombieCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
+void AZombieCharacter::NavLinkMantle()
+{
+	FVector ZombieLocation = GetActorLocation() + FVector(0.f, 0.f, -50.f);
+	FVector ForwardTargetPoint = ZombieLocation + GetActorForwardVector() * 60.f;
+
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	FHitResult MantleTargetHitResult;
+	ETraceTypeQuery TraceType = UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_Visibility);
+
+	bool bNavLinkTargetDetect = UKismetSystemLibrary::SphereTraceSingle(
+		this,
+		ZombieLocation,
+		ForwardTargetPoint,
+		10.f,
+		TraceType,
+		false,
+		IgnoreActors,
+		EDrawDebugTrace::ForDuration,
+		OUT MantleTargetHitResult,
+		true,
+		FLinearColor::Red,
+		FLinearColor::Green,
+		1.0f
+	);
+
+	if (bNavLinkTargetDetect) {
+		FVector MantleWallLocation = MantleTargetHitResult.Location;
+		FVector MantleWallNormal = MantleTargetHitResult.ImpactNormal;
+
+		FVector TargetVectorMaxHeight = MantleWallLocation + (MantleWallNormal * -30.f) + FVector(0.f, 0.f, 200.f);
+		FVector TargetVectorMinHeight = MantleWallLocation + (MantleWallNormal * -30.f) + FVector(0.f, 0.f, -20.f);
+
+		FHitResult MantleTargetHeightHitResult;
+
+		bool bNavLinkTargetHeightDetect = UKismetSystemLibrary::SphereTraceSingle(
+			this,
+			TargetVectorMaxHeight,
+			TargetVectorMinHeight,
+			10.f,
+			TraceType,
+			false,
+			IgnoreActors,
+			EDrawDebugTrace::ForDuration,
+			OUT MantleTargetHeightHitResult,
+			true,
+			FLinearColor::Red,
+			FLinearColor::Green,
+			1.0f
+		);
+
+
+		if (bNavLinkTargetHeightDetect) {
+			FVector FinalMantleVector = MantleWallNormal * 45.0f + MantleWallLocation;
+			FVector FinalVector = FVector(FinalMantleVector.X, FinalMantleVector.Y, GetCapsuleComponent()->GetComponentLocation().Z);
+
+			/*GetCapsuleComponent()->SetWorldLocation(FinalVector);*/
+			DrawDebugSphere(
+				GetWorld(),
+				FinalVector,
+				10.0f,
+				12,
+				FColor::Magenta,
+				1.0f,
+				false,
+				1,
+				1.0f
+			);
+		}
+	}
+
+
+}
+
 void AZombieCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,7 +110,11 @@ void AZombieCharacter::BeginPlay()
 
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 480.f, 0.f);
-	GetCharacterMovement()->MaxWalkSpeed = 200.f;
+
+	int32 RandSpeed = FMath::RandRange(0, SpeedArray.Num() - 1);
+	GetCharacterMovement()->MaxWalkSpeed = SpeedArray[RandSpeed];
+
+	RandomWalkBlendSpace = FMath::RandRange(0, RandomWalkBlendSpaceCount - 1);
 
 	const UZombieCharacterSettings* CDO = GetDefault<UZombieCharacterSettings>();
 	int32 RandIndex = FMath::RandRange(0, CDO->ZombieCharacterMeshPaths.Num() - 1);
@@ -62,6 +140,8 @@ void AZombieCharacter::Tick(float DeltaTime)
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(*CurrentBoneName), 1.f);
 	}
+
+	NavLinkMantle();
 }
 
 void AZombieCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -298,3 +378,4 @@ void AZombieCharacter::IsDead_NetMulticast_Implementation()
 	FTimerHandle DeathTimer;
 	GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &ThisClass::DestroyActor, 10.0f, false);
 }
+

@@ -73,6 +73,7 @@ AWeapon::AWeapon()
 	MuzzleSpotLightComponent->SetRelativeRotation(FRotator(4.5f, 4.5f, 0.f));
 	MuzzleSpotLightComponent->SetIsReplicated(true);
 	MuzzleSpotLightComponent->SetVisibility(false);
+	MuzzleSpotLightComponent->InverseExposureBlend = 1.0f;
 
 	if (MuzzleSpotLightComponent)
 	{
