@@ -64,6 +64,9 @@ APlayerCharacter::APlayerCharacter()
 
 	SpotLightComponent = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
 	SpotLightComponent->SetupAttachment(GetCapsuleComponent());
+
+	DefaultCameraZOffset = SpringArmComponent->SocketOffset.Z;
+	CrouchedCameraZOffset = DefaultCameraZOffset - 80.0f; 
 }
 	
 void APlayerCharacter::PossessedBy(AController* NewController)
@@ -94,7 +97,6 @@ void APlayerCharacter::BeginPlay()
 	RecoilTimeline.AddInterpFloat(HorizontalCurve, RecoilCurve_X);
 	RecoilTimeline.AddInterpFloat(VerticalCurve, RecoilCurve_Y);
 
-	
 }
 
 void APlayerCharacter::OnRep_PlayerState()
@@ -110,8 +112,17 @@ void APlayerCharacter::Tick(float DeltaTime)
 		ThrowGrenade_Tick();
 	}
 
-	CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 10.f);
-	CameraComponent->SetFieldOfView(CurrentFOV);
+	AMainGameMode* gamemode = Cast<AMainGameMode>(GetWorld()->GetAuthGameMode());
+	if (gamemode) {
+		FString LevelStateString;
+	}
+
+	if (CurrentFOV != TargetFOV) {
+        CurrentFOV = FMath::FInterpTo(CurrentFOV, TargetFOV, DeltaTime, 8.f);
+        CameraComponent->SetFieldOfView(CurrentFOV);
+    }
+
+	SpringArmComponent->SocketOffset.Z = FMath::FInterpTo(SpringArmComponent->SocketOffset.Z, TargetCameraZOffset, DeltaTime, 8.f);
 
 	if (IsValid(GetController())) {
 		FRotator ControlRotation = GetController()->GetControlRotation();
@@ -205,7 +216,13 @@ float APlayerCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 
-	GetCharacterComponent()->SetCurrentHp(GetCharacterComponent()->GetCurrentHp() - ActualDamage);
+	FString CharacterName = this->GetName();
+
+	if (HasAuthority()) {
+		if (CharacterName == TEXT("BP_Character_C_0")) {
+			GetCharacterComponent()->SetCurrentHp(GetCharacterComponent()->GetCurrentHp() - ActualDamage);
+		}
+	}	
 
 	if (GetCharacterComponent()->GetCurrentHp() < KINDA_SMALL_NUMBER) {
 		GetCharacterComponent()->SetIsDead(true);
@@ -328,9 +345,11 @@ void APlayerCharacter::Crouch(const FInputActionValue& InValue)
 	if (GetCharacterComponent()) {
 		if (GetCharacterComponent()->CurrentState == ECurrentState::Stand) {
 			GetCharacterComponent()->CurrentState = ECurrentState::Crouch;
+			TargetCameraZOffset = CrouchedCameraZOffset;
 		}
 		else {
 			GetCharacterComponent()->CurrentState = ECurrentState::Stand;
+			TargetCameraZOffset = DefaultCameraZOffset;
 		}
 	}
 }

@@ -57,6 +57,11 @@ AWeapon::AWeapon()
 		CrossHairBottom = CrossHairBottomBP.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UTexture2D> CrossHairBottomSG(TEXT("/Script/Engine.Texture2D'/Game/Source/Texture/UI/CrossHair/CrossHair_SG.CrossHair_SG'"));
+	if (CrossHairBottomSG.Succeeded()) {
+		CrossHairSG = CrossHairBottomSG.Object;
+	}
+
 	static ConstructorHelpers::FObjectFinder<UMaterial> MuzzleLightMaterialBP(TEXT("/Game/Source/Material/Effect/M_FlashLight.M_FlashLight"));
 	if (MuzzleLightMaterialBP.Succeeded())
 	{

@@ -56,6 +56,8 @@ public:
 
 	FZombieRoundTable* GetZombieRoundTableRowFromRound(int _Round);
 
+	ELevelState GetLevelState() const { return LevelState;  }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -76,6 +78,8 @@ private:
 	void SetLevelStateFromLevelName();
 
 	void SetLevelStateFromString(const FString& _LevelState);
+
+
 
 public:
 	

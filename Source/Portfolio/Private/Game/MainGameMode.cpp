@@ -271,9 +271,6 @@ void AMainGameMode::InStage()
 		FGameState->IncrementCurrentRoundNumber();
 		FGameInstance->IncrementTotalRoundNumber();
 	}
-	else if (FGameState->GetTotalZombiesInRound() >= 24) {
-
-	}
 	else if (ZombieSpawnRemaning > 0) {
 		SpawnZombie();
 	}

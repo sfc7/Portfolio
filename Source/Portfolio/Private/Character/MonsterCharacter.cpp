@@ -19,23 +19,6 @@ AMonsterCharacter::AMonsterCharacter()
 void AMonsterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-}
-
-void AMonsterCharacter::JumpInNavLink(FVector _Destination, float Jumpheight)
-{
-	FVector StartLocation = GetActorLocation();
-	FVector EndLocation = _Destination + FVector(0.f, 0.f, Jumpheight);
-	FVector OutResultVector;
-
-	bool bProjectileVelocity = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
-		this,	
-		OUT OutResultVector,
-		StartLocation,
-		EndLocation
-	);
-
-	LaunchCharacter(OutResultVector,true , true);
 }
 
 // Called every frame

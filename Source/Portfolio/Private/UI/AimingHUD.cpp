@@ -45,6 +45,7 @@ void AAimingHUD::DrawCrossHair(UTexture2D* Texture, FVector2D ViewportCenter, FV
 
 	float TextureWidth = Texture->GetSizeX();
 	float TextureHeight = Texture->GetSizeY();
+
 	FVector2D TextureDrawPoint(ViewportCenter.X - (TextureWidth / 2.f) + Spread.X,
 		ViewportCenter.Y - (TextureHeight / 2.f) + Spread.Y
 	);

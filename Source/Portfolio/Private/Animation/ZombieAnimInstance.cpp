@@ -51,12 +51,40 @@ void UZombieAnimInstance::AnimNotify_DeathMontageEnd()
 	DeathMontageEnd.Broadcast();
 }
 
+void UZombieAnimInstance::AnimNotify_NavLinkJumpinghMoveLocation()
+{
+	NavLinkJumpinghMoveLocation.Broadcast();
+}
+
+void UZombieAnimInstance::AnimNotify_NavLinkJumpinghMontageEnd()
+{
+	NavLinkJumpinghMontageEnd.Broadcast();
+}
+
 void UZombieAnimInstance::PlayDeathMontage()
 {
 	if (IsValid(DeathMontage)) {
 		StopAllMontages(0.0f);
 		if (!Montage_IsPlaying(DeathMontage)) {
 			Montage_Play(DeathMontage);
+		}
+	}
+}
+
+void UZombieAnimInstance::PlayNavLinkJumpinghMontage()
+{
+	if (IsValid(NavLinkJumpingMontage)) {
+		if (!Montage_IsPlaying(NavLinkJumpingMontage)) {
+			Montage_Play(NavLinkJumpingMontage);
+		}
+	}
+}
+
+void UZombieAnimInstance::PlayNavLinkFlailMontage()
+{
+	if (IsValid(NavLinkFlailMontage)) {
+		if (!Montage_IsPlaying(NavLinkFlailMontage)) {
+			Montage_Play(NavLinkFlailMontage);
 		}
 	}
 }

@@ -12,12 +12,15 @@
 #include "AI/ZombieAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Animation/ZombieAnimInstance.h"
 #include "Game/FPlayerState.h"
 #include "Game/FGameState.h"
 #include "Portfolio/Portfolio.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/DamageEvents.h"
+#include "AI/ZombieMantleNavLink.h"
+
 
 AZombieCharacter::AZombieCharacter()
 {
@@ -28,10 +31,12 @@ AZombieCharacter::AZombieCharacter()
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
-void AZombieCharacter::NavLinkMantle()
+void AZombieCharacter::NavLinkMantle(FVector _Destination, float _WallDistance, ANavLinkProxy* _NavLink)
 {
 	FVector ZombieLocation = GetActorLocation() + FVector(0.f, 0.f, -50.f);
-	FVector ForwardTargetPoint = ZombieLocation + GetActorForwardVector() * 60.f;
+	FVector DirectionToDestination = _Destination - ZombieLocation;
+	DirectionToDestination.Normalize();
+	FVector TargetPoint = ZombieLocation + DirectionToDestination * _WallDistance;
 
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(this);
@@ -41,25 +46,25 @@ void AZombieCharacter::NavLinkMantle()
 	bool bNavLinkTargetDetect = UKismetSystemLibrary::SphereTraceSingle(
 		this,
 		ZombieLocation,
-		ForwardTargetPoint,
+		TargetPoint,
 		10.f,
 		TraceType,
 		false,
 		IgnoreActors,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		OUT MantleTargetHitResult,
 		true,
 		FLinearColor::Red,
 		FLinearColor::Green,
-		1.0f
+		2.0f
 	);
 
 	if (bNavLinkTargetDetect) {
 		FVector MantleWallLocation = MantleTargetHitResult.Location;
 		FVector MantleWallNormal = MantleTargetHitResult.ImpactNormal;
 
-		FVector TargetVectorMaxHeight = MantleWallLocation + (MantleWallNormal * -30.f) + FVector(0.f, 0.f, 200.f);
-		FVector TargetVectorMinHeight = MantleWallLocation + (MantleWallNormal * -30.f) + FVector(0.f, 0.f, -20.f);
+		FVector TargetVectorMaxHeight = MantleWallLocation + (MantleWallNormal * -20.f) + FVector(0.f, 0.f, 200.f);
+		FVector TargetVectorMinHeight = MantleWallLocation + (MantleWallNormal * -20.f) + FVector(0.f, 0.f, -20.f);
 
 		FHitResult MantleTargetHeightHitResult;
 
@@ -71,35 +76,93 @@ void AZombieCharacter::NavLinkMantle()
 			TraceType,
 			false,
 			IgnoreActors,
-			EDrawDebugTrace::ForDuration,
+			EDrawDebugTrace::None,
 			OUT MantleTargetHeightHitResult,
 			true,
-			FLinearColor::Red,
-			FLinearColor::Green,
-			1.0f
+			FLinearColor::Yellow,
+			FLinearColor::Blue,
+			2.0f
 		);
 
-
 		if (bNavLinkTargetHeightDetect) {
-			FVector FinalMantleVector = MantleWallNormal * 45.0f + MantleWallLocation;
-			FVector FinalVector = FVector(FinalMantleVector.X, FinalMantleVector.Y, GetCapsuleComponent()->GetComponentLocation().Z);
+			//FVector StartLocation = GetActorLocation();
+			//FVector EndLocation = MantleTargetHeightHitResult.Location;
+			//FVector ProjectileVelocityOutResultVector;
 
-			/*GetCapsuleComponent()->SetWorldLocation(FinalVector);*/
-			DrawDebugSphere(
-				GetWorld(),
-				FinalVector,
-				10.0f,
-				12,
-				FColor::Magenta,
-				1.0f,
-				false,
-				1,
-				1.0f
-			);
+			//bool bProjectileVelocity = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+			//	this,
+			//	OUT ProjectileVelocityOutResultVector,
+			//	StartLocation,
+			//	EndLocation
+			//);
+
+			//if (bProjectileVelocity) {
+			//	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			//	/*LaunchCharacter(ProjectileVelocityOutResultVector, true, true);*/
+			//	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+			//	ZombieAnimInstance->PlayNavLinkJumpinghMontage();
+			//}
+
+			FVector MantleLocation = (MantleWallNormal * 45.f) + MantleWallLocation;
+			NavLinkDestination = (MantleWallNormal * 60.f) + MantleWallLocation;
+			FVector MantleFinalLocation = FVector(MantleLocation.X, MantleLocation.Y, GetCapsuleComponent()->GetComponentLocation().Z + 50.f);
+			FRotator MantleLook = FRotator(0.f, UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), MantleWallLocation).Yaw, 0.f);	
+
+
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			GetCapsuleComponent()->SetWorldLocation(MantleFinalLocation);
+			GetCapsuleComponent()->SetWorldRotation(MantleLook);
+			GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+			ZombieAnimInstance->PlayNavLinkJumpinghMontage();
+			NavLinkMantle_NetMulticast();
+			
+			//DrawDebugSphere(
+			//	GetWorld(),
+			//	MantleFinalLocation,
+			//	40.0f,
+			//	12,
+			//	FColor::Magenta,
+			//	1.0f,
+			//	false,
+			//	2.0f,
+			//	1
+			//);
+
+			if (_NavLink) {
+				AZombieMantleNavLink* ZombieMantleNavLink = Cast<AZombieMantleNavLink>(_NavLink);
+				if (ZombieMantleNavLink) {
+					ZombieMantleNavLink->bIsOccupied = true;
+					LastJumpNavLink = ZombieMantleNavLink;
+				}
+
+				FTimerHandle TimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(
+					TimerHandle, [ZombieMantleNavLink]() {
+						ZombieMantleNavLink->bIsOccupied = false;
+					},
+					0.5f, false
+				);
+			}
 		}
 	}
+}
 
+void AZombieCharacter::NavLinkFlail(FVector _Destination, float _Jumpheight)
+{
+	FVector StartLocation = GetActorLocation();
+	FVector EndLocation = _Destination + FVector(0.f, 0.f, _Jumpheight);
+	FVector OutResultVector;
 
+	bool bProjectileVelocity = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+		this,
+		OUT OutResultVector,
+		StartLocation,
+		EndLocation
+	);
+
+	LaunchCharacter(OutResultVector, true, true);
+	ZombieAnimInstance->PlayNavLinkFlailMontage();
+	NavLinkFlail_NetMulticast();
 }
 
 void AZombieCharacter::BeginPlay()
@@ -140,8 +203,6 @@ void AZombieCharacter::Tick(float DeltaTime)
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(TEXT("Hips")), 1.f);
 		GetMesh()->SetAllBodiesBelowPhysicsBlendWeight(FName(*CurrentBoneName), 1.f);
 	}
-
-	NavLinkMantle();
 }
 
 void AZombieCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -169,8 +230,6 @@ float AZombieCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent
 
 		return 0.f;
 	}
-
-	
 
 	float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
 	
@@ -207,6 +266,8 @@ void AZombieCharacter::PostInitializeComponents()
 		ZombieAnimInstance->AttackHit.AddUObject(this, &ThisClass::Attack_BasicHit);
 		ZombieAnimInstance->AttackMontageEnd.AddUObject(this, &ThisClass::AttackMontageEnd);
 		ZombieAnimInstance->DeathMontageEnd.AddUObject(this, &ThisClass::DestroyActor);
+		ZombieAnimInstance->NavLinkJumpinghMoveLocation.AddUObject(this, &ThisClass::NavLinkJumpMoveLocaiton);
+		ZombieAnimInstance->NavLinkJumpinghMontageEnd.AddUObject(this, &ThisClass::NavLinkJumpEnd);
 	}
 }
 
@@ -360,6 +421,42 @@ uint8 AZombieCharacter::GetMoneyFromHitPart(uint8 HitPart)
 	}
 
 	return 0;
+}
+
+void AZombieCharacter::NavLinkMantle_NetMulticast_Implementation()
+{
+	ZombieAnimInstance->PlayNavLinkJumpinghMontage();
+}
+
+void AZombieCharacter::NavLinkFlail_NetMulticast_Implementation()
+{
+	ZombieAnimInstance->PlayNavLinkFlailMontage();
+}
+
+void AZombieCharacter::NavLinkJumpMoveLocaiton()
+{
+	/*GetCapsuleComponent()->SetWorldLocation(NavLinkDestination);*/
+	FVector StartLocation = GetActorLocation();
+	FVector EndLocation = FVector(NavLinkDestination.X, NavLinkDestination.Y, GetActorLocation().Z);
+	FVector ProjectileVelocityOutResultVector;
+
+	bool bProjectileVelocity = UGameplayStatics::SuggestProjectileVelocity_CustomArc(
+		this,
+		OUT ProjectileVelocityOutResultVector,
+		StartLocation,
+		EndLocation
+	);
+
+	if (bProjectileVelocity) {
+		LaunchCharacter(ProjectileVelocityOutResultVector, true, true);
+		GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+}
+
+void AZombieCharacter::NavLinkJumpEnd()
+{
+	/*LastJumpNavLink->bIsOccupied = false;*/
 }
 
 void AZombieCharacter::IsDead_NetMulticast_Implementation()

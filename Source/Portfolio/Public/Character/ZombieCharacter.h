@@ -23,7 +23,12 @@ public:
 	class UMonsterComponent* GetMonsterComponent() { return MonsterComponent; }
 
 	UFUNCTION(BlueprintCallable)
-	void NavLinkMantle();
+	void NavLinkMantle(FVector _Destination, float _WallDistance, ANavLinkProxy* _NavLink);
+
+	UFUNCTION(BlueprintCallable)
+	void NavLinkFlail(FVector _Destination, float _Jumpheight);
+
+	int32 GetRandomWalkBlendSpace() { return RandomWalkBlendSpace; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -66,8 +71,20 @@ private:
 	uint8 GetMoneyFromHitPart(uint8 HitPart);
 	//
 
+	//Mantle
+	UFUNCTION(NetMulticast, Reliable)
+	void NavLinkMantle_NetMulticast();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NavLinkFlail_NetMulticast();
+
+	void NavLinkJumpMoveLocaiton();
+
+	void NavLinkJumpEnd();
+	//
+
 public:
-	int32 GetRandomWalkBlendSpace() { return RandomWalkBlendSpace; }
+	class AZombieMantleNavLink* LastJumpNavLink;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess))
@@ -84,6 +101,7 @@ private:
 	USkeletalMesh* ReplicateMesh;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = true))
+
 
 	//ABP
 
@@ -106,5 +124,6 @@ private:
 	FString CurrentBoneName;
 	//
 
-
+	//Mantle
+	FVector NavLinkDestination;
 };

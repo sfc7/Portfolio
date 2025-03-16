@@ -243,6 +243,14 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
 		float CurrentFOV = 70.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
+		float DefaultCameraZOffset;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess))
+		float CrouchedCameraZOffset;
+
+		float TargetCameraZOffset;
 	//
 	 
 	// Single / Burst

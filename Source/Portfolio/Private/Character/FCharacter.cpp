@@ -182,6 +182,11 @@ void AFCharacter::EquipWeapon()
 	if (IsValid(WeaponSlot.SecondPrimaryWeapon)) {
 		WeaponSlot.SecondPrimaryWeapon->SetOwner(this);
 		WeaponSlot.SecondPrimaryWeapon->SetWeaponState(EWeaponState::UnEquipped);
+		WeaponSlot.SecondPrimaryWeapon->CrossHairLeft = nullptr;
+		WeaponSlot.SecondPrimaryWeapon->CrossHairRight = nullptr;
+		WeaponSlot.SecondPrimaryWeapon->CrossHairTop = nullptr;
+		WeaponSlot.SecondPrimaryWeapon->CrossHairBottom = nullptr;
+		WeaponSlot.SecondPrimaryWeapon->CrossHairCenter = WeaponSlot.SecondPrimaryWeapon->CrossHairSG;
 	}
 }
 

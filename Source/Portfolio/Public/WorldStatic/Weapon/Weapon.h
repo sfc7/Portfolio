@@ -104,6 +104,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = CrossHair)
 		class UTexture2D* CrossHairBottom;
 
+	UPROPERTY(EditAnywhere, Category = CrossHair)
+		class UTexture2D* CrossHairSG;
+
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponMesh)
 		USkeletalMesh* ReplicateMesh;

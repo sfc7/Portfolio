@@ -31,7 +31,7 @@ UCharacterComponent::UCharacterComponent()
 		DefaultFirstPrimaryWeaponType = RifleBP.Class;
 	}
 	
-	static ConstructorHelpers::FClassFinder<AWeapon> ShotgunBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_ShotGun.BP_ShotGun_C'"));
+	static ConstructorHelpers::FClassFinder<AWeapon> ShotgunBP(TEXT("/Script/Engine.Blueprint'/Game/Source/Actor/Weapon/BP_SG.BP_SG_C'"));
 
 	if (ShotgunBP.Succeeded()) {
 		DefaultSecondPrimaryWeaponType = ShotgunBP.Class;

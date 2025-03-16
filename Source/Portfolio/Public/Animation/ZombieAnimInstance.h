@@ -9,6 +9,8 @@
 DECLARE_MULTICAST_DELEGATE(FAttackHit);
 DECLARE_MULTICAST_DELEGATE(FAttackMontageEnd);
 DECLARE_MULTICAST_DELEGATE(FDeathMontageEnd);
+DECLARE_MULTICAST_DELEGATE(FNavLinkJumpinghMoveLocation);
+DECLARE_MULTICAST_DELEGATE(FNavLinkJumpinghMontageEnd);
 /**
  * 
  */
@@ -28,7 +30,17 @@ public:
 	UFUNCTION()
 		void AnimNotify_DeathMontageEnd();
 
+	UFUNCTION()
+		void AnimNotify_NavLinkJumpinghMoveLocation();
+
+	UFUNCTION()
+		void AnimNotify_NavLinkJumpinghMontageEnd();
+
 	void PlayDeathMontage();
+
+	void PlayNavLinkJumpinghMontage();
+
+	void PlayNavLinkFlailMontage();
 
 	void PlayAttackMontage(int16 _MontageArrayNum);
 		
@@ -44,6 +56,8 @@ public:
 	FAttackHit AttackHit;
 	FAttackMontageEnd AttackMontageEnd;
 	FDeathMontageEnd DeathMontageEnd;
+	FNavLinkJumpinghMoveLocation NavLinkJumpinghMoveLocation;
+	FNavLinkJumpinghMontageEnd NavLinkJumpinghMontageEnd;
 
 	int16 AttackMontageArrayNum;
 
@@ -71,6 +85,12 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
 		UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* NavLinkJumpingMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Montage", meta = (AllowPrivateAccess = true))
+		UAnimMontage* NavLinkFlailMontage;
 
 	TArray<UAnimMontage*> AttackMontageArray;
 
